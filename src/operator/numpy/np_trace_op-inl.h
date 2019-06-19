@@ -68,7 +68,7 @@ struct numpy_trace {
     index_t j = ravel(unravel(i, oshape), ishape) + offset;
     if (back) {
       for (index_t k = 0; k < dlength; ++k) {
-        ASSIGN_DISPATCH(out[j], req, a[i]);
+        KERNEL_ASSIGN(out[j], req, a[i]);
         j += stride;
       }
     } else {
