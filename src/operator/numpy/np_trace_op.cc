@@ -43,8 +43,9 @@ inline bool NumpyTraceOpShape(const nnvm::NodeAttrs& attrs,
   int x2 = CheckAxis(param.axis2, (*in_attrs)[0].ndim());
   CHECK_NE(x1, x2) << "axis1 and axis2 cannot refer to the the same axis " << x1;
   for ( int i = 0, j = 0; i < ndim; ++i ) {
-    if (i != x1 && i != x2)
+    if (i != x1 && i != x2) {
       oshape[j++] = (*in_attrs)[0][i];
+    }
   }
   mxnet::TShape tshape(oshape.begin(), oshape.end());
   SHAPE_ASSIGN_CHECK(*out_attrs, 0, tshape);
@@ -54,8 +55,7 @@ inline bool NumpyTraceOpShape(const nnvm::NodeAttrs& attrs,
 DMLC_REGISTER_PARAMETER(NumpyTraceParam);
 
 NNVM_REGISTER_OP(_np_trace)
-.describe(
-  R"code(Computes the sum of the diagonal elements of a matrix.
+.describe(R"code(Computes the sum of the diagonal elements of a matrix.
 Input is a tensor *A* of dimension *n >= 2*.
 
 If *n=2*, we sum the diagonal elements. The result has shape ().
@@ -86,7 +86,6 @@ Examples::
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_np_trace"})
 .add_argument("data", "NDArray-or-Symbol", "Input ndarray")
 .add_arguments(NumpyTraceParam::__FIELDS__());
-
 
 NNVM_REGISTER_OP(_backward_np_trace)
 .set_attr_parser(ParamParser<NumpyTraceParam>)
