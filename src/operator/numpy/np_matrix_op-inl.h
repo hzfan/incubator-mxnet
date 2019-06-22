@@ -60,9 +60,9 @@ void NumpyTranspose(const nnvm::NodeAttrs& attrs,
   }
 }
 
-struct VstackParam : public dmlc::Parameter<VstackParam> {
+struct NumpyVstackParam : public dmlc::Parameter<NumpyVstackParam> {
   int num_args;
-  DMLC_DECLARE_PARAMETER(VstackParam) {
+  DMLC_DECLARE_PARAMETER(NumpyVstackParam) {
     DMLC_DECLARE_FIELD(num_args).set_lower_bound(1)
     .describe("Number of inputs to be vstacked.");
   } 
@@ -77,7 +77,7 @@ void NumpyVstackForward(const nnvm::NodeAttrs& attrs,
   using namespace mshadow;
   using namespace mshadow_op;
 
-  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  const NumpyVstackParam& param = nnvm::get<NumpyVstackParam>(attrs.parsed);
   CHECK_EQ(inputs.size(), param.num_args);
   CHECK_EQ(outputs.size(), 1);
   CHECK_EQ(req.size(), 1);
@@ -114,7 +114,7 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
   using namespace mshadow;
   using namespace mshadow_op;
   
-  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  const NumpyVstackParam& param = nnvm::get<NumpyVstackParam>(attrs.parsed);
   CHECK_EQ(inputs.size(), 1);
   CHECK_EQ(outputs.size(), param.num_args);
   CHECK_EQ(req.size(), param.num_args);
