@@ -415,6 +415,7 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
     }
   }
   if (idim == 0) {
+    print('is here')
     TShape shape1(0, 0);
     for (int i = 0; i < param.num_args; i++) {
       SHAPE_ASSIGN_CHECK(*in_attrs, i, shape1);
