@@ -975,7 +975,7 @@ def test_np_vstack():
         ((2, 2, 2), (3, 2, 2), (1, 2, 2)),
         ((0, 1, 1), (4, 1, 1), (5, 1, 1))
     ]
-    types = ['float16', 'float32', 'float64', 'int8', 'int32', 'int64']
+    types = ['float32', 'float16', 'float64', 'int8', 'int32', 'int64']
     for config in configs:
         for hybridize in [True, False]:
             for dtype in types:
