@@ -26,7 +26,7 @@ from . import _internal as _npi
 
 __all__ = ['zeros', 'ones', 'maximum', 'minimum', 'stack', 'arange', 'argmax',
            'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'concatenate',
-           'clip', 'split', 'swapaxes', 'expand_dims', 'tile']
+           'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'vstack']
 
 
 @set_module('mxnet.ndarray.numpy')
@@ -629,3 +629,16 @@ def tile(A, reps):
         The tiled output array.
     """
     return _npi.tile(A, reps)
+
+
+@set_module('mxnet.ndarray.numpy')
+def vstack(arrays):
+  """
+  """
+  def get_list(arrays):
+    if not hasattr(arrays, '__getitem__') and hasattr(arrays, '__iter__'):
+      raise ValueError("expected iterable for arrays but got {}".format(type(arrays)))
+    return [arr for arr in arrays]
+  
+  arrays = get_list(arrays)
+  return _npi.vstack(*arrays)

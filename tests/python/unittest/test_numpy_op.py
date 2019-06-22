@@ -948,6 +948,58 @@ def test_np_tile():
             assert same(ret_mx.asnumpy(), ret_np)
 
 
+@with_seed()
+@npx.use_np_shape
+def test_np_vstack():
+    class TestVstack(HybridBlock):
+        def __init__(self):
+            super(TestVstack, self).__init__()
+        
+        def hybrid_forward(self, F, data):
+            return F.np.vstack(data)
+    
+    def g(data):
+        return _np.ones_like(data)
+
+    configs = [
+        ((), (), ()),
+        ((2), (2), (2)),
+        ((2), (0), (1)),
+        ((2, 2), (3, 2), (0, 2)),
+        ((2, 3), (1, 3), (4, 3)),
+        ((2, 2, 2), (3, 2, 2), (1, 2, 2)),
+        ((0, 1, 1), (4, 1, 1), (5, 1, 1))
+    ]
+    types = ['float16', 'float32', 'float64', 'int8', 'int32', 'int64']
+    for config in configs:
+        for hybridize in [True, False]:
+            for dtype in types:
+                test_vstack = TestVstack()
+                if hybridize:
+                    test_vstack.hybridize()
+                rtol = 1e-3
+                atol = 1e-5
+                v1 = _np.random.uniform(-10.0, 10.0, config[0])
+                v2 = _np.random.uniform(-10.0, 10.0, config[1])
+                v3 = _np.random.uniform(-10.0, 10.0, config[2])
+                data_np = _np.array([v1, v2, v3], dtype=dtype)
+                data = mx.nd.array(data_np).as_np_ndarray()
+                data.attach_grad()
+                expected_np = _np.vstack(data_np)
+                with mx.autograd.record():
+                    mx_out = test_vstack(data)
+                assert mx_out.shape == expected_np.shape
+                assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                mx_out.backward()
+                expected_grad = g(data_np)
+                assert_almost_equal(data.grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
+
+                # Test imperative once again
+                mx_out = np.vstack(data)
+                expected_np = _np.vstack(data)
+                assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule()

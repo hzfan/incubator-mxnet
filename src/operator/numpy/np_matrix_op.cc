@@ -373,5 +373,169 @@ NNVM_REGISTER_OP(_np_squeeze)
 .add_argument("a", "NDArray-or-Symbol[]", "data to squeeze")
 .add_arguments(SqueezeParam::__FIELDS__());
 
+bool NumpyVstackType(const nnvm::NodeAttrs& attrs,
+                     std::vector<int> *in_type,
+                     std::vector<int> *out_type) {
+  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  CHECK_EQ(in_type->size(), param.num_args);
+  CHECK_EQ(out_type->size(), 1);
+  int dtype = -1;
+  for (int i = 0; i < param.num_args; i++) {
+    if (dtype == -1) {
+      dtype = in_type->at(i);
+    }
+  }
+  if (dtype == -1)
+    dtype = out_type->at(0);
+  for (int i = 0; i < param.num_args; i++) {
+    TYPE_ASSIGN_CHECK(in_type, i, dtype);
+  }
+  TYPE_ASSIGN_CHECK(out_type, 0, dtype);
+  return type_is_known(type);
+}
+
+bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
+                             mxnet::ShapeVector* in_attrs,
+                             mxnet::ShapeVector* out_attrs) {
+  CHECK_EQ(out_attrs->size(), 1U);
+  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  CHECK_EQ(in_attrs->size(), param.num_args);
+  int idim = -1;
+  for (const mxnet::TShape& shape : (*in_attrs)) {
+    if (idim == -1) {
+      idim = shape.ndim();
+    }
+  }
+  int odim = (*out_attrs)[0].ndim();
+  if (idim == -1) {
+    if (odim == 2 || odim == -1) {
+      return false;
+    } else {
+      idim = odim;
+    }
+  }
+  if (idim == 0) {
+    TShape shape1(0, 0);
+    for (int i = 0; i < param.num_args; i++) {
+      SHAPE_ASSIGN_CHECK(*in_attrs, i, shape1);
+    }
+    TShape shape2(2, 1);
+    shape2[0] = param.num_args;
+    SHAPE_ASSIGN_CHECK(*out_attrs, 0, shape2)
+    return true;
+  } else if (idim == 1){
+    TShape dshape;
+    for (const mxnet::TShape& i : (*in_attrs)) {
+      shape_assign(&dshape, i)
+    }
+    TShape tmp;
+    if ((*out_attrs)[0].ndim() == 2) {
+      tmp.SetDim(1);
+      tmp[0] = (*out_attrs)[0][1];
+    }
+    shape_assign(&dshape, tmp);
+    for (int i = 0; i < param.num_args; i++) {
+      SHAPE_ASSIGN_CHECK(*in_attrs, i, dshape)
+    }
+    TShape oshape(2, 1);
+    oshape[0] = param.num_args;
+    oshape[1] = dshape[0];
+    SHAPE_ASSIGN(*out_attrs, 0, oshape);
+    return shape_is_known(dshape)
+  } else {
+    TShape dshape;
+    int cnt = 0, sum = 0, pos = -1, x;
+    for (int i = 0; i < param.num_args; i++) {
+      TShape tmp = in_attrs->at(i);
+      if (tmp.ndim() >= 2) {
+        x = CheckAxis(0, tmp.ndim());
+        if (!dim_size_is_known(tmp, x)) {
+          cnt++;
+          pos = i;
+        } else {
+          sum += tmp[x];
+        }
+        i[x] = -1;
+        shape_assign(&dshape, tmp);
+      }
+    }
+    if (out_attrs->at(0).ndim() >= 2)
+    {
+      tmp = out_attrs->at(0);
+      x = CheckAxis(0, tmp.ndim())
+      if (!dim_size_is_known(tmp, x)) {
+        cnt++;
+        pos = -1;
+      } else {
+        sum += tmp[x];
+      }
+      tmp[x] = -1;
+      shape_assign(&dshape, tmp);
+    }
+    
+    for (int i = 0; i < param.num_args; i++) {
+      SHAPE_ASSIGN_CHECK(*in_attrs, i, dshape)
+    }
+    SHAPE_ASSIGN_CHECK(*out_attrs, 0, dshape)
+    
+    x = CheckAxis(0, out_attrs->at(0).ndim());
+    dshape[x] = 0;
+    if (!shape_is_known(dshape))
+      return false;
+
+    dshape[x] = sum;
+    if (cnt == 0) {
+      SHAPE_ASSIGN_CHECK(out_attrs, 0, dshape);
+      return true;
+    } else if (cnt == 1) {
+      if (pos >= 0) {
+        in_attrs->at(pos)[x] = out_attrs->at(0)[x] - sum;
+      } else {
+        out_attrs->at(0)[x] = sum;
+      }
+      return true;
+    } else {
+      return false;
+    }
+  } 
+}
+
+DMLC_REGISTER_PARAMETER(NumpyVstackParam);
+
+NNVM_REGISTER_OP(_np_vstack)
+.describe(R"code()code" ADD_FILELINE)
+.set_attr_parser(ParamParser(NumpyVstackShape))
+.set_num_inputs([](const nnvm::NodeAttrs& attrs) {
+  const NumpyVstackParam& param = dmlc::get<NumpyVstackParam>(attrs.parsed);
+  return static_cast<uint32_t>(param.num_args);
+}) 
+.set_num_outputs(1)
+.set_attr<nnvm::FListInputNames>("FListInputNames", 
+  [](const nnvm::NodeAttrs& attrs) {
+    int num_args = dmlc::get<NumpyVstackParam>(attrs.parsed).num_args;
+    std::vector<std::string> ret;
+    for (int i = 0; i < num_args; i++) {
+      ret.push_back(std::string("arg") + std::to_string(i));
+    }
+    return ret;
+  })
+.set_attr<std::string>("key_var_num_Args", "num_args")
+.set_attr<nnvm::FInferShape>("FInferShape", NumpyVstackShape)
+.set_attr<nnvm::FInferType>("FInferType", NumpyVstackType)
+.set_attr<FCompute>("FCompute<cpu>", NumpyVstackForward)
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_np_vstack"})
+.add_argument("data", "NDArray-or-Symbol[]", "List of arrays to vstack")
+.add_arguments(NumpyVstackParam::__FIELDS__());
+
+
+NNVM_REGISTER_OP(_backward_np_vstack)
+.set_attr_parser(ParamParser(NumpyVstackShape))
+.set_num_inputs(1)
+.set_num_outputs(](const nnvm::NodeAttrs& attrs) {
+  const NumpyVstackParam& param = dmlc::get<NumpyVstackParam>(attrs.parsed);
+  return static_cast<uint32_t>(param.num_args);
+})
+.set_attr<nnvm::TIsBackward>("TIsBackward", true)
+.set_attr<FCompute>("FCompute<cpu>", NumpyVstackBackward<cpu>);
 }  // namespace op
 }  // namespace mxnet

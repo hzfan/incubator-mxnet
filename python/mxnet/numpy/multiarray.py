@@ -45,7 +45,7 @@ from ..ndarray.numpy import _internal as _npi
 
 __all__ = ['ndarray', 'empty', 'array', 'zeros', 'ones', 'maximum', 'minimum', 'stack', 'arange',
            'argmax', 'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'concatenate',
-           'clip', 'split', 'swapaxes', 'expand_dims', 'tile']
+           'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'vstack']
 
 
 # This function is copied from ndarray.py since pylint
@@ -1790,3 +1790,10 @@ def tile(A, reps):
         The tiled output array.
     """
     return _npi.tile(A, reps)
+
+
+@set_module('mxnet.numpy')
+def vstack(arrays):
+  """
+  """
+  return _mx_nd_np.vstack(arrays)
