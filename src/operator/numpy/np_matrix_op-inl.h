@@ -80,7 +80,7 @@ void NumpyVstackForward(const nnvm::NodeAttrs& attrs,
   
   // reshape if necessary
   int idim = inputs[0].shape_.ndim();
-  vector<TBlob> data(param.num_args);
+  std::vector<TBlob> data(param.num_args);
   for (int i = 0; i < param.num_args; i++) {
     if (idim == 0 || idim == 1) {
       Shape2 shape(1, inputs[i].shape_.Size());
