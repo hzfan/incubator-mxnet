@@ -528,9 +528,9 @@ NNVM_REGISTER_OP(_np_vstack)
 
 
 NNVM_REGISTER_OP(_backward_np_vstack)
-.set_attr_parser(ParamParser(NumpyVstackShape))
+.set_attr_parser(ParamParser<NumpyVstackParam>)
 .set_num_inputs(1)
-.set_num_outputs(](const nnvm::NodeAttrs& attrs) {
+.set_num_outputs([]](const nnvm::NodeAttrs& attrs) {
   const NumpyVstackParam& param = dmlc::get<NumpyVstackParam>(attrs.parsed);
   return static_cast<uint32_t>(param.num_args);
 })
