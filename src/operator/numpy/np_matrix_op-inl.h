@@ -126,8 +126,7 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
     if (idim == 0 || idim == 1) {
       TShape shape = Shape2(1, outputs[i].shape_.Size());
       data[i] = outputs[i].reshape(shape);
-    }
-    else {
+    } else {
       data[i] = outputs[i];
     }
   }
