@@ -503,7 +503,7 @@ DMLC_REGISTER_PARAMETER(NumpyVstackParam);
 
 NNVM_REGISTER_OP(_np_vstack)
 .describe(R"code()code" ADD_FILELINE)
-.set_attr_parser(ParamParser(NumpyVstackShape))
+.set_attr_parser(ParamParser<NumpyVstackParam>)
 .set_num_inputs([](const nnvm::NodeAttrs& attrs) {
   const NumpyVstackParam& param = dmlc::get<NumpyVstackParam>(attrs.parsed);
   return static_cast<uint32_t>(param.num_args);
