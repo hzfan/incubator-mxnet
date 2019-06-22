@@ -388,9 +388,9 @@ bool NumpyVstackType(const nnvm::NodeAttrs& attrs,
   if (dtype == -1)
     dtype = out_type->at(0);
   for (int i = 0; i < param.num_args; i++) {
-    TYPE_ASSIGN_CHECK(in_type, i, dtype);
+    TYPE_ASSIGN_CHECK(*in_type, i, dtype);
   }
-  TYPE_ASSIGN_CHECK(out_type, 0, dtype);
+  TYPE_ASSIGN_CHECK(*out_type, 0, dtype);
   return type_is_known(type);
 }
 
@@ -485,7 +485,7 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
 
     dshape[x] = sum;
     if (cnt == 0) {
-      SHAPE_ASSIGN_CHECK(out_attrs, 0, dshape);
+      SHAPE_ASSIGN_CHECK(*out_attrs, 0, dshape);
       return true;
     } else if (cnt == 1) {
       if (pos >= 0) {
