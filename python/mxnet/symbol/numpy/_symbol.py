@@ -1311,12 +1311,6 @@ def tile(A, reps):
 def vstack(arrays):
   """
   """
-  def get_list(arrays):
-    if not hasattr(arrays, '__getitem__') and hasattr(arrays, '__iter__'):
-      raise ValueError("expected iterable for arrays but got {}".format(type(arrays)))
-    return [arr for arr in arrays]
-
-  arrays = get_list(arrays)
-  return _npi.vstack(*arrays)
+  return _npi.vstack(arrays)
 
 _set_np_symbol_class(_Symbol)
