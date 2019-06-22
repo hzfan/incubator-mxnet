@@ -391,7 +391,7 @@ bool NumpyVstackType(const nnvm::NodeAttrs& attrs,
     TYPE_ASSIGN_CHECK(*in_type, i, dtype);
   }
   TYPE_ASSIGN_CHECK(*out_type, 0, dtype);
-  return type_is_known(type);
+  return type_is_known(dtype);
 }
 
 bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
@@ -426,11 +426,10 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
   } else if (idim == 1){
     TShape dshape;
     for (const mxnet::TShape& i : (*in_attrs)) {
-      shape_assign(&dshape, i)
+      shape_assign(&dshape, i);
     }
-    TShape tmp;
+    TShape tmp(1, 0);
     if ((*out_attrs)[0].ndim() == 2) {
-      tmp.SetDim(1);
       tmp[0] = (*out_attrs)[0][1];
     }
     shape_assign(&dshape, tmp);
