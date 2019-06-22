@@ -982,6 +982,7 @@ def test_np_vstack():
                 test_vstack = TestVstack()
                 if hybridize:
                     test_vstack.hybridize()
+                print('config is {}'.format(config))
                 rtol = 1e-3
                 atol = 1e-5
                 v1 = _np.random.uniform(-10.0, 10.0, config[0])
