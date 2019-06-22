@@ -518,7 +518,7 @@ NNVM_REGISTER_OP(_npi_vstack)
     }
     return ret;
   })
-.set_attr<std::string>("key_var_num_Args", "num_args")
+.set_attr<std::string>("key_var_num_args", "num_args")
 .set_attr<mxnet::FInferShape>("FInferShape", NumpyVstackShape)
 .set_attr<nnvm::FInferType>("FInferType", NumpyVstackType)
 .set_attr<FCompute>("FCompute<cpu>", NumpyVstackForward<cpu>)
