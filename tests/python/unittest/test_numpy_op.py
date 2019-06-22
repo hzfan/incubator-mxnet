@@ -993,8 +993,8 @@ def test_np_vstack():
                 expected_np = _np.vstack(data_np)
                 with mx.autograd.record():
                     mx_out = test_vstack(data)
-                dbg(mx_out)
-                dbg(expected_np)
+                dbg(mx_out, "mx_out")
+                dbg(expected_np, "expected_np")
                 assert mx_out.shape == expected_np.shape
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
                 mx_out.backward()
