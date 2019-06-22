@@ -1004,7 +1004,7 @@ def test_np_vstack():
                 for i in range(3):
                     expected_grad = g(v_np[i])
                     dbg(expected_grad, "expected_grad")
-                    dbg(v[i].grad.asnumpy(), "v[i].grad.asnumpy()")
+                    dbg(v[i].grad, "v[i].grad")
                     assert_almost_equal(v[i].grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
 
                 # Test imperative once again
