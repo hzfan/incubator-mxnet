@@ -391,7 +391,7 @@ bool NumpyVstackType(const nnvm::NodeAttrs& attrs,
     TYPE_ASSIGN_CHECK(*in_type, i, dtype);
   }
   TYPE_ASSIGN_CHECK(*out_type, 0, dtype);
-  return type_is_known(dtype);
+  return dtype != -1;
 }
 
 bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
@@ -439,8 +439,8 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
     TShape oshape(2, 1);
     oshape[0] = param.num_args;
     oshape[1] = dshape[0];
-    SHAPE_ASSIGN(*out_attrs, 0, oshape);
-    return shape_is_known(dshape)
+    SHAPE_ASSIGN_CHECK(*out_attrs, 0, oshape);
+    return shape_is_known(dshape);
   } else {
     TShape dshape;
     int cnt = 0, sum = 0, pos = -1, x;
@@ -454,13 +454,13 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
         } else {
           sum += tmp[x];
         }
-        i[x] = -1;
+        tmp[x] = -1;
         shape_assign(&dshape, tmp);
       }
     }
     if (out_attrs->at(0).ndim() >= 2)
     {
-      tmp = out_attrs->at(0);
+      TShape tmp = out_attrs->at(0);
       x = CheckAxis(0, tmp.ndim())
       if (!dim_size_is_known(tmp, x)) {
         cnt++;
