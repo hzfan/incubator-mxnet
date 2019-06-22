@@ -501,7 +501,7 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
 
 DMLC_REGISTER_PARAMETER(NumpyVstackParam);
 
-NNVM_REGISTER_OP(_np_vstack)
+NNVM_REGISTER_OP(_npi_vstack)
 .describe(R"code()code" ADD_FILELINE)
 .set_attr_parser(ParamParser<NumpyVstackParam>)
 .set_num_inputs([](const nnvm::NodeAttrs& attrs) {
