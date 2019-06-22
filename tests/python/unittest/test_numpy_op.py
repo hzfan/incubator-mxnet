@@ -994,12 +994,12 @@ def test_np_vstack():
                 print("v_np = {}".format(v_np))
                 print("")
                 expected_np = _np.vstack(v_np)
-                # with mx.autograd.record():
-                #     mx_out = test_vstack(*v)
-                # # dbg(mx_out, "mx_out")
-                # # dbg(expected_np, "expected_np")
-                # assert mx_out.shape == expected_np.shape
-                # assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                with mx.autograd.record():
+                    mx_out = test_vstack(*v)
+                # dbg(mx_out, "mx_out")
+                # dbg(expected_np, "expected_np")
+                assert mx_out.shape == expected_np.shape
+                assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
                 # # Test gradient
                 # mx_out.backward()
