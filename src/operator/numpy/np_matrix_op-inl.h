@@ -127,6 +127,9 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
       TShape shape = Shape2(1, outputs[i].shape_.Size());
       data[i] = outputs[i].reshape(shape);
     }
+    else {
+      data[i] = outputs[i];
+    }
   }
 
   // initialize ConcatOp
