@@ -988,7 +988,7 @@ def test_np_vstack():
                 v = []
                 v_np = []
                 for i in range(3):
-                    v[i]_np = np.array(_np.random.uniform(-10.0, 10.0, config[i]), dtype=dtype)
+                    v[i]_np = _np.array(_np.random.uniform(-10.0, 10.0, config[i]), dtype=dtype)
                     v[i] = mx.nd.array(v[i]_np)
                     v[i].attach_grad()
                 expected_np = _np.vstack(v_np)
