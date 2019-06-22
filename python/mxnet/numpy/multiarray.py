@@ -48,7 +48,7 @@ __all__ = ['ndarray', 'empty', 'array', 'zeros', 'ones', 'maximum', 'minimum', '
            'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'linspace', 'eye', 'sin', 'cos',
            'sin', 'cos', 'sinh', 'cosh', 'log10', 'sqrt', 'abs', 'exp', 'arctan', 'sign', 'log',
            'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin',
-           'argsort', 'hstack', 'tensordot']
+           'argsort', 'hstack', 'tensordot', 'vstack']
 
 
 @set_module('mxnet.numpy')
@@ -3084,3 +3084,49 @@ def arcsin(x, out=None, **kwargs):
     http://www.math.sfu.ca/~cbm/aands/
     """
     return _mx_nd_np.arcsin(x, out=out, **kwargs)
+
+
+def vstack(arrays):
+    r"""vstack(tup)
+
+    Stack arrays in sequence vertically (row wise).
+
+    This is equivalent to concatenation along the first axis after 1-D arrays
+    of shape `(N,)` have been reshaped to `(1,N)`. Rebuilds arrays divided by
+    `vsplit`.
+
+    This function makes most sense for arrays with up to 3 dimensions. For
+    instance, for pixel-data with a height (first axis), width (second axis),
+    and r/g/b channels (third axis). The functions `concatenate` and `stack`
+    provide more general stacking and concatenation operations.
+
+    Parameters
+    ----------
+    tup : sequence of ndarrays
+        The arrays must have the same shape along all but the first axis.
+        1-D arrays must have the same length.
+
+    Returns
+    -------
+    stacked : ndarray
+        The array formed by stacking the given arrays, will be at least 2-D.
+
+    Examples
+    --------
+    >>> a = np.array([1, 2, 3])
+    >>> b = np.array([2, 3, 4])
+    >>> np.vstack((a, b))
+    array([[1., 2., 3.],
+           [2., 3., 4.]])
+
+    >>> a = np.array([[1], [2], [3]])
+    >>> b = np.array([[2], [3], [4]])
+    >>> np.vstack((a, b))
+    array([[1.],
+           [2.],
+           [3.],
+           [2.],
+           [3.],
+           [4.]])
+    """
+    return _mx_nd_np.vstack(arrays)
