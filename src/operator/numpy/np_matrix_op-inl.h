@@ -73,6 +73,9 @@ void NumpyVstackForward(const nnvm::NodeAttrs& attrs,
                         const std::vector<TBlob>& inputs,                     
                         const std::vector<OpReqType>& req,                    
                         const std::vector<TBlob>& outputs) {
+  using namespace mshadow;
+  using namespace mshadow_op;
+
   const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
   CHECK_EQ(inputs.size(), param.num_args);
   CHECK_EQ(outputs.size(), 1);
@@ -107,6 +110,9 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
                          const std::vector<TBlob>& inputs,                   
                          const std::vector<OpReqType>& req,                  
                          const std::vector<TBlob>& outputs) {
+  using namespace mshadow;
+  using namespace mshadow_op;
+  
   const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
   CHECK_EQ(inputs.size(), 1);
   CHECK_EQ(outputs.size(), param.num_args);
