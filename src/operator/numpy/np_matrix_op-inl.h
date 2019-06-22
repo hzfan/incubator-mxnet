@@ -68,13 +68,13 @@ struct VstackParam : public dmlc::Parameter<VstackParam> {
     DMLC_DECLARE_FIELD(num_args).set_lower_bound(1)
     .describe("Number of inputs to be vstacked.");
   } 
-}
+};
 
-template<typename xpu>                                                        // 1
-void NumpyVstackForward(const nnvm::NodeAttrs& attrs,                         // 2
-                        const OpContext& ctx,                                 // 3
-                        const std::vector<TBlob>& inputs,                     // 4
-                        const std::vector<OpReqType>& req,                    // 5
+template<typename xpu>                                                        
+void NumpyVstackForward(const nnvm::NodeAttrs& attrs,                         
+                        const OpContext& ctx,                                 
+                        const std::vector<TBlob>& inputs,                     
+                        const std::vector<OpReqType>& req,                    
                         const std::vector<TBlob>& outputs) {
   const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
   CHECK_EQ(inputs.size(), param.num_args);
