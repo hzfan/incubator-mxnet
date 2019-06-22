@@ -522,12 +522,12 @@ NNVM_REGISTER_OP(_npi_vstack)
 .set_attr<mxnet::FInferShape>("FInferShape", NumpyVstackShape)
 .set_attr<nnvm::FInferType>("FInferType", NumpyVstackType)
 .set_attr<FCompute>("FCompute<cpu>", NumpyVstackForward<cpu>)
-.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_np_vstack"})
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_vstack"})
 .add_argument("data", "NDArray-or-Symbol[]", "List of arrays to vstack")
 .add_arguments(NumpyVstackParam::__FIELDS__());
 
 
-NNVM_REGISTER_OP(_backward_np_vstack)
+NNVM_REGISTER_OP(_backward_vstack)
 .set_attr_parser(ParamParser<NumpyVstackParam>)
 .set_num_inputs(1)
 .set_num_outputs([](const nnvm::NodeAttrs& attrs) {
