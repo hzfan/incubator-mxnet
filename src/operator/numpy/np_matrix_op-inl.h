@@ -86,7 +86,7 @@ void NumpyVstackForward(const nnvm::NodeAttrs& attrs,
   std::vector<TBlob> data(param.num_args);
   for (int i = 0; i < param.num_args; i++) {
     if (idim == 0 || idim == 1) {
-      Shape2 shape(1, inputs[i].shape_.Size());
+      TShape shape = Shape2(1, inputs[i].shape_.Size());
       data[i] = inputs[i].reshape(shape);
     } else {
       data[i] = inputs[i];
@@ -123,7 +123,7 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
   vector<TBlob> data(param.num_args);
   for (int i = 0; i < param.num_args; i++) {
     if (idim == 0 || idim == 1) {
-      Shape2 shape(1, outputs[i].shape_.Size());
+      TShape shape = Shape2(1, outputs[i].shape_.Size());
       data[i] = outputs[i].reshape(shape);
     }
   }
