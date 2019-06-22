@@ -47,7 +47,7 @@ NNVM_REGISTER_OP(_np_squeeze)
 .set_attr<FCompute>("FCompute<gpu>", UnaryOp::IdentityCompute<gpu>);
 
 NNVM_REGISTER_OP(_npi_vstack)
-.set_attr<FCompute>("FCompute<gpu>", NumpyVstackForward<gpu>;)
+.set_attr<FCompute>("FCompute<gpu>", NumpyVstackForward<gpu>);
 
 }  // namespace op
 }  // namespace mxnet
