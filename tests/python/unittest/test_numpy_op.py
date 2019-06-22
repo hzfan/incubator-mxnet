@@ -985,26 +985,26 @@ def test_np_vstack():
                 print('config is {}'.format(config))
                 rtol = 1e-3
                 atol = 1e-5
-                v1 = _np.random.uniform(-10.0, 10.0, config[0])
-                v2 = _np.random.uniform(-10.0, 10.0, config[1])
-                v3 = _np.random.uniform(-10.0, 10.0, config[2])
-                data_np = _np.array([v1, v2, v3], dtype=dtype)
-                data = mx.nd.array(data_np).as_np_ndarray()
-                data.attach_grad()
-                expected_np = _np.vstack(data_np)
+                v = []
+                v_np = []
+                for i in range(3):
+                    v[i]_np = np.array(_np.random.uniform(-10.0, 10.0, config[i]), dtype=dtype)
+                    v[i] = mx.nd.array(v[i]_np)
+                    v[i].attach_grad()
+                expected_np = _np.vstack(v_np)
                 with mx.autograd.record():
-                    mx_out = test_vstack(data)
+                    mx_out = test_vstack(v)
                 dbg(mx_out, "mx_out")
                 dbg(expected_np, "expected_np")
                 assert mx_out.shape == expected_np.shape
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
                 mx_out.backward()
-                expected_grad = g(data_np)
+                expected_grad = g(v_np)
                 assert_almost_equal(data.grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
 
                 # Test imperative once again
-                mx_out = np.vstack(data)
-                expected_np = _np.vstack(data)
+                mx_out = np.vstack(v)
+                expected_np = _np.vstack(v)
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
 
