@@ -121,7 +121,7 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
 
   // reshape if necessary
   int idim = outputs[0].shape_.ndim();
-  vector<TBlob> data(param.num_args);
+  std::vector<TBlob> data(param.num_args);
   for (int i = 0; i < param.num_args; i++) {
     if (idim == 0 || idim == 1) {
       TShape shape = Shape2(1, outputs[i].shape_.Size());
