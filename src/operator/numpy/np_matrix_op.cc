@@ -461,7 +461,7 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
     if (out_attrs->at(0).ndim() >= 2)
     {
       TShape tmp = out_attrs->at(0);
-      x = CheckAxis(0, tmp.ndim())
+      x = CheckAxis(0, tmp.ndim());
       if (!dim_size_is_known(tmp, x)) {
         cnt++;
         pos = -1;
