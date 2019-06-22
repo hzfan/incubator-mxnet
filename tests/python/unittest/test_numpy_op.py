@@ -998,9 +998,12 @@ def test_np_vstack():
                 dbg(expected_np, "expected_np")
                 assert mx_out.shape == expected_np.shape
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
+
+                # Test gradient
                 mx_out.backward()
-                expected_grad = g(v_np)
-                assert_almost_equal(data.grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
+                for i in range(3):
+                    expected_grad = g(v_np[i])
+                    assert_almost_equal(v[i].grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
 
                 # Test imperative once again
                 mx_out = np.vstack(v)
