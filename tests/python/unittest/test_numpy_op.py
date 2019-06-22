@@ -956,7 +956,7 @@ def test_np_vstack():
             super(TestVstack, self).__init__()
         
         def hybrid_forward(self, F, a, *args):
-            return F.np.vstack([a] + list(args)
+            return F.np.vstack([a] + list(args))
     
     def g(data):
         return _np.ones_like(data)
