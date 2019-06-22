@@ -376,7 +376,7 @@ NNVM_REGISTER_OP(_np_squeeze)
 bool NumpyVstackType(const nnvm::NodeAttrs& attrs,
                      std::vector<int> *in_type,
                      std::vector<int> *out_type) {
-  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  const NumpyVstackParam& param = nnvm::get<NumpyVstackParam>(attrs.parsed);
   CHECK_EQ(in_type->size(), param.num_args);
   CHECK_EQ(out_type->size(), 1);
   int dtype = -1;
@@ -398,7 +398,7 @@ bool NumpyVstackShape(const nnvm::NodeAttrs& attrs,
                              mxnet::ShapeVector* in_attrs,
                              mxnet::ShapeVector* out_attrs) {
   CHECK_EQ(out_attrs->size(), 1U);
-  const VstackParam& param = nnvm::get<VstackParam>(attrs.parsed);
+  const NumpyVstackParam& param = nnvm::get<NumpyVstackParam>(attrs.parsed);
   CHECK_EQ(in_attrs->size(), param.num_args);
   int idim = -1;
   for (const mxnet::TShape& shape : (*in_attrs)) {
