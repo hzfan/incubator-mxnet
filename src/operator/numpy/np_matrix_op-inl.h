@@ -59,9 +59,6 @@ void NumpyTranspose(const nnvm::NodeAttrs& attrs,
   }
 }
 
-}  // namespace op
-}  // namespace mxnet
-
 struct VstackParam : public dmlc::Parameter<VstackParam> {
   int num_args;
   DMLC_DECLARE_PARAMETER(VstackParam) {
@@ -136,5 +133,7 @@ void NumpyVstackBackward(const nnvm::NodeAttrs& attrs,
   });
 }
 
+}  // namespace op
+}  // namespace mxnet
 
 #endif  // MXNET_OPERATOR_NUMPY_NP_MATRIX_OP_INL_H_
