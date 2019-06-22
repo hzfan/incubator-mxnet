@@ -991,7 +991,8 @@ def test_np_vstack():
                     v_np.append(_np.array(_np.random.uniform(-10.0, 10.0, config[i]), dtype=dtype))
                     v.append(mx.nd.array(v_np[i]).as_np_ndarray())
                     v[i].attach_grad()
-                dbg(v_np, "v_np")
+                for i in range(3):
+                    dbg(v_np[i], "v_np[i]")
                 expected_np = _np.vstack(v_np)
                 with mx.autograd.record():
                     mx_out = test_vstack(*v)
