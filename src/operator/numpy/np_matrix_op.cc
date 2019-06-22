@@ -519,7 +519,7 @@ NNVM_REGISTER_OP(_np_vstack)
     return ret;
   })
 .set_attr<std::string>("key_var_num_Args", "num_args")
-.set_attr<nnvm::FInferShape>("FInferShape", NumpyVstackShape)
+.set_attr<mxnet::FInferShape>("FInferShape", NumpyVstackShape)
 .set_attr<nnvm::FInferType>("FInferType", NumpyVstackType)
 .set_attr<FCompute>("FCompute<cpu>", NumpyVstackForward)
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_np_vstack"})
