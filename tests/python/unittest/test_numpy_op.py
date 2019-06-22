@@ -961,6 +961,11 @@ def test_np_vstack():
     def g(data):
         return _np.ones_like(data)
 
+    def dbg(data, name):
+        print('type of {} = {}'.format(name, type(data)))
+        print('shape of {} = {}'.format(name, data.shape))
+        print('{} = {}'.format(name, data))
+
     configs = [
         ((), (), ()),
         ((2), (2), (2)),
@@ -988,6 +993,8 @@ def test_np_vstack():
                 expected_np = _np.vstack(data_np)
                 with mx.autograd.record():
                     mx_out = test_vstack(data)
+                dbg(mx_out)
+                dbg(expected_np)
                 assert mx_out.shape == expected_np.shape
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
                 mx_out.backward()
