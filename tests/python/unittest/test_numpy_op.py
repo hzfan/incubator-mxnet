@@ -975,7 +975,7 @@ def test_np_vstack():
         ((2, 2, 2), (3, 2, 2), (1, 2, 2)),
         ((0, 1, 1), (4, 1, 1), (5, 1, 1))
     ]
-    types = ['float32', 'float16', 'float64', 'int8', 'int32', 'int64']
+    types = ['float16', 'float32', 'float64', 'int8', 'int32', 'int64']
     for config in configs:
         for hybridize in [True, False]:
             for dtype in types:
@@ -992,11 +992,12 @@ def test_np_vstack():
                     v.append(mx.nd.array(v_np[i]).as_np_ndarray())
                     v[i].attach_grad()
                 print("v_np = {}".format(v_np))
+                print("")
                 expected_np = _np.vstack(v_np)
                 with mx.autograd.record():
                     mx_out = test_vstack(*v)
-                dbg(mx_out, "mx_out")
-                dbg(expected_np, "expected_np")
+                # dbg(mx_out, "mx_out")
+                # dbg(expected_np, "expected_np")
                 assert mx_out.shape == expected_np.shape
                 assert_almost_equal(mx_out.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
@@ -1004,8 +1005,8 @@ def test_np_vstack():
                 mx_out.backward()
                 for i in range(3):
                     expected_grad = g(v_np[i])
-                    dbg(expected_grad, "expected_grad")
-                    dbg(v[i].grad, "v[i].grad")
+                    # dbg(expected_grad, "expected_grad")
+                    # dbg(v[i].grad, "v[i].grad")
                     assert_almost_equal(v[i].grad.asnumpy(), expected_grad, rtol=rtol, atol=atol)
 
                 # Test imperative once again
