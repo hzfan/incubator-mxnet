@@ -955,8 +955,8 @@ def test_np_vstack():
         def __init__(self):
             super(TestVstack, self).__init__()
         
-        def hybrid_forward(self, F, data):
-            return F.np.vstack(data)
+        def hybrid_forward(self, F, a, *args):
+            return F.np.vstack([a] + list(args)
     
     def g(data):
         return _np.ones_like(data)
@@ -993,7 +993,7 @@ def test_np_vstack():
                     v[i].attach_grad()
                 expected_np = _np.vstack(v_np)
                 with mx.autograd.record():
-                    mx_out = test_vstack(v)
+                    mx_out = test_vstack(*v)
                 dbg(mx_out, "mx_out")
                 dbg(expected_np, "expected_np")
                 assert mx_out.shape == expected_np.shape
