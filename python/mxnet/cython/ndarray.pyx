@@ -70,6 +70,11 @@ def _set_ndarray_class(cls):
     _ndarray_cls = cls
 
 
+def _set_np_ndarray_class(cls):
+    global _np_ndarray_cls
+    _np_ndarray_cls = cls
+
+
 cdef NewArray(NDArrayHandle handle, int stype=-1):
     """Create a new array given handle"""
     return _ndarray_cls(_ctypes.cast(<unsigned long long>handle, _ctypes.c_void_p), stype=stype)
