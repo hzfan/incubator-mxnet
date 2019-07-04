@@ -57,6 +57,12 @@ def test_np_tensordot():
             if _np.isscalar(b_axes_summed):
                 b_axes_summed = b_axes_summed,
 
+            for i in range(len(a_axes_summed)):
+                a_axes_summed[i] = (a_axes_summed[i] + a.ndim) % a.ndim
+
+            for i in range(len(b_axes_summed)):
+                b_axes_summed[i] = (b_axes_summed[i] + b.ndim) % b.ndim
+
         if len(a_axes_summed) != len(b_axes_summed):
             raise ValueError('Axes length mismatch') 
 
@@ -105,17 +111,22 @@ def test_np_tensordot():
     tensor_shapes = [
         ((3, 5), (5, 4), 1),  # (a_shape, b_shape, axes)
         ((3,), (3,), 1),
-        ((3, 4, 5, 6, 7), (5, 6, 7, 1, 2), 3),
-        ((3, 5, 4, 6, 7), (7, 6, 5, 1, 2), [[1, 3, 4], [2, 1, 0]]),
+        ((3, 4, 5, 3, 2), (5, 3, 2, 1, 2), 3),
+        ((3, 5, 4, 3, 2), (2, 3, 5, 1, 2), [[1, 3, 4], [2, 1, 0]]),
         ((3, 5, 4), (5, 4, 3), [[1, 0, 2], [0, 2, 1]]),
-        ((3, 5, 4), (5, 3, 4), [[2, 0], [2, 1]]),
+        ((3, 5, 4), (5, 3, 4), [[2, 0], [-1, -2]]),
         ((2, 2), (2, 2), 2),
+        ((3, 5, 4), (5, ), [[-2], [0]]),
         ((3, 5, 4), (5, ), [[1], [0]]),
         ((2,), (2, 3), 1),
         ((3,), (3,), 0),
         ((2,), (2, 3), 0),
         ((3, 5, 4), (5, ), 0),
-        ((2, 3, 4), (4, 3, 2), [[], []])
+        ((2, 3, 4), (4, 3, 2), [[], []]),
+        ((3, 0), (0, 5), 1),
+        ((3, 0), (0, 4), [[1], [0]]),
+        ((0, 3), (3, 5), 1),
+        ((0, 3), (5, 0), [[0], [1]])
     ]
 
     for hybridize in [True, False]:
@@ -150,33 +161,6 @@ def test_np_tensordot():
                 mx_sym = mx.sym.np.tensordot(a_sym, b_sym, axes).as_nd_ndarray()
                 check_numeric_gradient(mx_sym, [a.as_nd_ndarray(), b.as_nd_ndarray()],
                   rtol=1e-1, atol=1e-1, dtype = dtype)
-
-    # test zero size input
-    zero_shapes = [
-        ((3, 0), (0, 5), 1),
-        ((3, 0), (0, 4), [1, 0]),
-        ((0, 3), (3, 5), 1)
-    ]
-
-    for hybridize in [True, False]:
-        for a_shape, b_shape, axes in zero_shapes:
-            for dtype in [_np.float32, _np.float64]:
-                test_tensordot = TestTensordot(axes)
-                if hybridize:
-                    test_tensordot.hybridize()
-                a = rand_ndarray(shape = a_shape, dtype = dtype).as_np_ndarray()
-                b = rand_ndarray(shape = b_shape, dtype = dtype).as_np_ndarray()
-
-                np_out = _np.tensordot(a.asnumpy(), b.asnumpy(), axes)
-                with mx.autograd.record():
-                    mx_out = test_tensordot(a, b)
-                assert mx_out.shape == np_out.shape
-                assert_almost_equal(mx_out.asnumpy(), np_out, rtol = 1e-3, atol = 1e-5)
-
-                # Test imperative once again
-                mx_out = np.tensordot(a, b, axes)
-                np_out = _np.tensordot(a.asnumpy(), b.asnumpy(), axes)
-                assert_almost_equal(mx_out.asnumpy(), np_out, rtol=1e-3, atol=1e-5)
 
 
 @with_seed()
@@ -1570,6 +1554,101 @@ def test_np_trace():
         except mx.base.MXNetError:
             continue
         assert False
+
+
+@with_seed()
+@npx.use_np
+def test_np_einsum():
+    class TestEinsum(HybridBlock):
+        def __init__(self, subscripts, optimize):
+            super(TestEinsum, self).__init__()
+            self.subscripts = subscripts
+            self.optimize = optimize
+
+        def hybrid_forward(self, F, *operands):
+            return F.np.einsum(self.subscripts, *operands, optimize=self.optimize)
+
+    def dbg(name, data):
+        print('type of {} = {}'.format(name, type(data)))
+        print('shape of {} = {}'.format(name, data.shape))
+        print('{} = {}'.format(name, data))
+
+    configs = [
+        ('ii', [(5, 5)], lambda *args: (_np.eye(5),)),
+        ('ii->i', [(5, 5)], lambda *args: (_np.eye(5),)),
+        ('ij->i', [(5, 5)], lambda *args: (_np.ones((5, 5)),)),
+        ('...j->...', [(5, 5)], lambda *args: (_np.ones((5, 5)),)),
+        ('ji', [(2, 3)], lambda *args: (_np.ones((2, 3)),)),
+        ('ij->ji', [(2, 3)], lambda *args: (_np.ones((2, 3)),)),
+        ('i, i', [(5,), (5,)], lambda *args: (args[1], args[0])),
+        ('ij, j', [(5, 5), (5,)], lambda *args: (_np.tile(args[1][None, :], [5, 1]),
+                                                 args[0].sum(axis=0))),
+        ('...j, j', [(5, 5), (5,)], lambda *args: (_np.tile(args[1][None, :], [5, 1]),
+                                                   _np.sum(args[0], axis=0))),
+        ('..., ...', [(), (2, 3)], lambda *args: (_np.sum(args[1], axis=None),
+                                                  args[0] * _np.ones((2, 3)))),
+        (', ij', [(), (2, 3)], lambda *args: (_np.sum(args[1], axis=None),
+                                              args[0] * _np.ones((2, 3)))),
+        ('i, j', [(2,), (5, )], lambda *args: (_np.sum(args[1], axis=None) * _np.ones(2),
+                                               _np.sum(args[0], axis=None) * _np.ones(5))),
+        ('ijk, jil->kl', [(3, 4, 5), (4, 3, 2)], lambda *args: (_np.tile(_np.transpose(_np.sum(args[1],
+                                                                                               axis=-1))[:, :, None],
+                                                                         [1, 1, 5]),
+                                                                _np.tile(_np.transpose(_np.sum(args[0],
+                                                                                               axis=-1))[:, :, None],
+                                                                         [1, 1, 2]))),
+        ('ii->i', [(3, 3)], lambda *args: (_np.eye(3),)),
+        ('ki, jk->ij', [(3, 2), (4, 3)], lambda *args: (_np.tile(args[1].sum(axis=0)[:, None], [1, 2]),
+                                                        _np.tile(args[0].sum(axis=1)[None, :], [4, 1]))),
+        ('ki, ...k->i...', [(3, 2), (4, 3)], lambda *args: (_np.tile(args[1].sum(axis=0)[:, None], [1, 2]),
+                                                            _np.tile(args[0].sum(axis=1)[None, :], [4, 1]))),
+        ('k..., jk', [(3, 2), (4, 3)], lambda *args: (_np.tile(args[1].sum(axis=0)[:, None], [1, 2]),
+                                                      _np.tile(args[0].sum(axis=1)[None, :], [4, 1]))),
+        ('ij, jk', [(5, 0), (0, 4)], lambda *args: (_np.empty((5, 0)), _np.empty((0, 4)))),
+    ]
+    dtypes = ['int32', 'float16', 'float32', 'float64']
+    for hybridize in [False, True]:
+        for dtype in dtypes:
+            for config in configs:
+                for optimize in [False, True]:
+                    rtol = 1e-0 if dtype == 'float16' else 1e-3
+                    atol = 1e-1 if dtype == 'float16' else 1e-5
+                    (subscripts, operands, get_grad) = config
+                    print("==================start of test===============")
+                    print("subscripts = {}".format(subscripts))
+                    print("hybridize = {}".format(hybridize))
+                    print("dtype = {}".format(dtype))
+                    print("operands = {}".format(operands))
+                    print("optimize = {}".format(optimize))
+                    test_einsum = TestEinsum(subscripts, optimize)
+                    if hybridize:
+                        test_einsum.hybridize()
+                    x = []
+                    x_np = []
+                    for shape in operands:
+                        x_np.append(_np.array(_np.random.uniform(-10.0, 10.0, shape),
+                                            dtype=dtype))
+                        x.append(mx.nd.array(x_np[-1]).as_np_ndarray())
+                        x[-1].attach_grad()
+                    expected_np = _np.einsum(subscripts, *x_np, optimize=optimize)
+                    with mx.autograd.record():
+                        out_mx = test_einsum(*x)
+                    assert out_mx.shape == expected_np.shape
+                    assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                    out_mx.backward()
+                    for (iop, op) in enumerate(x):
+                        assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
+
+                    # Test imperative once again
+                    for op in x:
+                        op.attach_grad()
+                    with mx.autograd.record():
+                        out_mx = np.einsum(subscripts, *x, optimize=optimize)
+                    out_mx.backward()
+                    expected_np = _np.einsum(subscripts, *x_np, optimize=optimize)
+                    assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                    for (iop, op) in enumerate(x):
+                        assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
 
 
 if __name__ == '__main__':
