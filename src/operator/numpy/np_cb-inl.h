@@ -37,7 +37,7 @@ typedef int (PYFUNC)();
 
 struct NumpyCbParam: public dmlc::Parameter<NumpyCbParam> {
   
-  PYFUNC pyfunc;
+  PYFUNC* pyfunc;
   DMLC_DECLARE_PARAMETER(NumpyCbParam) {
     DMLC_DECLARE_FIELD(pyfunc)
     .describe("pyfunc");
