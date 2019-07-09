@@ -33,7 +33,7 @@ NNVM_REGISTER_OP(_npi_cb)
   [](const NodeAttrs& attrs) {
     return std::vector<std::string>{"data"};
   })
-.set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>
+.set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)
 .set_attr<nnvm::FInferType>("FInferType", ElemwiseType<1, 1>)
 .set_attr<FCompute>("FCompute<cpu>", NumpyCbForward<cpu>)
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_npi_cb"})
