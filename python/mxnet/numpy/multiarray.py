@@ -47,7 +47,16 @@ __all__ = ['ndarray', 'empty', 'array', 'zeros', 'ones', 'maximum', 'minimum', '
            'argmax', 'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'concatenate',
            'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'linspace', 'sin', 'cos',
            'sin', 'cos', 'sinh', 'cosh', 'log10', 'sqrt', 'abs', 'exp', 'arctan', 'sign', 'log',
-           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin']
+           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'cb']
+
+
+def pyfunc():
+    return 1
+
+
+@set_module('mxnet.numpy')
+def cb(x):
+    return _npi.cb(x, pyfunc=pyfunc)
 
 
 # This function is copied from ndarray.py since pylint
