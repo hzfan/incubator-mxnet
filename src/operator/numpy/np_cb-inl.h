@@ -61,7 +61,7 @@ void NumpyCbForward(const nnvm::NodeAttrs& attrs,
   const mxnet::TShape& ishape = inputs[0].shape_;
   const mxnet::TShape& oshape = outputs[0].shape_;
   const NumpyCbParam& param = nnvm::get<NumpyCbParam>(attrs.parsed);
-  PYFUNC* f = param.pyfunc
+  PYFUNC* f = param.pyfunc;
 
   MSHADOW_TYPE_SWITCH(out_data.type_flag_, DType, {
       out_data.FlatTo1D<xpu, DType>(s) = (*f)();
