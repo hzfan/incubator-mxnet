@@ -21,6 +21,7 @@
 
 # pylint: disable=too-many-lines
 from __future__ import absolute_import
+import ctypes
 import numpy as _np
 from ...base import numeric_types
 from ...util import _sanity_check_params, set_module
@@ -40,7 +41,8 @@ def pyfunc():
 
 @set_module('mxnet.ndarray.numpy')
 def cb(x):
-    return _npi.cb(x, pyfunc=pyfunc)
+    proto = ctypes.CFUNCTYPE(ctypes.c_int)
+    return _npi.cb(x, pyfunc=proto(pyfunc)
 
 @set_module('mxnet.ndarray.numpy')
 def zeros(shape, dtype=_np.float32, **kwargs):

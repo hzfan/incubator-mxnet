@@ -33,7 +33,7 @@
 namespace mxnet {
 namespace op {
 
-typedef void (PYFUNC)();
+typedef int (PYFUNC)();
 
 struct NumpyCbParam: public dmlc::Parameter<NumpyCbParam> {
   
@@ -56,10 +56,7 @@ void NumpyCbForward(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(outputs.size(), 1U);
   CHECK_EQ(req.size(), 1U);
   mshadow::Stream<xpu> *s = ctx.get_stream<xpu>();
-  const TBlob& in_data = inputs[0];
   const TBlob& out_data = outputs[0];
-  const mxnet::TShape& ishape = inputs[0].shape_;
-  const mxnet::TShape& oshape = outputs[0].shape_;
   const NumpyCbParam& param = nnvm::get<NumpyCbParam>(attrs.parsed);
   PYFUNC* f = param.pyfunc;
 
