@@ -2229,4 +2229,4 @@ _set_np_symbol_class(_Symbol)
 def einsum_path(*operands, **kwargs):
     r"""
     """
-    return _einsum_path_util('symbol', *operands, **kwargs)
+    return _einsum_path_util._einsum_path('symbol', *operands, **kwargs)

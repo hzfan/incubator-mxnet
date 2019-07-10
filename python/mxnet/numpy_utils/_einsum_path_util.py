@@ -939,6 +939,7 @@ def _einsum_path(module_name, *operands, **kwargs):
     else:
         from ..symbol.numpy import _internal as _npi
     # todo: handle op, sub, op, sub format...
+    print('_einsum_path')
     subscript = operands[0]
     operands = operands[1:]
     shapes = []
