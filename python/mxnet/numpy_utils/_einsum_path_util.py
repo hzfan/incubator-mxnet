@@ -627,13 +627,14 @@ def _parse_einsum_input(operands):
                 raise ValueError("Character %s is not a valid symbol." % s)
             if tmp_subscripts.count(s) == 1:
                 output_subscript += s
-
     # Make sure output subscripts are in the input
     for char in output_subscript:
         if char not in input_subscripts:
             raise ValueError("Output character %s did not appear in the input"
                              % char)
 
+    print(input_subscripts)
+    print(operands)
     # Make sure number operands is equivalent to the number of terms
     if len(input_subscripts.split(',')) != len(operands):
         raise ValueError("Number of einsum subscripts must be equal to the "
@@ -751,7 +752,6 @@ def einsum_path(*operands, **kwargs):
        5               defg,hd->efgh                               efgh->efgh
     """
 
-    print("here")
     # Make sure all keywords are valid
     valid_contract_kwargs = ['optimize', 'einsum_call']
     unknown_kwargs = [k for (k, v) in kwargs.items() if k
@@ -785,7 +785,6 @@ def einsum_path(*operands, **kwargs):
 
     else:
         raise TypeError("Did not understand the path: %s" % str(path_type))
-    print("after pass")
     # Hidden option, only einsum should call this
     einsum_call_arg = kwargs.pop("einsum_call", False)
 
@@ -928,7 +927,6 @@ def einsum_path(*operands, **kwargs):
         path_run = (scale_list[n], einsum_str, remaining_str)
         path_print += "\n%4d    %24s %40s" % path_run
 
-    print("result")
     path = ['einsum_path'] + path
     return (path, path_print)
 
@@ -939,7 +937,6 @@ def _einsum_path(module_name, *operands, **kwargs):
     else:
         from ..symbol.numpy import _internal as _npi
     # todo: handle op, sub, op, sub format...
-    print('_einsum_path')
     subscripts = operands[0]
     operands = operands[1:]
     shapes = []

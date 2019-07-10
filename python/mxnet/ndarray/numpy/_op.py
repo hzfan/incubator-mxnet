@@ -1900,5 +1900,4 @@ def einsum(subscripts, *operands, **kwargs):
 def einsum_path(*operands, **kwargs):
     r"""
     """
-    print("it's here")
     return _einsum_path_util._einsum_path('ndarray', *operands, **kwargs)
