@@ -3102,4 +3102,4 @@ def einsum(subscripts, *operands, **kwargs):
 def einsum_path(*operands, **kwargs):
     r"""
     """
-    return _mx_nd_np.einsum(*operands, **kwargs)
+    return _mx_nd_np.einsum_path(*operands, **kwargs)
