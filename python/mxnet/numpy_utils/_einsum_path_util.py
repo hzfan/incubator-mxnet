@@ -944,7 +944,7 @@ def _einsum_path(module_name, *operands, **kwargs):
     operands = operands[1:]
     shapes = []
     for op in operands:
-        sh = _npi.array_shape(op)
+        sh = _npi.shape_array(op)
         sh_t = []
         for i in sh:
             sh_t.append(int(i))
