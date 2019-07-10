@@ -37,11 +37,22 @@ typedef int (PYFUNC)();
 
 struct NumpyCbParam: public dmlc::Parameter<NumpyCbParam> {
   
-  PYFUNC* pyfunc;
+  unsigned long long pyfunc;
   DMLC_DECLARE_PARAMETER(NumpyCbParam) {
     DMLC_DECLARE_FIELD(pyfunc)
     .describe("pyfunc");
   }
+  /*
+  template<typename DType>
+  inline parameter::FieldEntry<DType>& DECLARE(
+      parameter::ParamManagerSingleton<PType> *manager,
+      const std::string &key, DType &ref) { // NOLINT(*)
+    parameter::FieldEntry<DType> *e =
+        new parameter::FieldEntry<DType>();
+    e->Init(key, this->head(), ref);
+    manager->manager.AddEntry(key, e);
+    return *e;
+  } */
 };
 
 template<typename xpu>
