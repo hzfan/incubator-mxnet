@@ -940,7 +940,7 @@ def _einsum_path(module_name, *operands, **kwargs):
     subscript = operands[0]
     operands = operands[1:]
     shapes = []
-    for op in operands
+    for op in operands:
         sh = _npi.array_shape(op)
         sh_t = []
         for i in sh:
