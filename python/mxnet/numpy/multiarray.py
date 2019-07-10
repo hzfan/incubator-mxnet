@@ -50,15 +50,6 @@ __all__ = ['ndarray', 'empty', 'array', 'zeros', 'ones', 'maximum', 'minimum', '
            'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'cb']
 
 
-def pyfunc():
-    return 1
-
-
-@set_module('mxnet.numpy')
-def cb(x):
-    return _npi.cb(x, pyfunc=pyfunc)
-
-
 # This function is copied from ndarray.py since pylint
 # keeps giving false alarm error of undefined-all-variable
 def _new_alloc_handle(shape, ctx, delay_alloc, dtype=mx_real_t):
@@ -2882,3 +2873,11 @@ def arcsin(x, out=None, **kwargs):
     http://www.math.sfu.ca/~cbm/aands/
     """
     return _mx_nd_np.arcsin(x, out=out, **kwargs)
+
+
+@set_module('mxnet.ndarray.numpy')
+def cb(x):
+    def pyfunc():
+        return 1
+    proto = ctypes.CFUNCTYPE(ctypes.c_int)
+    return _npi.cb(x, pyfunc=proto(pyfunc)

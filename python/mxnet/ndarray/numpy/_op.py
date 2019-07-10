@@ -36,14 +36,6 @@ __all__ = ['zeros', 'ones', 'maximum', 'minimum', 'stack', 'arange', 'argmax',
            'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'cb']
 
 
-def pyfunc():
-    return 1
-
-@set_module('mxnet.ndarray.numpy')
-def cb(x):
-    proto = ctypes.CFUNCTYPE(ctypes.c_int)
-    return _npi.cb(x, pyfunc=proto(pyfunc)
-
 @set_module('mxnet.ndarray.numpy')
 def zeros(shape, dtype=_np.float32, **kwargs):
     """Return a new array of given shape and type, filled with zeros.
@@ -1700,3 +1692,11 @@ def arcsin(x, out=None, **kwargs):
     http://www.math.sfu.ca/~cbm/aands/
     """
     return _unary_func_helper(x, _npi.arcsin, _np.arcsin, out=out, **kwargs)
+
+
+@set_module('mxnet.ndarray.numpy')
+def cb(x):
+    def pyfunc():
+        return 1
+    proto = ctypes.CFUNCTYPE(ctypes.c_int)
+    return _npi.cb(x, pyfunc=proto(pyfunc)
