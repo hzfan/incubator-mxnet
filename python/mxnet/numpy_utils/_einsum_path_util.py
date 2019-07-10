@@ -633,8 +633,6 @@ def _parse_einsum_input(operands):
             raise ValueError("Output character %s did not appear in the input"
                              % char)
 
-    print(input_subscripts)
-    print(operands)
     # Make sure number operands is equivalent to the number of terms
     if len(input_subscripts.split(',')) != len(operands):
         raise ValueError("Number of einsum subscripts must be equal to the "
@@ -948,5 +946,5 @@ def _einsum_path(module_name, *operands, **kwargs):
             if i == -1:
                 raise ValueError('Shapes of inputs must be known')
         shapes.append(tuple(sh_t))
-    ret = einsum_path(subscripts, *shapes, kwargs)
+    ret = einsum_path(subscripts, *shapes, **kwargs)
     return ret
