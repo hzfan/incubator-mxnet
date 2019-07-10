@@ -28,7 +28,7 @@ from ...context import current_context
 from ..symbol import Symbol
 from .._internal import _set_np_symbol_class
 from . import _internal as _npi
-from ../../numpy_utils import _einsum_path_util
+from ...numpy_utils import _einsum_path_util
 
 __all__ = ['zeros', 'ones', 'maximum', 'minimum', 'stack', 'concatenate', 'arange', 'argmax',
            'clip', 'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'split', 'swapaxes',
