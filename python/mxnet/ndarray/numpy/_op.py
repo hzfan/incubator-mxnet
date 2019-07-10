@@ -27,12 +27,14 @@ from ...util import _sanity_check_params, set_module
 from ...context import current_context
 from . import _internal as _npi
 from ..ndarray import NDArray
+from ../../numpy_utils import _einsum_path_util
 
 __all__ = ['zeros', 'ones', 'maximum', 'minimum', 'stack', 'arange', 'argmax',
            'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'concatenate',
            'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'linspace',
            'sin', 'cos', 'sinh', 'cosh', 'log10', 'sqrt', 'abs', 'exp', 'arctan', 'sign', 'log',
-           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'einsum']
+           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'einsum',
+           'einsum_path']
 
 
 @set_module('mxnet.ndarray.numpy')
@@ -1892,3 +1894,10 @@ def einsum(subscripts, *operands, **kwargs):
     """
     out = kwargs.get('out', None)
     return _npi.einsum(*operands, subscripts=subscripts, out=out)
+
+
+@set_module('mxnet.ndarray.numpy')
+def einsum_path(*operands, **kwargs):
+    r"""
+    """
+    return _einsum_path_util._einsum_path('ndarray', *operands, **kwargs)

@@ -28,12 +28,13 @@ from ...context import current_context
 from ..symbol import Symbol
 from .._internal import _set_np_symbol_class
 from . import _internal as _npi
+from ../../numpy_utils import _einsum_path_util
 
 __all__ = ['zeros', 'ones', 'maximum', 'minimum', 'stack', 'concatenate', 'arange', 'argmax',
            'clip', 'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'split', 'swapaxes',
            'expand_dims', 'tile', 'linspace', 'sin', 'cos', 'sinh', 'cosh', 'log10', 'sqrt',
            'abs', 'exp', 'arctan', 'sign', 'log', 'degrees', 'log2', 'rint', 'radians', 'mean',
-           'reciprocal', 'square', 'arcsin', 'einsum']
+           'reciprocal', 'square', 'arcsin', 'einsum', 'einsum_path']
 
 
 def _num_outputs(sym):
@@ -2222,3 +2223,10 @@ def einsum(subscripts, *operands, **kwargs):
 
 
 _set_np_symbol_class(_Symbol)
+
+
+@set_module('mxnet.symbol.numpy')
+def einsum_path(*operands, **kwargs):
+    r"""
+    """
+    return _einsum_path_util('symbol', *operands, **kwargs)

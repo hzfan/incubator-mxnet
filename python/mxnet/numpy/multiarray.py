@@ -47,7 +47,8 @@ __all__ = ['ndarray', 'empty', 'array', 'zeros', 'ones', 'maximum', 'minimum', '
            'argmax', 'add', 'subtract', 'multiply', 'divide', 'mod', 'power', 'concatenate',
            'clip', 'split', 'swapaxes', 'expand_dims', 'tile', 'linspace', 'sin', 'cos',
            'sin', 'cos', 'sinh', 'cosh', 'log10', 'sqrt', 'abs', 'exp', 'arctan', 'sign', 'log',
-           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'einsum']
+           'degrees', 'log2', 'rint', 'radians', 'mean', 'reciprocal', 'square', 'arcsin', 'einsum',
+           'einsum_path']
 
 
 # This function is copied from ndarray.py since pylint
@@ -3095,3 +3096,10 @@ def einsum(subscripts, *operands, **kwargs):
     """
     out = kwargs.get('out', None)
     return _mx_nd_np.einsum(subscripts, *operands, out=out)
+
+
+@set_module('mxnet.numpy')
+def einsum_path(*operands, **kwargs):
+    r"""
+    """
+    return _mx_nd_np.einsum(*operands, **kwargs)
