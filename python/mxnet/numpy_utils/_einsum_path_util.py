@@ -932,7 +932,7 @@ def einsum_path(*operands, **kwargs):
 
 
 def _einsum_path(module_name, *operands, **kwargs):
-    if module_name == 'ndarray'
+    if module_name == 'ndarray':
         from ../ndarray/numpy import _internal as _npi
     else:
         from ../symbol/numpy import _internal as _npi
