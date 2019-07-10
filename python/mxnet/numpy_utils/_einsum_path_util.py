@@ -751,6 +751,7 @@ def einsum_path(*operands, **kwargs):
        5               defg,hd->efgh                               efgh->efgh
     """
 
+    print("here")
     # Make sure all keywords are valid
     valid_contract_kwargs = ['optimize', 'einsum_call']
     unknown_kwargs = [k for (k, v) in kwargs.items() if k
@@ -784,7 +785,7 @@ def einsum_path(*operands, **kwargs):
 
     else:
         raise TypeError("Did not understand the path: %s" % str(path_type))
-
+    print("after pass")
     # Hidden option, only einsum should call this
     einsum_call_arg = kwargs.pop("einsum_call", False)
 
@@ -927,6 +928,7 @@ def einsum_path(*operands, **kwargs):
         path_run = (scale_list[n], einsum_str, remaining_str)
         path_print += "\n%4d    %24s %40s" % path_run
 
+    print("result")
     path = ['einsum_path'] + path
     return (path, path_print)
 
