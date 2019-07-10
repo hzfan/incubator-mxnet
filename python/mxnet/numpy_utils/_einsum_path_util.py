@@ -933,9 +933,9 @@ def einsum_path(*operands, **kwargs):
 
 def _einsum_path(module_name, *operands, **kwargs):
     if module_name == 'ndarray':
-        from ../ndarray/numpy import _internal as _npi
+        from ..ndarray.numpy import _internal as _npi
     else:
-        from ../symbol/numpy import _internal as _npi
+        from ..symbol.numpy import _internal as _npi
     # todo: handle op, sub, op, sub format...
     subscript = operands[0]
     operands = operands[1:]
