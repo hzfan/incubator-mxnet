@@ -37,7 +37,7 @@ typedef int (PYFUNC)();
 
 struct NumpyCbParam: public dmlc::Parameter<NumpyCbParam> {
   
-  unsigned long long pyfunc;
+  std::string pyfunc;
   DMLC_DECLARE_PARAMETER(NumpyCbParam) {
     DMLC_DECLARE_FIELD(pyfunc)
     .describe("pyfunc");
@@ -69,6 +69,7 @@ void NumpyCbForward(const nnvm::NodeAttrs& attrs,
   mshadow::Stream<xpu> *s = ctx.get_stream<xpu>();
   const TBlob& out_data = outputs[0];
   const NumpyCbParam& param = nnvm::get<NumpyCbParam>(attrs.parsed);
+  std::cout << param.pyfunc;
   // PYFUNC* f = param.pyfunc;
 
   // MSHADOW_TYPE_SWITCH(out_data.type_flag_, DType, {
