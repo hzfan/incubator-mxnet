@@ -948,3 +948,105 @@ def _einsum_path(module_name, *operands, **kwargs):
         shapes.append(tuple(sh_t))
     ret = einsum_path(subscripts, *shapes, **kwargs)
     return ret
+
+
+def _einsum(module_name, *operands, **kwargs):
+    if module_name == 'ndarray':
+        from ..ndarray.numpy import _internal as _npi
+    else:
+        from ..symbol.numpy import _internal as _npi
+    
+    # For now, dtype, order, casting are not supported
+    # valid_einsum_kwargs = ['out', 'dtype', 'order', 'casting']
+    valid_einsum_kwargs = ['out']
+    einsum_kwargs = {k: v for (k, v) in kwargs.items() if
+                     k in valid_einsum_kwargs}
+
+    # Make sure all keywords are valid
+    valid_contract_kwargs = ['optimize'] + valid_einsum_kwargs
+    unknown_kwargs = [k for (k, v) in kwargs.items() if
+                      k not in valid_contract_kwargs]
+
+    if len(unknown_kwargs):
+        raise TypeError("Did not understand the following kwargs: %s"
+                        % unknown_kwargs)
+
+    # Grab non-einsum kwargs; do not optimize by default.
+    optimize_arg = kwargs.pop('optimize', False)
+
+    # If no optimization, run pure einsum
+    if optimize_arg is False:
+        # todo: handle op, sub, op, sub format...
+        subscripts = operands[0]
+        operands = operands[1:]
+        return _npi.einsum(*operands, subscripts=subscripts,
+                           **einsum_kwargs)
+
+    # Special handeling if out is specified
+    specified_out = False
+    out_array = einsum_kwargs.pop('out', None)
+    if out_array is not None:
+        specified_out = True
+
+    # Build the contraction list and operand
+    contraction_list = _einsum_path(*operands, optimize=optimize_arg,
+                                    einsum_call=True)
+    operands = operands[1:]
+
+    handle_out = False
+
+    # Start contraction loop
+    for num, contraction in enumerate(contraction_list):
+        inds, idx_rm, einsum_str, remaining, blas = contraction
+        tmp_operands = [operands.pop(x) for x in inds]
+
+        # Do we need to deal with the output?
+        handle_out = specified_out and ((num + 1) == len(contraction_list))
+
+        # tensordot is not available now
+        blas = False
+
+        # Call tensordot if still possible
+        if blas:
+            # Checks have already been handled
+            input_str, results_index = einsum_str.split('->')
+            input_left, input_right = input_str.split(',')
+
+            tensor_result = input_left + input_right
+            for s in idx_rm:
+                tensor_result = tensor_result.replace(s, "")
+
+            # Find indices to contract over
+            left_pos, right_pos = [], []
+            for s in sorted(idx_rm):
+                left_pos.append(input_left.find(s))
+                right_pos.append(input_right.find(s))
+
+            # Contract!
+            new_view = tensordot(*tmp_operands, axes=(tuple(left_pos), tuple(right_pos)))
+
+            # Build a new view if needed
+            if (tensor_result != results_index) or handle_out:
+                if handle_out:
+                    einsum_kwargs["out"] = out_array
+                new_view = _npi.einsum(new_view, subscripts=tensor_result + '->' + results_index,
+                                       **einsum_kwargs)
+
+        # Call einsum
+        else:
+            # If out was specified
+            if handle_out:
+                einsum_kwargs["out"] = out_array
+
+            # Do the contraction
+            new_view = _npi.einsum(*tmp_operands, subscripts=einsum_str,
+                                   **einsum_kwargs)
+
+        # Append new items and dereference what we can
+        operands.append(new_view)
+        del tmp_operands, new_view
+
+    if specified_out:
+        return out_array
+    else:
+        return operands[0]
