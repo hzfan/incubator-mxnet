@@ -1351,6 +1351,7 @@ def test_np_einsum_path():
                                     (10, 10),
                                     (10, 10, 10, 10),
                                     (10, 10, 10, 10),], 'greedy'),
+    ]
     for hybridize in [False, True]:
         for config in configs:
             atol = 1e-5
