@@ -1346,11 +1346,11 @@ def test_np_einsum_path():
 
     configs = [
         ('ij,jk,kl->il', [(2, 2), (2, 5), (5, 2)], 'greedy'),
-        ('ea,fb,abcd,gc,hd->efgh', [(10, 10, 10, 10),
-                                    (10, 10, 10, 10),
+        ('ea,fb,abcd,gc,hd->efgh', [(10, 10),
                                     (10, 10),
                                     (10, 10, 10, 10),
-                                    (10, 10, 10, 10),], 'greedy'),
+                                    (10, 10),
+                                    (10, 10),], 'greedy'),
     ]
     for hybridize in [False, True]:
         for config in configs:
