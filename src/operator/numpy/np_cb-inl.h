@@ -55,6 +55,18 @@ struct NumpyCbParam: public dmlc::Parameter<NumpyCbParam> {
   } */
 };
 
+PYFUNC* GetAddr(std::string str) {
+  std::size_t start = str.find("0x");
+  std::size_t end = str.find(">");
+  std::string sub = str.substr(start, end - start);
+  std::stringstream ss;
+  ss << std::hex << sub;
+  unsigned long long addr;
+  ss >> addr;
+  PYFUNC* ret = (PYFUNC*) addr;
+  return ret;
+}
+
 template<typename xpu>
 void NumpyCbForward(const nnvm::NodeAttrs& attrs,
                          const OpContext& ctx,
@@ -69,8 +81,9 @@ void NumpyCbForward(const nnvm::NodeAttrs& attrs,
   mshadow::Stream<xpu> *s = ctx.get_stream<xpu>();
   const TBlob& out_data = outputs[0];
   const NumpyCbParam& param = nnvm::get<NumpyCbParam>(attrs.parsed);
-  std::cout << param.pyfunc;
-  // PYFUNC* f = param.pyfunc;
+  std::cout << "pyfunc = " << param.pyfunc;
+  PYFUNC* f = GetAddr(param.pyfunc);
+  std::cout << "f = " << f();
 
   // MSHADOW_TYPE_SWITCH(out_data.type_flag_, DType, {
   //     out_data.FlatTo1D<xpu, DType>(s) = (*f)();
