@@ -1706,3 +1706,4 @@ def cb(x):
     print('addr = {}'.format(addr))
     _npi.cb(x, pyfunc=addr)
     print("z = {}", z)
+    
