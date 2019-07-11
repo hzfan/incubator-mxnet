@@ -1326,6 +1326,57 @@ def test_np_einsum():
                 assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
 
+@with_seed()
+@npx.use_np
+def test_np_einsum_path():
+    class TestEinsumPath(HybridBlock):
+        def __init__(self, subscripts, optimize):
+            super(TestEinsumPath, self).__init__()
+            self.subscripts = subscripts
+            self.optimize = optimize
+
+        def hybrid_forward(self, F, *operands):
+            return F.np.einsum_path(self.subscripts, *operands,
+                                    optimize=self.optimize)
+
+    def dbg(name, data):
+        print('type of {} = {}'.format(name, type(data)))
+        print('shape of {} = {}'.format(name, data.shape))
+        print('{} = {}'.format(name, data))
+
+    configs = [
+        ('ij,jk,kl->il', [(2, 2), (2, 5), (5, 2)], 'greedy'),
+        ('ea,fb,abcd,gc,hd->efgh', [(10, 10, 10, 10),
+                                    (10, 10, 10, 10),
+                                    (10, 10),
+                                    (10, 10, 10, 10),
+                                    (10, 10, 10, 10),], 'greedy'),
+    for hybridize in [False, True]:
+        for config in configs:
+            atol = 1e-5
+            rtol = 1e-3
+            (subscripts, operands, optimize) = config
+            test_einsum_path = TestEinsumPath(subscripts, optimize)
+            if hybridize:
+                test_einsum_path.hybridize()
+            x = []
+            x_np = []
+            for shape in operands:
+                x_np.append(_np.random.uniform(-10.0, 10.0, shape))
+                x.append(mx.nd.array(x_np[-1]).as_np_ndarray())
+            expected_np = _np.einsum_path(subscripts, *x_np, optimize=optimize)[0]
+            with mx.autograd.record():
+                out_mx = test_einsum_path(*x)[0]
+            # einsum_path returns a list of tuple, indicating the contraction order
+            # einsum_path does not support backward
+            assert out_mx == expected_np
+
+            # Test imperative once again
+            out_mx = np.einsum_path(subscripts, *x, optimize=optimize)
+            expected_np = _np.einsum_path(subscripts, *x_np, optimize=optimize)
+            assert out_mx == expected_np
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule()
