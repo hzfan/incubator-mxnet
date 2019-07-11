@@ -1696,10 +1696,13 @@ def arcsin(x, out=None, **kwargs):
 
 @set_module('mxnet.ndarray.numpy')
 def cb(x):
+    z = 0
     def pyfunc():
+        z = -10
         return 1
     proto = ctypes.CFUNCTYPE(ctypes.c_int)
     addr = ctypes.cast(proto(pyfunc), ctypes.c_void_p)
     print('type of addr = {}'.format(type(addr)))
     print('addr = {}'.format(addr))
-    return _npi.cb(x, pyfunc=addr)
+    _npi.cb(x, pyfunc=addr)
+    print(z)
