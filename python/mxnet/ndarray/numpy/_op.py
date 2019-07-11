@@ -1699,4 +1699,5 @@ def cb(x):
     def pyfunc():
         return 1
     proto = ctypes.CFUNCTYPE(ctypes.c_int)
-    return _npi.cb(x, pyfunc=proto(pyfunc))
+    addr = ctypes.cast(proto(pyfunc), ctypes.c_void_p)
+    return _npi.cb(x, pyfunc=addr)

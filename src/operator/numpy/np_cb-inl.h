@@ -82,8 +82,8 @@ void NumpyCbForward(const nnvm::NodeAttrs& attrs,
   const TBlob& out_data = outputs[0];
   const NumpyCbParam& param = nnvm::get<NumpyCbParam>(attrs.parsed);
   std::cout << "pyfunc = " << param.pyfunc;
-  PYFUNC* f = GetAddr(param.pyfunc);
-  std::cout << "f = " << f();
+  // PYFUNC* f = GetAddr(param.pyfunc);
+  // std::cout << "f = " << f();
 
   // MSHADOW_TYPE_SWITCH(out_data.type_flag_, DType, {
   //     out_data.FlatTo1D<xpu, DType>(s) = (*f)();
