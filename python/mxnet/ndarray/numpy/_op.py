@@ -1705,4 +1705,4 @@ def cb(x):
     print('type of addr = {}'.format(type(addr)))
     print('addr = {}'.format(addr))
     _npi.cb(x, pyfunc=addr)
-    print(z)
+    print("z = {}", z)
