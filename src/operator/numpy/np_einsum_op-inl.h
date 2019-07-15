@@ -798,6 +798,12 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     }
     printf("\n");
   }
+  TShape temp_space_shape[NPY_MAXARGS];
+  size_t temp_space_size = 0;
+  for (int i = 0; i < paths_len - 1; ++i) {
+    temp_space_shape[i] = TShape(paths[i].shape, paths[i].shape + paths[i].ndim)
+    std::cout << temp_space_shape[i] << std::endl;
+  }
   NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
 }
 
