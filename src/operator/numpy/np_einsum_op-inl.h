@@ -827,7 +827,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     for (int i = 0; i < paths_len; ++i) {
       tmp_operands.clear();
       for (int j = 0; j < paths[i].contract_inds_len; ++j) {
-        std::cout << "index = " << operands[paths[i].contract_inds[j]] << std::endl;
+        std::cout << "index = " << paths[i].contract_inds[j] << std::endl;
         tmp_operands.push_back(operands[paths[i].contract_inds[j]]);
       }
       std::cout << "finished" << std::endl;
