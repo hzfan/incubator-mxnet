@@ -958,8 +958,6 @@ def _einsum(module_name, *operands, **kwargs):
                     ("contract_inds_len", ctypes.c_int),
                     ("idx_removed", ctypes.c_char * 1000),
                     ("einsum_str", ctypes.c_char * 1000),
-                    ("input_list", (ctypes.c_char * 32) * 1000),
-                    ("input_list_len", ctypes.c_int),
                     ("do_blas", ctypes.c_int),
                     ("shape", ctypes.c_int * 32),
                     ("ndim", ctypes.c_int)]
@@ -991,9 +989,7 @@ def _einsum(module_name, *operands, **kwargs):
                 ret[i].contract_inds_len = len(path[0])
                 ret[i].idx_removed = (''.join(list(path[1]))).encode('utf-8')
                 ret[i].einsum_str = (path[2]).encode('utf-8')
-                ret[i].input_list[:len(path[3])] = [p.encode('utf-8') for p in path[3]]
                 ret[i].do_blas = path[4]
-                ret[i].input_list_len = len(path[3])
                 ret[i].shape[:len(path[5])] = path[5]
                 ret[i].ndim = len(path[5])
             path_len[0] = len(paths)

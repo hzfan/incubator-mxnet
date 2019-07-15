@@ -746,8 +746,6 @@ struct Path {
   int contract_inds_len;
   char idx_removed[1000];
   char einsum_str[1000];
-  char input_list[NPY_MAXARGS][1000];
-  int input_list_len;
   int do_blas;
   int shape[NPY_MAXDIMS];
   int ndim;
@@ -818,10 +816,6 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     printf("\n");
     printf("%s\n", paths[i].idx_removed);
     printf("%s\n", paths[i].einsum_str);
-    printf("%d\n", paths[i].input_list_len);
-    for (int j = 0; j < paths[i].input_list_len; j++) {
-      printf("%s ", paths[i].input_list[j]);
-    }
     printf("\n");
     printf("%d\n", paths[i].do_blas);
     printf("%d\n", paths[i].ndim);
