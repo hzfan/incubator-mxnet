@@ -2877,7 +2877,7 @@ def arcsin(x, out=None, **kwargs):
 
 
 @set_module('mxnet.numpy')
-def einsum(subscripts, *operands, **kwargs):
+def einsum(*operands, **kwargs):
     r"""
     einsum(subscripts, *operands, out=None)
 
@@ -3094,8 +3094,7 @@ def einsum(subscripts, *operands, **kwargs):
     >>> for iteration in range(500):
     ...     np.einsum('ijk,ilm,njm,nlk,abc->',a,a,a,a,a, optimize=path)
     """
-    out = kwargs.get('out', None)
-    return _mx_nd_np.einsum(subscripts, *operands, out=out)
+    return _mx_nd_np.einsum(*operands, **kwargs)
 
 
 @set_module('mxnet.numpy')

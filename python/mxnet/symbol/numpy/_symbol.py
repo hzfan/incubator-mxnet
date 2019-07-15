@@ -2122,7 +2122,7 @@ def arcsin(x, out=None, **kwargs):
 
 
 @set_module('mxnet.symbol.numpy')
-def einsum(subscripts, *operands, **kwargs):
+def einsum(*operands, **kwargs):
     r"""
     einsum(subscripts, *operands, out=None)
 
@@ -2218,11 +2218,7 @@ def einsum(subscripts, *operands, **kwargs):
     of a new array.  Thus, taking the diagonal as ``np.einsum('ii->i', a)``
     produces a view (changed in version 1.10.0).
     """
-    out = kwargs.get('out', None)
-    return _npi.einsum(*operands, subscripts=subscripts, out=out)
-
-
-_set_np_symbol_class(_Symbol)
+    return _einsum_path_util._einsum(*operands, **kwargs)
 
 
 @set_module('mxnet.symbol.numpy')
@@ -2230,3 +2226,6 @@ def einsum_path(*operands, **kwargs):
     r"""
     """
     return _einsum_path_util._einsum_path('symbol', *operands, **kwargs)
+
+
+_set_np_symbol_class(_Symbol)

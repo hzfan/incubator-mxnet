@@ -888,12 +888,13 @@ def einsum_path(*operands, **kwargs):
         else:
             sort_result = [(dimension_dict[ind], ind) for ind in out_inds]
             idx_result = "".join([x[1] for x in sorted(sort_result)])
+        oshape = [dimension_dict[ind] for ind in idx_result]
 
         input_list.append(idx_result)
         broadcast_indices.append(new_bcast_inds)
         einsum_str = ",".join(tmp_inputs) + "->" + idx_result
 
-        contraction = (contract_inds, idx_removed, einsum_str, input_list[:], do_blas)
+        contraction = (contract_inds, idx_removed, einsum_str, input_list[:], do_blas, oshape)
         contraction_list.append(contraction)
 
     opt_cost = sum(cost_list) + 1
@@ -920,7 +921,7 @@ def einsum_path(*operands, **kwargs):
     path_print += "-" * 74
 
     for n, contraction in enumerate(contraction_list):
-        inds, idx_rm, einsum_str, remaining, blas = contraction
+        inds, idx_rm, einsum_str, remaining, blas, tshape = contraction
         remaining_str = ",".join(remaining) + "->" + output_subscript
         path_run = (scale_list[n], einsum_str, remaining_str)
         path_print += "\n%4d    %24s %40s" % path_run
@@ -950,103 +951,49 @@ def _einsum_path(module_name, *operands, **kwargs):
     return ret
 
 
-def _einsum(module_name, *operands, **kwargs):
-    if module_name == 'ndarray':
-        from ..ndarray.numpy import _internal as _npi
-    else:
-        from ..symbol.numpy import _internal as _npi
-    
-    # For now, dtype, order, casting are not supported
-    # valid_einsum_kwargs = ['out', 'dtype', 'order', 'casting']
-    valid_einsum_kwargs = ['out']
-    einsum_kwargs = {k: v for (k, v) in kwargs.items() if
-                     k in valid_einsum_kwargs}
+def _einsum(*operands, **kwargs):
+    class Path(ctypes.Structure):
+        _fields_ = [("contract_inds", ctypes.c_int * 2),
+                    ("idx_removed", ctypes.c_char_p),
+                    ("einsum_str", ctypes.c_char_p),
+                    ("input_list", ctypes.c_char_p * 32),
+                    ("input_list_len", ctypes.c_int),
+                    ("do_blas", ctypes.c_int),
+                    ("shape", ctypes.c_int * 32),
+                    ("ndim", ctypes.c_int)]
 
-    # Make sure all keywords are valid
-    valid_contract_kwargs = ['optimize'] + valid_einsum_kwargs
-    unknown_kwargs = [k for (k, v) in kwargs.items() if
-                      k not in valid_contract_kwargs]
+    def einsum_path_wrapper(einsum_path):
+        def dbg(name, data):
+            print("type of {} = {}".format(name, type(data)))
+            print("{} = {}".format(name, data))
 
-    if len(unknown_kwargs):
-        raise TypeError("Did not understand the following kwargs: %s"
-                        % unknown_kwargs)
+        def func(subscripts, num_args, ndims, shapes, optimize, einsum_call, ret, path_len):
+            ndims = [ndims[i] for i in range(num_args)]
+            shapes = [[shapes[i][j] for j in range(ndims[i])] for i in range(num_args)]
+            paths = einsum_path(subscripts, *shapes)
+            for i, path in enumerate(paths):
+                ret[i].contract_inds[0] = path[0][0]
+                ret[i].contract_inds[1] = path[0][1]
+                ret[i].idx_removed = ''.join(list(path[1]))
+                ret[i].einsum_str = path[2]
+                ret[i].input_list[:len(path[3])] = path[3]
+                ret[i].do_blas = path[4]
+                ret[i].input_list_len = len(path[3])
+                ret[i].shape[:len(path[5])] = path[5]
+                ret[i].ndim = len(path[5])
+            path_len[0] = len(paths)
 
-    # Grab non-einsum kwargs; do not optimize by default.
-    optimize_arg = kwargs.pop('optimize', False)
+        return func
 
-    # If no optimization, run pure einsum
-    if optimize_arg is False:
-        # todo: handle op, sub, op, sub format...
-        subscripts = operands[0]
-        operands = operands[1:]
-        return _npi.einsum(*operands, subscripts=subscripts,
-                           **einsum_kwargs)
-
-    # Special handeling if out is specified
-    specified_out = False
-    out_array = einsum_kwargs.pop('out', None)
-    if out_array is not None:
-        specified_out = True
-
-    # Build the contraction list and operand
-    contraction_list = _einsum_path(*operands, optimize=optimize_arg,
-                                    einsum_call=True)
+    subscripts = operands[0]
     operands = operands[1:]
-
-    handle_out = False
-
-    # Start contraction loop
-    for num, contraction in enumerate(contraction_list):
-        inds, idx_rm, einsum_str, remaining, blas = contraction
-        tmp_operands = [operands.pop(x) for x in inds]
-
-        # Do we need to deal with the output?
-        handle_out = specified_out and ((num + 1) == len(contraction_list))
-
-        # tensordot is not available now
-        blas = False
-
-        # Call tensordot if still possible
-        if blas:
-            # Checks have already been handled
-            input_str, results_index = einsum_str.split('->')
-            input_left, input_right = input_str.split(',')
-
-            tensor_result = input_left + input_right
-            for s in idx_rm:
-                tensor_result = tensor_result.replace(s, "")
-
-            # Find indices to contract over
-            left_pos, right_pos = [], []
-            for s in sorted(idx_rm):
-                left_pos.append(input_left.find(s))
-                right_pos.append(input_right.find(s))
-
-            # Contract!
-            new_view = tensordot(*tmp_operands, axes=(tuple(left_pos), tuple(right_pos)))
-
-            # Build a new view if needed
-            if (tensor_result != results_index) or handle_out:
-                if handle_out:
-                    einsum_kwargs["out"] = out_array
-                new_view = _npi.einsum(new_view, subscripts=tensor_result + '->' + results_index,
-                                       **einsum_kwargs)
-
-        # Call einsum
-        else:
-            # If out was specified
-            if handle_out:
-                einsum_kwargs["out"] = out_array
-
-            # Do the contraction
-            new_view = _npi.einsum(*tmp_operands, subscripts=einsum_str,
-                                   **einsum_kwargs)
-
-        # Append new items and dereference what we can
-        operands.append(new_view)
-        del tmp_operands, new_view
-
-    if specified_out:
-        return out_array
-    else:
-        return operands[0]
+    out = kwargs.get('out', None)
+    optimize = kwargs.get('optimize', False)
+    if optimize != False:
+        optimize = True
+    proto = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+                             ctypes.POINTER(ctypes.POINTER(ctypes.c_int)), ctypes.c_int, ctypes.c_int,
+                             ctypes.POINTER(Path), ctypes.POINTER(ctypes.c_int))
+    func = proto(einsum_path_wrapper(einsum_path))
+    return _npi.einsum(*operands, subscripts=subscripts, out=out,
+                       optimize=optimize, einsum_path_func=ctypes.cast(func, ctypes.c_void_p))

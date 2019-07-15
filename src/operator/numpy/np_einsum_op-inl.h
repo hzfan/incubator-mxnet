@@ -720,6 +720,7 @@ inline void NumpyEinsumProcess(const std::vector<TBlob>& inputs,
 struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
   int num_args;
   std::string  subscripts;
+  unsigned long long einsum_path_func;
   DMLC_DECLARE_PARAMETER(NumpyEinsumParam) {
     DMLC_DECLARE_FIELD(num_args).set_lower_bound(1)
       .describe("Number of input arrays.");
@@ -729,8 +730,25 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
       " of subscript labels. An implicit (classical Einstein summation) calculation"
       " is performed unless the explicit indicator ‘->’ is included as well as"
       " subscript labels of the precise output form.");
+    DMLC_DECLARE_FIELD(einsum_path_func)
+      .set_default(0)
+      .describe("callback function for einsum_path")
   }
 };
+
+
+struct Path {
+  int contract_inds[2];
+  char* idx_removed;
+  char* einsum_str;
+  char* input_list[NPY_MAXARGS];
+  int input_list_len;
+  int do_blas;
+  int shape[NPY_MAXDIMS];
+  int ndim;
+};
+typedef void (*EinsumPathFunc)(char*, int, int*, int**, int, int, struct Path*, int*);
+
 
 template<typename xpu>
 inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
@@ -743,24 +761,13 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   const NumpyEinsumParam &param = nnvm::get<NumpyEinsumParam>(attrs.parsed);
   int num_args = param.num_args;
   const char* subscripts = param.subscripts.c_str();
+  EinsumPathFunc einsum_path_func = (EinsumPathFunc)param.einsum_path_func;
   Stream<xpu> *s = ctx.get_stream<xpu>();
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
   
-  MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
-    Tensor<xpu, 1, DType> temp_space =
-        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(3), s);
-    Tensor<xpu, 1, DType> temp_space1 = temp_space.Slice(0, 1);
-    Tensor<xpu, 1, DType> temp_space2 = temp_space.Slice(1, 3);
-    temp_space1 = 0;
-    temp_space2 = 1;
-    TBlob tmp1 = temp_space1;
-    TBlob tmp2 = temp_space2;
-    std::cout << "first = " << tmp1.dptr<DType>()[0] << std::endl;
-    std::cout << "second = " << tmp2.dptr<DType>()[0] << " " << tmp2.dptr<DType>()[1] << std::endl;
-  })
   
-  // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+  NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
 }
 
 
