@@ -1319,15 +1319,14 @@ def test_np_einsum():
                     with mx.autograd.record():
                         out_mx = test_einsum(*x)
                     assert out_mx.shape == expected_np.shape
+                    print(out_mx)
                     assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
                     out_mx.backward()
                     for (iop, op) in enumerate(x):
-                        print(get_grad(*x_np)[iop])
                         assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
 
                     # Test imperative once again
                     out_mx = np.einsum(subscripts, *x)
-                    print(out_mx)
                     expected_np = _np.einsum(subscripts, *x_np, optimize=optimize)
                     assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
