@@ -788,26 +788,26 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     shapes[i] = inputs[i].shape_.data();
   }
   einsum_path_func(subscripts, num_args, ndims, shapes, optimize, 1, paths, &paths_len);
-  for (int i = 0; i < paths_len; ++i) {
-    printf("%d\n", paths[i].contract_inds_len);
-    for (int j = 0; j < paths[i].contract_inds_len; ++j) {
-      printf("%d ", paths[i].contract_inds[j]);
-    }
-    printf("\n");
-    printf("%s\n", paths[i].idx_removed);
-    printf("%s\n", paths[i].einsum_str);
-    printf("%d\n", paths[i].input_list_len);
-    for (int j = 0; j < paths[i].input_list_len; j++) {
-      printf("%s ", paths[i].input_list[j]);
-    }
-    printf("\n");
-    printf("%d\n", paths[i].do_blas);
-    printf("%d\n", paths[i].ndim);
-    for (int j = 0; j < paths[i].ndim; j++) {
-      printf("%d ", paths[i].shape[j]);
-    }
-    printf("\n\n");
-  }
+  // for (int i = 0; i < paths_len; ++i) {
+  //   printf("%d\n", paths[i].contract_inds_len);
+  //   for (int j = 0; j < paths[i].contract_inds_len; ++j) {
+  //     printf("%d ", paths[i].contract_inds[j]);
+  //   }
+  //   printf("\n");
+  //   printf("%s\n", paths[i].idx_removed);
+  //   printf("%s\n", paths[i].einsum_str);
+  //   printf("%d\n", paths[i].input_list_len);
+  //   for (int j = 0; j < paths[i].input_list_len; j++) {
+  //     printf("%s ", paths[i].input_list[j]);
+  //   }
+  //   printf("\n");
+  //   printf("%d\n", paths[i].do_blas);
+  //   printf("%d\n", paths[i].ndim);
+  //   for (int j = 0; j < paths[i].ndim; j++) {
+  //     printf("%d ", paths[i].shape[j]);
+  //   }
+  //   printf("\n\n");
+  // }
   TShape temp_space_shape[NPY_MAXARGS];
   size_t temp_space_size = 0;
   std::vector<TBlob> operands(inputs);
