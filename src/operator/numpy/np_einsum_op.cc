@@ -171,7 +171,7 @@ NNVM_REGISTER_OP(_npi_einsum)
 .set_attr<FResourceRequest>("FResourceRequest",
   [](const NodeAttrs& attrs) {
     int num_args = dmlc::get<NumpyEinsumParam>(attrs.parsed).num_args;
-    return std::vector<ResourceRequest>(num_args, ResourceRequest::kTempSpace);
+    return std::vector<ResourceRequest>(32, ResourceRequest::kTempSpace);
   })
 .set_attr<nnvm::FInferType>("FInferType", ElemwiseType<-1, 1>)
 .set_attr<FCompute>("FCompute<cpu>", NumpyEinsumForward<cpu>)
