@@ -743,9 +743,21 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   const NumpyEinsumParam &param = nnvm::get<NumpyEinsumParam>(attrs.parsed);
   int num_args = param.num_args;
   const char* subscripts = param.subscripts.c_str();
+  Stream<xpu> *s = ctx.get_stream<xpu>();
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
-  NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+  
+  MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+    Tensor<xpu, 1, DType> temp_space1 =
+        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(1), s);
+    temp_space1 = 0;
+    Tensor<xpu, 1, DType> temp_space2 =
+        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(2), s);
+    temp_space2 = 1;
+    outputs[0] = temp_space1;
+  })
+  
+  // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
 }
 
 
