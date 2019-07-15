@@ -969,9 +969,19 @@ def _einsum(module_name, *operands, **kwargs):
             print("{} = {}".format(name, data))
 
         def func(subscripts, num_args, ndims, shapes, optimize, einsum_call, ret, path_len):
+            dbg("subscripts", subscripts)
+            dbg("num_args", num_args)
+            dbg("ndims", ndims)
+            dbg("shapes", shapes)
+            dbg("optimize", optimize)
+            dbg("einsum_call", einsum_call)
+            dbg("ret", ret)
             ndims = [ndims[i] for i in range(num_args)]
+            dbg("ndims", ndims)
             shapes = [[shapes[i][j] for j in range(ndims[i])] for i in range(num_args)]
+            dbg("shapes", shapes)
             paths = einsum_path(subscripts, *shapes)
+            dbg("paths", paths)
             for i, path in enumerate(paths):
                 ret[i].contract_inds[0] = path[0][0]
                 ret[i].contract_inds[1] = path[0][1]
