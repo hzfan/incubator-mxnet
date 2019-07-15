@@ -998,7 +998,7 @@ def _einsum(module_name, *operands, **kwargs):
         optimize = True
     optimize = int(optimize)
     proto = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
-                             ctypes.POINTER(ctypes.POINTER(ctypes.c_longlong)), ctypes.c_int,
+                             ctypes.POINTER(ctypes.POINTER(ctypes.c_int)), ctypes.c_int,
                              ctypes.c_int, ctypes.POINTER(Path), ctypes.POINTER(ctypes.c_int))
     func = proto(einsum_path_wrapper(einsum_path))
     return _npi.einsum(*operands, subscripts=subscripts, out=out,

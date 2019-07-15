@@ -751,7 +751,7 @@ struct Path {
   int shape[NPY_MAXDIMS];
   int ndim;
 };
-typedef void (*EinsumPathFunc)(const char*, int, int*, const long long**,
+typedef void (*EinsumPathFunc)(const char*, int, int*, const int**,
                                int, int, struct Path*, int*);
 
 
