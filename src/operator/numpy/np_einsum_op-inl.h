@@ -816,8 +816,6 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   for (int i = 0; i < paths_len - 1; ++i) {
     temp_space_shape[i] = TShape(paths[i].shape, paths[i].shape + paths[i].ndim);
     temp_space_size += temp_space_shape[i].Size();
-    std::cout << "temp space " << i << " : " << temp_space_shape[i] << std::endl;
-    std::cout << "temp space " << i << " dim : " << temp_space_shape[i].ndim() << std::endl;
   }
   MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
     Tensor<xpu, 1, DType> temp_space =
@@ -831,10 +829,8 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     for (int i = 0; i < paths_len; ++i) {
       tmp_operands.clear();
       for (int j = 0; j < paths[i].contract_inds_len; ++j) {
-        std::cout << "index = " << paths[i].contract_inds[j] << std::endl;
         tmp_operands.push_back(operands[paths[i].contract_inds[j]]);
       }
-      std::cout << "finished" << std::endl;
       for (int j = 0; j < paths[i].contract_inds_len; ++j) {
         operands.erase(operands.begin() + paths[i].contract_inds[j]);
       }
