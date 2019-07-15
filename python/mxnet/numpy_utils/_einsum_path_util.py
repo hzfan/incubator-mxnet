@@ -969,7 +969,7 @@ def _einsum(module_name, *operands, **kwargs):
             print("{} = {}".format(name, data))
 
         def func(subscripts, num_args, ndims, shapes, optimize, einsum_call, ret, path_len):
-            subscripts = subscripts.decode('ascii')
+            subscripts = subscripts.decode('utf-8')
             einsum_call = bool(einsum_call)
             optimize = bool(optimize)
             dbg("subscripts", subscripts)
@@ -988,9 +988,7 @@ def _einsum(module_name, *operands, **kwargs):
             for i, path in enumerate(paths):
                 ret[i].contract_inds[0] = path[0][0]
                 ret[i].contract_inds[1] = path[0][1]
-                tmp = ''.join(list(path[1]))
-                print(type(tmp))
-                ret[i].idx_removed = tmp
+                ret[i].idx_removed = (''.join(list(path[1]))).encode('utf-8')
                 ret[i].einsum_str = path[2]
                 ret[i].input_list[:len(path[3])] = path[3]
                 ret[i].do_blas = path[4]
