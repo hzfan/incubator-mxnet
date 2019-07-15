@@ -802,7 +802,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     for (int j = 0; j < paths[i].ndim; j++) {
       printf("%d ", paths[i].shape[j]);
     }
-    printf("\n");
+    printf("\n\n");
   }
   TShape temp_space_shape[NPY_MAXARGS];
   size_t temp_space_size = 0;
@@ -828,6 +828,8 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
       tmp_operands.clear();
       for (int j = 0; j < paths[i].contract_inds_len; ++j) {
         tmp_operands.push_back(operands[paths[i].contract_inds[j]]);
+      }
+      for (int j = 0; j < paths[i].contract_inds_len; ++j) {
         operands.erase(operands.begin() + paths[i].contract_inds[j]);
       }
       bool handle_out = (i == paths_len - 1);
