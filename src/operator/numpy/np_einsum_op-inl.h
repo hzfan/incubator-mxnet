@@ -840,7 +840,8 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
         handle_out ? req : std::vector<OpReqType>{OpReqType::kWriteTo},
         handle_out ? outputs : std::vector<TBlob>{temp_space_vec[i]},
         paths[i].einsum_str, paths[i].contract_inds_len, ctx);
-      operands.push_back(temp_space_vec[i]);
+      if (!handle_out)
+        operands.push_back(temp_space_vec[i]);
     }
     // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
   })
