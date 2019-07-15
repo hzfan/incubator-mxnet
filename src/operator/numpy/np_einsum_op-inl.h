@@ -732,7 +732,7 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
       " subscript labels of the precise output form.");
     DMLC_DECLARE_FIELD(einsum_path_func)
       .set_default(0)
-      .describe("callback function for einsum_path")
+      .describe("callback function for einsum_path");
   }
 };
 
