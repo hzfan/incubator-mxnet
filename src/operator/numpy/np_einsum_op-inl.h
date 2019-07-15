@@ -751,7 +751,8 @@ struct Path {
   int shape[NPY_MAXDIMS];
   int ndim;
 };
-typedef void (*EinsumPathFunc)(char*, int, int*, long long**, int, int, struct Path*, int*);
+typedef void (*EinsumPathFunc)(const char*, int, int*, const long long**,
+                               int, int, struct Path*, int*);
 
 
 template<typename xpu>
@@ -771,7 +772,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
   int ndims[NPY_MAXARGS];
-  long long* shapes[NPY_MAXARGS];
+  const long long* shapes[NPY_MAXARGS];
   Path paths[NPY_MAXARGS];
   int paths_len;
   for (int i = 0; i < num_args; ++i) {
