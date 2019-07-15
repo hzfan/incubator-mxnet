@@ -981,7 +981,7 @@ def _einsum(module_name, *operands, **kwargs):
             dbg("ndims", ndims)
             shapes = [tuple([shapes[i][j] for j in range(ndims[i])]) for i in range(num_args)]
             dbg("shapes", shapes)
-            paths = einsum_path(subscripts, *shapes)
+            paths = einsum_path(subscripts, *shapes, optimize=optimize, einsum_call=einsum_call)
             dbg("paths", paths)
             for i, path in enumerate(paths):
                 ret[i].contract_inds[0] = path[0][0]
