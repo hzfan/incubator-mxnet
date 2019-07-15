@@ -970,6 +970,8 @@ def _einsum(module_name, *operands, **kwargs):
 
         def func(subscripts, num_args, ndims, shapes, optimize, einsum_call, ret, path_len):
             subscripts = subscripts.decode('ascii')
+            einsum_call = bool(einsum_call)
+            optimize = bool(optimize)
             dbg("subscripts", subscripts)
             dbg("num_args", num_args)
             dbg("ndims", ndims)
