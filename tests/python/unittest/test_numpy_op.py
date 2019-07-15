@@ -1298,7 +1298,7 @@ def test_np_einsum():
     for hybridize in [False, True]:
         for dtype in dtypes:
             for config in configs:
-                for optimize in [False, True]:
+                for optimize in [False]:
                     print("optimize = {}".format(optimize))
                     rtol = 1e-0 if dtype == 'float16' else 1e-3
                     atol = 1e-1 if dtype == 'float16' else 1e-5
