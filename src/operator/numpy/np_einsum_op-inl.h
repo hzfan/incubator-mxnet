@@ -788,7 +788,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     shapes[i] = inputs[i].shape_.data();
   }
   einsum_path_func(subscripts, num_args, ndims, shapes, optimize, 1, paths, &paths_len);
-  printf("=========================c++====================\n")
+  printf("=========================c++====================\n");
   for (int i = 0; i < paths_len; ++i) {
     printf("%d\n", paths[i].contract_inds_len);
     for (int j = 0; j < paths[i].contract_inds_len; ++j) {
