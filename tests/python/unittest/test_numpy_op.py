@@ -1327,6 +1327,7 @@ def test_np_einsum():
 
                     # Test imperative once again
                     out_mx = np.einsum(subscripts, *x)
+                    print(out_mx)
                     expected_np = _np.einsum(subscripts, *x_np, optimize=optimize)
                     assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
