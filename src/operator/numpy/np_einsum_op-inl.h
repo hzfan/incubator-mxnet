@@ -719,6 +719,7 @@ inline void NumpyEinsumProcess(const std::vector<TBlob>& inputs,
 
 struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
   int num_args;
+  int optimize;
   std::string  subscripts;
   unsigned long long einsum_path_func;
   DMLC_DECLARE_PARAMETER(NumpyEinsumParam) {
@@ -733,6 +734,9 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
     DMLC_DECLARE_FIELD(einsum_path_func)
       .set_default(0)
       .describe("callback function for einsum_path");
+    DMLC_DECLARE_FIELD(optimize)
+      .set_default(0)
+      .describe("optimization");
   }
 };
 
