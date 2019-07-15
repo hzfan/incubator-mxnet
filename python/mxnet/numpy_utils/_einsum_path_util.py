@@ -979,7 +979,7 @@ def _einsum(module_name, *operands, **kwargs):
             dbg("ret", ret)
             ndims = [ndims[i] for i in range(num_args)]
             dbg("ndims", ndims)
-            shapes = [[shapes[i][j] for j in range(ndims[i])] for i in range(num_args)]
+            shapes = [(shapes[i][j] for j in range(ndims[i])) for i in range(num_args)]
             dbg("shapes", shapes)
             paths = einsum_path(subscripts, *shapes)
             dbg("paths", paths)
