@@ -990,7 +990,7 @@ def _einsum(module_name, *operands, **kwargs):
                 ret[i].contract_inds[1] = path[0][1]
                 ret[i].idx_removed = (''.join(list(path[1]))).encode('utf-8')
                 ret[i].einsum_str = (path[2]).encode('utf-8')
-                ret[i].input_list[:len(path[3])] = path[3]
+                ret[i].input_list[:len(path[3])] = [p.encode('utf-8') for p in path[3]]
                 ret[i].do_blas = path[4]
                 ret[i].input_list_len = len(path[3])
                 ret[i].shape[:len(path[5])] = path[5]
