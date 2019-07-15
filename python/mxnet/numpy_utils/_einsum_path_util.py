@@ -996,6 +996,7 @@ def _einsum(module_name, *operands, **kwargs):
     optimize = kwargs.get('optimize', False)
     if optimize != False:
         optimize = True
+    optimize = int(optimize)
     proto = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int),
                              ctypes.POINTER(ctypes.POINTER(ctypes.c_int)), ctypes.c_int, ctypes.c_int,
                              ctypes.POINTER(Path), ctypes.POINTER(ctypes.c_int))
