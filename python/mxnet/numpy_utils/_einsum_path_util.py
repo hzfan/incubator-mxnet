@@ -956,9 +956,9 @@ def _einsum(module_name, *operands, **kwargs):
     class Path(ctypes.Structure):
         _fields_ = [("contract_inds", ctypes.c_int * 32),
                     ("contract_inds_len", ctypes.c_int),
-                    ("idx_removed", ctypes.c_char_p),
-                    ("einsum_str", ctypes.c_char_p),
-                    ("input_list", ctypes.c_char_p * 32),
+                    ("idx_removed", ctypes.c_char * 1000),
+                    ("einsum_str", ctypes.c_char * 1000),
+                    ("input_list", (ctypes.c_char * 32) * 1000),
                     ("input_list_len", ctypes.c_int),
                     ("do_blas", ctypes.c_int),
                     ("shape", ctypes.c_int * 32),

@@ -744,9 +744,9 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
 struct Path {
   int contract_inds[NPY_MAXARGS];
   int contract_inds_len;
-  char* idx_removed;
-  char* einsum_str;
-  char* input_list[NPY_MAXARGS];
+  char idx_removed[1000];
+  char einsum_str[1000];
+  char input_list[NPY_MAXARGS][1000];
   int input_list_len;
   int do_blas;
   int shape[NPY_MAXDIMS];
