@@ -1248,12 +1248,13 @@ def test_np_trace():
 @npx.use_np
 def test_np_einsum():
     class TestEinsum(HybridBlock):
-        def __init__(self, subscripts):
+        def __init__(self, subscripts, optimize):
             super(TestEinsum, self).__init__()
             self.subscripts = subscripts
+            self.optimize = optimize
 
         def hybrid_forward(self, F, *operands):
-            return F.np.einsum(self.subscripts, *operands)
+            return F.np.einsum(self.subscripts, *operands, optimize=self.optimize)
 
     def dbg(name, data):
         print('type of {} = {}'.format(name, type(data)))
@@ -1297,33 +1298,35 @@ def test_np_einsum():
     for hybridize in [False, True]:
         for dtype in dtypes:
             for config in configs:
-                rtol = 1e-0 if dtype == 'float16' else 1e-3
-                atol = 1e-1 if dtype == 'float16' else 1e-5
-                (subscripts, operands, get_grad) = config
-                test_einsum = TestEinsum(subscripts)
-                if hybridize:
-                    test_einsum.hybridize()
-                x = []
-                x_np = []
-                for shape in operands:
-                    x_np.append(_np.array(_np.random.uniform(-10.0, 10.0, shape),
-                                         dtype=dtype))
-                    x.append(mx.nd.array(x_np[-1]).as_np_ndarray())
-                    x[-1].attach_grad()
-                expected_np = _np.einsum(subscripts, *x_np)
-                with mx.autograd.record():
-                    out_mx = test_einsum(*x)
-                assert out_mx.shape == expected_np.shape
-                assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
-                out_mx.backward()
-                for (iop, op) in enumerate(x):
-                    print(get_grad(*x_np)[iop])
-                    assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
+                for optimize in [False, True]:
+                    printf("optimize = {}".format(optimize))
+                    rtol = 1e-0 if dtype == 'float16' else 1e-3
+                    atol = 1e-1 if dtype == 'float16' else 1e-5
+                    (subscripts, operands, get_grad) = config
+                    test_einsum = TestEinsum(subscripts, optimize)
+                    if hybridize:
+                        test_einsum.hybridize()
+                    x = []
+                    x_np = []
+                    for shape in operands:
+                        x_np.append(_np.array(_np.random.uniform(-10.0, 10.0, shape),
+                                            dtype=dtype))
+                        x.append(mx.nd.array(x_np[-1]).as_np_ndarray())
+                        x[-1].attach_grad()
+                    expected_np = _np.einsum(subscripts, *x_np)
+                    with mx.autograd.record():
+                        out_mx = test_einsum(*x)
+                    assert out_mx.shape == expected_np.shape
+                    assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                    out_mx.backward()
+                    for (iop, op) in enumerate(x):
+                        print(get_grad(*x_np)[iop])
+                        assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
 
-                # Test imperative once again
-                out_mx = np.einsum(subscripts, *x)
-                expected_np = _np.einsum(subscripts, *x_np)
-                assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
+                    # Test imperative once again
+                    out_mx = np.einsum(subscripts, *x)
+                    expected_np = _np.einsum(subscripts, *x_np, optimize=optimize)
+                    assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
 
 
 @with_seed()

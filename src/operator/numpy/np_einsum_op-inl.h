@@ -773,6 +773,10 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   Stream<xpu> *s = ctx.get_stream<xpu>();
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
+  if (optimize == 0) {
+    NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+    return;
+  }
   int ndims[NPY_MAXARGS];
   const long* shapes[NPY_MAXARGS];
   Path paths[NPY_MAXARGS];
@@ -843,7 +847,6 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
       if (!handle_out)
         operands.push_back(temp_space_vec[i]);
     }
-    // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
   })
 }
 
