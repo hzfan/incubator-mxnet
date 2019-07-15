@@ -808,7 +808,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   size_t temp_space_size = 0;
   std::vector<TBlob> operands(inputs.begin(), inputs.end());
   std::vector<TBlob> tmp_operands;
-  std::vector<TBlob> temp_space_vec(path_len - 1);
+  std::vector<TBlob> temp_space_vec(paths_len - 1);
   for (int i = 0; i < paths_len - 1; ++i) {
     temp_space_shape[i] = TShape(paths[i].shape, paths[i].shape + paths[i].ndim);
     temp_space_size += temp_space_shape[i].Size();
