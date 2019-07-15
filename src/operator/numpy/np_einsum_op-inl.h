@@ -748,11 +748,11 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(outputs.size(), 1U);
   
   MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
-    Tensor<xpu, 1, DType> temp_space1 =
-        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(1), s);
+    Tensor<xpu, 1, DType> temp_space =
+        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(3), s);
+    Tensor<xpu, 1, DType> temp_space1 = temp_space.Slice(0, 1);
+    Tensor<xpu, 1, DType> temp_space2 = temp_space.Slice(1, 3);
     temp_space1 = 0;
-    Tensor<xpu, 1, DType> temp_space2 =
-        ctx.requested[1].get_space_typed<xpu, 1, DType>(Shape1(2), s);
     temp_space2 = 1;
     TBlob tmp1 = temp_space1;
     TBlob tmp2 = temp_space2;
