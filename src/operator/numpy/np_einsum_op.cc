@@ -170,7 +170,7 @@ NNVM_REGISTER_OP(_npi_einsum)
 .set_attr<mxnet::FInferShape>("FInferShape", NumpyEinsumShape)
 .set_attr<FResourceRequest>("FResourceRequest",
   [](const NodeAttrs& attrs) {
-    return std::vector<ResourceRequest>{ResourceRequest::kTempSpace};
+    return std::vector<ResourceRequest>(attrs.num_args, ResourceRequest::kTempSpace);
   })
 .set_attr<nnvm::FInferType>("FInferType", ElemwiseType<-1, 1>)
 .set_attr<FCompute>("FCompute<cpu>", NumpyEinsumForward<cpu>)

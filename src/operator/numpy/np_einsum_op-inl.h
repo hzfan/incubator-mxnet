@@ -752,7 +752,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
         ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(1), s);
     temp_space1 = 0;
     Tensor<xpu, 1, DType> temp_space2 =
-        ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(2), s);
+        ctx.requested[1].get_space_typed<xpu, 1, DType>(Shape1(2), s);
     temp_space2 = 1;
     TBlob tmp1 = temp_space1;
     TBlob tmp2 = temp_space2;
