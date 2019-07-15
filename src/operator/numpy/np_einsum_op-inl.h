@@ -820,7 +820,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
       ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(temp_space_size), s);
     size_t begin = 0;
     for (int i = 0; i < paths_len - 1; ++i) {
-      TBlob tblob = TBlob(temp_space.Slice(begin, begin + temp_space_shape[i].Size()))
+      TBlob tblob = TBlob(temp_space.Slice(begin, begin + temp_space_shape[i].Size()));
       temp_space_vec[i] = tblob.reshape(temp_space_shape[i]);
       begin = begin + temp_space_shape[i].Size();
     }
