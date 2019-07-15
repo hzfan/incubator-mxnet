@@ -775,7 +775,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   Path paths[NPY_MAXARGS];
   int paths_len;
   for (int i = 0; i < num_args; ++i) {
-    ndims[i] = inputs[i].shape_.ndim()
+    ndims[i] = inputs[i].shape_.ndim();
   }
   for (int i = 0; i < num_args; ++i) {
     shapes[i] = inputs[i].shape_.data();
