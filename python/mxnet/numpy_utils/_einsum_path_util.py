@@ -969,6 +969,7 @@ def _einsum(module_name, *operands, **kwargs):
             print("{} = {}".format(name, data))
 
         def func(subscripts, num_args, ndims, shapes, optimize, einsum_call, ret, path_len):
+            subscripts = subscripts.decode('ascii')
             dbg("subscripts", subscripts)
             dbg("num_args", num_args)
             dbg("ndims", ndims)
