@@ -1001,4 +1001,4 @@ def _einsum(module_name, *operands, **kwargs):
                              ctypes.POINTER(Path), ctypes.POINTER(ctypes.c_int))
     func = proto(einsum_path_wrapper(einsum_path))
     return _npi.einsum(*operands, subscripts=subscripts, out=out,
-                       optimize=optimize, einsum_path_func=ctypes.cast(func, ctypes.c_void_p))
+                       optimize=optimize, einsum_path_func=ctypes.cast(func, ctypes.c_void_p).value)
