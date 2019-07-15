@@ -2218,7 +2218,7 @@ def einsum(*operands, **kwargs):
     of a new array.  Thus, taking the diagonal as ``np.einsum('ii->i', a)``
     produces a view (changed in version 1.10.0).
     """
-    return _einsum_path_util._einsum(*operands, **kwargs)
+    return _einsum_path_util._einsum('symbol', *operands, **kwargs)
 
 
 @set_module('mxnet.symbol.numpy')

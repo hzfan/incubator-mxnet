@@ -1892,7 +1892,7 @@ def einsum(*operands, **kwargs):
     array([[10., 28., 46., 64.],
            [13., 40., 67., 94.]])
     """
-    return _einsum_path_util._einsum(*operands, **kwargs)
+    return _einsum_path_util._einsum('ndarray', *operands, **kwargs)
 
 
 @set_module('mxnet.ndarray.numpy')

@@ -952,7 +952,7 @@ def _einsum_path(module_name, *operands, **kwargs):
     return ret
 
 
-def _einsum(*operands, **kwargs):
+def _einsum(module_name, *operands, **kwargs):
     class Path(ctypes.Structure):
         _fields_ = [("contract_inds", ctypes.c_int * 2),
                     ("idx_removed", ctypes.c_char_p),
@@ -986,6 +986,10 @@ def _einsum(*operands, **kwargs):
 
         return func
 
+    if module_name == 'ndarray':
+        from ..ndarray.numpy import _internal as _npi
+    else:
+        from ..symbol.numpy import _internal as _npi
     subscripts = operands[0]
     operands = operands[1:]
     out = kwargs.get('out', None)
