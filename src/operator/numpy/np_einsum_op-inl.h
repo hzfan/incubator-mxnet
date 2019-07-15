@@ -815,20 +815,31 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
     std::cout << "temp space " << i << " : " << temp_space_shape[i] << std::endl;
     std::cout << "temp space " << i << " dim : " << temp_space_shape[i].ndim() << std::endl;
   }
-  // MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
-  //   Tensor<xpu, 1, DType> temp_space =
-  //     ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(temp_space_size), s);
-  //   size_t begin = 0;
-  //   for (int i = 0; i < paths_len - 1; ++i) {
-  //     tblob = TBlob(temp_space.Slice(begin, begin + temp_space_shape[i].Size()))
-  //     temp_space_vec[i] = tblob.reshape(temp_space_shape[i]);
-  //     begin = begin + temp_space_shape[i].Size();
-  //   }
-  //   for (int i = 0; i < paths_len; ++i) {
-  //     paths[i].contract_inds
-  //   }
-  //   NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
-  // })
+  MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+    Tensor<xpu, 1, DType> temp_space =
+      ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(temp_space_size), s);
+    size_t begin = 0;
+    for (int i = 0; i < paths_len - 1; ++i) {
+      TBlob tblob = TBlob(temp_space.Slice(begin, begin + temp_space_shape[i].Size()))
+      temp_space_vec[i] = tblob.reshape(temp_space_shape[i]);
+      begin = begin + temp_space_shape[i].Size();
+    }
+    for (int i = 0; i < paths_len; ++i) {
+      tmp_operands.clear();
+      for (int j = 0; j < paths[i].contract_inds_len; ++j) {
+        tmp_operands.push_back(operands[paths[i].contract_inds[j]]);
+        operands.erase(operands.begin() + paths[i].contract_inds[j]);
+      }
+      bool handle_out = (i == paths_len - 1);
+      
+      NumpyEinsumProcess<xpu, 0>(tmp_operands,
+        handle_out ? req : std::vector<OpReqType>{OpReqType::kWriteTo},
+        handle_out ? outputs : std::vector<TBlob>{temp_space_vec[i]},
+        paths[i].einsum_str, paths[i].contract_inds_len, ctx);
+      operands.push_back(temp_space_vec[i]);
+    }
+    // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+  })
 }
 
 
