@@ -755,7 +755,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
         ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(2), s);
     temp_space2 = 1;
     TBlob tmp = temp_space1;
-    std::cout << "first = " << tmp.dptr<DType>()[0] << std::endl;
+    // std::cout << "first = " << tmp.dptr<DType>()[0] << std::endl;
   })
   
   // NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
