@@ -846,7 +846,7 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
         operands.push_back(temp_space_vec[i]);
     }
   })
-  printf("end of calculation\n")
+  printf("end of calculation\n");
 }
 
 
