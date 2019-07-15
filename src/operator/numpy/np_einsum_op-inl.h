@@ -742,7 +742,8 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
 
 
 struct Path {
-  int contract_inds[2];
+  int contract_inds[NPY_MAXARGS];
+  int contract_inds_len;
   char* idx_removed;
   char* einsum_str;
   char* input_list[NPY_MAXARGS];
@@ -751,6 +752,7 @@ struct Path {
   int shape[NPY_MAXDIMS];
   int ndim;
 };
+
 typedef void (*EinsumPathFunc)(const char*, int, int*, const long**,
                                int, int, struct Path*, int*);
 
@@ -783,7 +785,11 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   }
   einsum_path_func(subscripts, num_args, ndims, shapes, optimize, 1, paths, &paths_len);
   for (int i = 0; i < paths_len; ++i) {
-    printf("%d %d\n", paths[i].contract_inds[0], paths[i].contract_inds[1]);
+    printf("%d\n", paths[i].contract_inds_len);
+    for (int j = 0; j < paths[i].contract_inds_len; ++j) {
+      printf("%d ", paths[i].contract_inds[j]);
+    }
+    printf("\n");
     printf("%s\n", paths[i].idx_removed);
     printf("%s\n", paths[i].einsum_str);
     printf("%d\n", paths[i].input_list_len);
@@ -800,12 +806,29 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   }
   TShape temp_space_shape[NPY_MAXARGS];
   size_t temp_space_size = 0;
+  std::vector<TBlob> operands(inputs.begin(), inputs.end());
+  std::vector<TBlob> tmp_operands;
+  std::vector<TBlob> temp_space_vec(path_len - 1);
   for (int i = 0; i < paths_len - 1; ++i) {
     temp_space_shape[i] = TShape(paths[i].shape, paths[i].shape + paths[i].ndim);
+    temp_space_size += temp_space_shape[i].Size();
     std::cout << "temp space " << i << " : " << temp_space_shape[i] << std::endl;
     std::cout << "temp space " << i << " dim : " << temp_space_shape[i].ndim() << std::endl;
   }
-  NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+  // MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+  //   Tensor<xpu, 1, DType> temp_space =
+  //     ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(temp_space_size), s);
+  //   size_t begin = 0;
+  //   for (int i = 0; i < paths_len - 1; ++i) {
+  //     tblob = TBlob(temp_space.Slice(begin, begin + temp_space_shape[i].Size()))
+  //     temp_space_vec[i] = tblob.reshape(temp_space_shape[i]);
+  //     begin = begin + temp_space_shape[i].Size();
+  //   }
+  //   for (int i = 0; i < paths_len; ++i) {
+  //     paths[i].contract_inds
+  //   }
+  //   NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
+  // })
 }
 
 

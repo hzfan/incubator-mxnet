@@ -954,7 +954,8 @@ def _einsum_path(module_name, *operands, **kwargs):
 
 def _einsum(module_name, *operands, **kwargs):
     class Path(ctypes.Structure):
-        _fields_ = [("contract_inds", ctypes.c_int * 2),
+        _fields_ = [("contract_inds", ctypes.c_int * 32),
+                    ("contract_inds_len", ctypes.c_int),
                     ("idx_removed", ctypes.c_char_p),
                     ("einsum_str", ctypes.c_char_p),
                     ("input_list", ctypes.c_char_p * 32),
@@ -986,8 +987,8 @@ def _einsum(module_name, *operands, **kwargs):
             paths = einsum_path(subscripts, *shapes, optimize=optimize, einsum_call=einsum_call)
             dbg("paths", paths)
             for i, path in enumerate(paths):
-                ret[i].contract_inds[0] = path[0][0]
-                ret[i].contract_inds[1] = path[0][1]
+                ret[i].contract_inds[:len(path[0])] = path[0]
+                ret[i].contract_inds_len = len(path[0])
                 ret[i].idx_removed = (''.join(list(path[1]))).encode('utf-8')
                 ret[i].einsum_str = (path[2]).encode('utf-8')
                 ret[i].input_list[:len(path[3])] = [p.encode('utf-8') for p in path[3]]
