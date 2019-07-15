@@ -1299,7 +1299,7 @@ def test_np_einsum():
         for dtype in dtypes:
             for config in configs:
                 for optimize in [False, True]:
-                    printf("optimize = {}".format(optimize))
+                    print("optimize = {}".format(optimize))
                     rtol = 1e-0 if dtype == 'float16' else 1e-3
                     atol = 1e-1 if dtype == 'float16' else 1e-5
                     (subscripts, operands, get_grad) = config
