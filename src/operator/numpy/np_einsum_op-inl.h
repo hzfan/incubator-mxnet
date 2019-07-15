@@ -751,7 +751,7 @@ struct Path {
   int shape[NPY_MAXDIMS];
   int ndim;
 };
-typedef void (*EinsumPathFunc)(char*, int, int*, int**, int, int, struct Path*, int*);
+typedef void (*EinsumPathFunc)(char*, int, int*, long long**, int, int, struct Path*, int*);
 
 
 template<typename xpu>
@@ -764,13 +764,39 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   using namespace mxnet_op;
   const NumpyEinsumParam &param = nnvm::get<NumpyEinsumParam>(attrs.parsed);
   int num_args = param.num_args;
+  int optimize = param.optimize;
   const char* subscripts = param.subscripts.c_str();
   EinsumPathFunc einsum_path_func = (EinsumPathFunc)param.einsum_path_func;
   Stream<xpu> *s = ctx.get_stream<xpu>();
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
-  
-  
+  int ndims[NPY_MAXARGS];
+  long long* shapes[NPY_MAXARGS];
+  Path paths[NPY_MAXARGS];
+  int paths_len;
+  for (int i = 0; i < num_args; ++i) {
+    ndims[i] = inputs[i].shape_.ndim()
+  }
+  for (int i = 0; i < num_args; ++i) {
+    shapes[i] = inputs[i].shape_.data();
+  }
+  einsum_path_func(subscripts, num_args, ndims, shapes, optimize, 1, paths, &paths_len);
+  for (int i = 0; i < paths_len; ++i) {
+    printf("%d %d\n", paths[i].contract_inds[0], paths[i].contract_inds[1]);
+    printf("%s\n", paths[i].idx_removed);
+    printf("%s\n", paths[i].einsum_str);
+    printf("%d\n", paths[i].input_list_len);
+    for (int j = 0; j < paths[i].input_list_len; j++) {
+      printf("%s ", paths[i].input_list[j]);
+    }
+    printf("\n");
+    printf("%d\n", paths[i].do_blas);
+    printf("%d\n", paths[i].ndim);
+    for (int j = 0; j < paths[i].ndim; j++) {
+      printf("%d ", paths[i].shape[j]);
+    }
+    printf("\n");
+  }
   NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
 }
 
