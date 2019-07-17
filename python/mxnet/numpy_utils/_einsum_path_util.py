@@ -1030,6 +1030,7 @@ def _einsum(module_name, *operands, **kwargs):
         # Do we need to deal with the output?
         handle_out = ((num + 1) == len(contraction_list))
 
+        print("blas = {}".format(blas))
         # Call tensordot if still possible
         if blas:
             # Checks have already been handled
