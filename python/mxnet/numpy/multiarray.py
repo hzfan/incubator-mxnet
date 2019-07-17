@@ -653,7 +653,7 @@ class ndarray(NDArray):
         check_call(_LIB.MXNDArrayReshapeEx(self.handle,
                                            len(newshape),
                                            c_array(ctypes.c_int64, newshape),
-                                           ctypes.c_char(order[0]),
+                                           ctypes.c_char(ord(order[0])),
                                            ctypes.byref(handle)))
         return self.__class__(handle=handle, writable=self.writable)
 
