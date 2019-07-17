@@ -1030,9 +1030,37 @@ def _einsum(module_name, *operands, **kwargs):
         # Do we need to deal with the output?
         handle_out = ((num + 1) == len(contraction_list))
 
-        cur_out = out if handle_out else None
-        # Do the contraction
-        new_view = _npi.einsum(*tmp_operands, subscripts=einsum_str, out=cur_out)
+        # Call tensordot if still possible
+        if blas:
+            # Checks have already been handled
+            input_str, results_index = einsum_str.split('->')
+            input_left, input_right = input_str.split(',')
+
+            tensor_result = input_left + input_right
+            for s in idx_rm:
+                tensor_result = tensor_result.replace(s, "")
+
+            # Find indices to contract over
+            left_pos, right_pos = [], []
+            for s in sorted(idx_rm):
+                left_pos.append(input_left.find(s))
+                right_pos.append(input_right.find(s))
+
+            # Contract!
+            new_view = _npi.tensordot(*tmp_operands, tuple(left_pos), tuple(right_pos))
+
+            # Build a new view if needed
+            if (tensor_result != results_index) or handle_out:
+                cur_out = out if handle_out else None
+                new_view = _npi.einsum(new_view,
+                                       subscripts=tensor_result + '->' + results_index,
+                                       out=cur_out)
+        
+        # Call einsum
+        else:
+            cur_out = out if handle_out else None
+            # Do the contraction
+            new_view = _npi.einsum(*tmp_operands, subscripts=einsum_str, out=cur_out)
 
         # Append new items and dereference what we can
         operands.append(new_view)
