@@ -1567,7 +1567,7 @@ def test_np_trace():
 
 
 @with_seed()
-@npx.use_np
+@use_np
 def test_np_vstack():
     class TestVstack(HybridBlock):
         def __init__(self):
