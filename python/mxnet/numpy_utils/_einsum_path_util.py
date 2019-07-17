@@ -1048,8 +1048,9 @@ def _einsum(module_name, *operands, **kwargs):
                 right_pos.append(input_right.find(s))
 
             # Contract!
-            print("left = {}".format(left_pos))
-            print("right = {}".format(right_pos))
+            print("operands = {}".format(*tmp_operands))
+            print("left = {}".format(tuple(left_pos)))
+            print("right = {}".format(tuple(right_pos)))
             new_view = _npi.tensordot(*tmp_operands, tuple(left_pos), tuple(right_pos))
 
             # Build a new view if needed
