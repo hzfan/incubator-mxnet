@@ -37,7 +37,7 @@ from ..ndarray import NDArray, _DTYPE_NP_TO_MX, _GRAD_REQ_MAP
 from ..ndarray._internal import _set_np_ndarray_class
 from . import _op as _mx_np_op
 from ..base import check_call, _LIB, NDArrayHandle
-from ..base import mx_real_t, c_array_buf, mx_uint, numeric_types, integer_types
+from ..base import mx_real_t, c_array_buf, c_array, mx_uint, numeric_types, integer_types
 from ..util import _sanity_check_params, set_module
 from ..context import current_context
 from ..ndarray import numpy as _mx_nd_np
