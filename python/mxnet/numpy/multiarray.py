@@ -646,9 +646,16 @@ class ndarray(NDArray):
         if len(args) == 0:
             raise TypeError('reshape() takes exactly 1 argument (0 given)')
         if len(args) == 1 and isinstance(args[0], tuple):
-            return _mx_np_op.reshape(self, newshape=args[0], order=order)
+            newshape = args[0]
         else:
-            return _mx_np_op.reshape(self, newshape=args, order=order)
+            newshape = args
+        handle = NDArrayHandle()
+        check_call(_LIB.MXNDArrayReshapeEx(self.handle,
+                                           len(newshape),
+                                           c_array(ctypes.c_int64, newshape),
+                                           ctypes.c_char(order),
+                                           ctypes.byref(handle)))
+        return self.__class__(handle=handle, writable=self.writable)
 
     def reshape_like(self, *args, **kwargs):
         """Convenience fluent method for :py:func:`reshape_like`.

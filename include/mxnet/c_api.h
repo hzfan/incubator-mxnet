@@ -767,6 +767,21 @@ MXNET_DLL int MXNDArrayReshape64(NDArrayHandle handle,
                                  dim_t *dims,
                                  bool reverse,
                                  NDArrayHandle *out);
+
+/*!
+ * \brief Reshape the NDArray.
+ * \param handle the handle to the narray
+ * \param ndim number of dimensions of new shape
+ * \param dims new shape
+ * \param order the memory layout
+ * \param out the NDArrayHandle of reshaped NDArray
+ * \return 0 when success, -1 when failure happens
+ */
+MXNET_DLL int MXNDArrayReshapeEx(NDArrayHandle handle,
+                                 int ndim,
+                                 dim_t *dims,
+                                 char order,
+                                 NDArrayHandle *out);
 /*!
  * \brief DEPRECATED. Use MXNDArrayGetShapeEx instead.
  * get the shape of the array

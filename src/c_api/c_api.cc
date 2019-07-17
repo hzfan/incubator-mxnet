@@ -482,6 +482,43 @@ MXNET_DLL int MXNDArrayReshape64(NDArrayHandle handle,
   API_END_HANDLE_ERROR(delete ptr);
 }
 
+MXNET_DLL int MXNDArrayReshapeEx(NDArrayHandle handle,
+                                 int ndim,
+                                 dim_t *dims,
+                                 char order,
+                                 NDArrayHandle *out) {
+  NDArray *ptr = new NDArray();
+  API_BEGIN();
+  NDArray *arr = static_cast<NDArray*>(handle);
+  mxnet::TShape shape(dims, dims+ndim);
+  int pos = -1, size = 1;
+  for (int i = 0; i < ndim; ++i) {
+    if (dims[i] == -1) {
+      CHECK_EQ(pos, -1)
+        << "Invalid new shape " << shape
+        << ": more than one dimensions are -1";
+      pos = i;
+    }
+    else {
+      size = size * dims[i];
+    }
+  }
+  if (pos == -1) {
+    CHECK_EQ(size, arr->shape().Size()) << "Cannot reshape array of size "
+                                        << arr->shape().Size() << " into shape " << shape;
+  }
+  else {
+    CHECK_NE(size, 0) << "Cannot reshape array of size "
+                      << arr->shape().Size() << " into shape " << shape;
+    CHECK_EQ(arr->shape().Size() % size, 0) << "Cannot reshape array of size "
+                                            << arr->shape().Size() << " into shape " << shape;
+    shape[pos] = arr->shape().Size() / size;
+  }
+  *ptr = arr->ReshapeWithRecord(shape);
+  *out = ptr;
+  API_END_HANDLE_ERROR(delete ptr);
+}
+
 int MXNDArrayGetStorageType(NDArrayHandle handle,
                      int *out_storage_type) {
   API_BEGIN();
