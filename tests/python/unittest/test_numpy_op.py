@@ -1631,6 +1631,8 @@ def test_np_einsum():
                     atol = 1e-1 if dtype == 'float16' else 1e-5
                     (subscripts, operands, get_grad) = config
                     print("subscripts = {}".format(subscripts))
+                    print("hybridize = {}".format(hybridize))
+                    print("dtype = {}".format(dtype))
                     print("operands = {}".format(operands))
                     print("optimize = {}".format(optimize))
                     test_einsum = TestEinsum(subscripts, optimize)
