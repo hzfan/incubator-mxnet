@@ -1630,6 +1630,8 @@ def test_np_einsum():
                     rtol = 1e-0 if dtype == 'float16' else 1e-3
                     atol = 1e-1 if dtype == 'float16' else 1e-5
                     (subscripts, operands, get_grad) = config
+                    print("subscripts = {}".format(subscripts))
+                    print("operands = {}".format(operands))
                     test_einsum = TestEinsum(subscripts, optimize)
                     if hybridize:
                         test_einsum.hybridize()
