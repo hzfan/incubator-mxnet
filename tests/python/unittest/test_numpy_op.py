@@ -1632,6 +1632,7 @@ def test_np_einsum():
                     (subscripts, operands, get_grad) = config
                     print("subscripts = {}".format(subscripts))
                     print("operands = {}".format(operands))
+                    print("optimize = {}".format(optimize))
                     test_einsum = TestEinsum(subscripts, optimize)
                     if hybridize:
                         test_einsum.hybridize()
