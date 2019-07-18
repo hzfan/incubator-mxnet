@@ -693,7 +693,7 @@ def _parse_einsum_input(operands):
         raise ValueError("Number of einsum subscripts must be equal to the "
                          "number of operands.")
 
-    return (input_subscripts, output_subscript, operands)
+    return (input_subscripts, output_subscript)
 
 
 def einsum_path(*operands, **kwargs):
@@ -842,7 +842,8 @@ def einsum_path(*operands, **kwargs):
     einsum_call_arg = kwargs.pop("einsum_call", False)
 
     # Python side parsing
-    input_subscripts, output_subscript, operands = _parse_einsum_input(operands)
+    input_subscripts, output_subscript = _parse_einsum_input(operands)
+    operands = operands[1:]
 
     # Build a few useful list and sets
     input_list = input_subscripts.split(',')
