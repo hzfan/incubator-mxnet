@@ -61,6 +61,7 @@
 #include <mxnet/operator_util.h>
 #include <string>
 #include <vector>
+#include "./np_einsum_path_op-inl.h"
 #include "../../common/static_array.h"
 #include "../mxnet_op.h"
 #include "../operator_common.h"
@@ -745,6 +746,13 @@ struct NumpyEinsumParam: public dmlc::Parameter<NumpyEinsumParam> {
   }
 };
 
+
+std::vector<Step> einsum_path(const std::string& subscripts,
+                              const std::vector<TBlob>& operands,
+                              bool optimize,
+                              std::vector<std::vector<int> >* ret_path,
+                              std::string* ret_string_repr) 
+
 template<typename xpu>
 inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
                                const OpContext& ctx,
@@ -758,6 +766,11 @@ inline void NumpyEinsumForward(const nnvm::NodeAttrs& attrs,
   const char* subscripts = param.subscripts.c_str();
   CHECK_EQ(inputs.size(), num_args);
   CHECK_EQ(outputs.size(), 1U);
+  Step ret;
+  std::vector<std::vector<int> > path;
+  std::string string_repr;
+  ret = einsum_path(param.subscripts, inputs, true, &path, &string_repr);
+  std::cout << "path:" << std::endl << string_repr << std::endl;
   NumpyEinsumProcess<xpu, 0>(inputs, req, outputs, subscripts, num_args, ctx);
 }
 

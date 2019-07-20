@@ -81,10 +81,10 @@ def _flop_count(idx_contraction, inner, num_terms, size_dictionary):
     --------
 
     >>> _flop_count('abc', False, 1, {'a': 2, 'b':3, 'c':5})
-    90
+    30
 
     >>> _flop_count('abc', True, 2, {'a': 2, 'b':3, 'c':5})
-    270
+    60
 
     """
 
@@ -574,8 +574,6 @@ def _parse_einsum_input(operands):
         Parsed input strings
     output_string : str
         Parsed output string
-    operands : list of array_like
-        The operands to use in the numpy contraction
 
     Examples
     --------
