@@ -1637,6 +1637,38 @@ def test_np_einsum():
                     assert_almost_equal(out_mx.asnumpy(), expected_np, rtol=rtol, atol=atol)
                     for (iop, op) in enumerate(x):
                         assert_almost_equal(op.grad.asnumpy(), get_grad(*x_np)[iop], rtol=rtol, atol=atol)
+    configs = [
+        (('ij,jk,kl->il'), [(2, 2), (2, 5), (5, 2)]),
+        (('ea,fb,abcd,gc,hd->efgh'), [(10, 10), (10, 10), (10, 10, 10, 10), (10, 10), (10, 10)])
+    ]
+    dtypes = ['int32', 'float32', 'float64']
+    for hybridize in [False, True]:
+        for dtype in dtypes:
+            for config in configs:
+                (subscripts, operands) = config
+                rtol = 1e-2
+                atol = 1e-2
+                grad = []
+                x = []
+                x_np = []
+                for shape in operands:
+                    x_np.append(_np.array(_np.random.uniform(-1.0, 1.0, shape),
+                                        dtype=dtype))
+                    x.append(np.array(x_np[-1], dtype=dtype))
+                    x[-1].attach_grad()
+                for optimize in [False, True]:
+                    test_einsum = TestEinsum(subscripts, optimize)
+                    if hybridize:
+                        test_einsum.hybridize()
+                    with mx.autograd.record():
+                        out_mx = test_einsum(*x)
+                    out_mx.backward()
+                    cur_grad = []
+                    for (iop, op) in enumerate(x):
+                        cur_grad.append(op.grad.asnumpy())
+                    grad.append(cur_grad)
+                for (iop, op) in enumerate(grad[0]):
+                    assert_almost_equal(grad[0][iop], grad[1][iop], rtol=rtol, atol=atol)
 
 
 if __name__ == '__main__':
