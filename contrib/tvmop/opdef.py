@@ -56,6 +56,8 @@ class OpDef:
         #   {"ldtype": "int32", "rdtype": "float16"},
         #   {"ldtype": "int32", "rdtype": "int16"},
         # ]
+        self.ordered = kwargs.pop('ordered', [])
+        self.kwargs_valid = kwargs.pop('kwargs_valid', lambda **kwargs: True)
         args = [k for k in kwargs]
         values = [kwargs[k] if isinstance(kwargs[k], (list, tuple)) else [kwargs[k]]
                   for k in args]
@@ -72,10 +74,15 @@ class OpDef:
 
     def invoke_all(self):
         for each_kwargs in self.arg_combination:
-            yield self.func(**each_kwargs)
+            if (self.kwargs_valid(**each_kwargs)):
+                sch, args = self.func(**each_kwargs)
+                name = self.name \
+                    + ''.join(["{}_{}".format(key, each_kwargs[key]) for key in self.ordered]) \
+                    + ''.join(["%s_%d" % (arg.dtype, len(arg.shape)) for arg in args])
+                yield sch, args, name
 
-    def get_op_name(self, args):
-        return self.name + ''.join(["%s_%d" % (arg.dtype, len(arg.shape)) for arg in args])
+    # def get_op_name(self, args):
+    #     return self.name + ''.join(["%s_%d" % (arg.dtype, len(arg.shape)) for arg in args])
 
     def get_binds(self, args):
         if self.auto_broadcast:

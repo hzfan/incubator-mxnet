@@ -17,6 +17,6 @@
 
 # coding: utf-8
 from .opdef import defop
-from .utils import AllTypes, RealTypes
+from .utils import AllTypes, AllTypesButHalf, RealTypes
 
 from . import basic
