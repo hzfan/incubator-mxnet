@@ -31,12 +31,12 @@ def compute_add(dtype, ndim):
        dtype=AllTypes, ndim=list(range(1, 6)))
 def vadd(dtype, ndim):
     s, A, B, C = compute_add(dtype, ndim)
-    bx, tx = s[C].split(C.op.axis[0], nparts=16)
-    s[C].parallel(bx)
-    # axes = [axis for axis in C.op.axis]
-    # fused = s[C].fuse(*axes)
-    # bx, tx = s[C].split(fused, nparts=16)
+    # bx, tx = s[C].split(C.op.axis[0], nparts=16)
     # s[C].parallel(bx)
+    axes = [axis for axis in C.op.axis]
+    fused = s[C].fuse(*axes)
+    s[C].parallel(fused)
+    print(tvm.lower(s, [A, B, C], simple_mode=True))
     return s, [A, B, C]
 
 @defop(name="cuda_vadd", target="cuda", auto_broadcast=True,
