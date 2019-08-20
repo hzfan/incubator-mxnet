@@ -43,7 +43,7 @@ def test_add():
     print("np add:")
     a = np.ones(1048576).reshape(1024, 1024)
     b = np.ones(1024).reshape(1, 1024)
-    cost = measure_cost(500, np.add, [a, b])
+    cost = measure_cost(500, np.add, a, b)
     print("cost: {} ms".format(cost * 1000))
 
 
