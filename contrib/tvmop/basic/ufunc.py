@@ -31,6 +31,7 @@ def compute_add(dtype, ndim):
        dtype=AllTypes, ndim=list(range(1, 6)))
 def vadd(dtype, ndim):
     s, A, B, C = compute_add(dtype, ndim)
+    s[C].parallel(C.op.axis[0], nparts=16)
     # axes = [axis for axis in C.op.axis]
     # fused = s[C].fuse(*axes)
     # bx, tx = s[C].split(fused, nparts=16)
