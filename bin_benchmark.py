@@ -37,7 +37,7 @@ def test_add():
     print("tvm add:")
     a = mx.nd.ones(1048576).reshape(1024, 1024)
     b = mx.nd.ones(1024).reshape(1, 1024)
-    cost = measure_cost(500, mx.nd.contrib.tvm_vadd, [a, b])
+    cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
     print("cost: {} ms".format(cost * 1000))
     # np add
     print("np add:")
