@@ -67,7 +67,7 @@ def compute_add_1024(dtype, ndim):
 
 
 @defop(name="vadd_1024", target="cpu", auto_broadcast=True,
-       dtype=['float32']], ndim=[2])
+       dtype=['float32'], ndim=[2])
 def vadd_1024(dtype, ndim):
     print("====================vadd16===========================")
     print("dtype = {}".format(dtype))
