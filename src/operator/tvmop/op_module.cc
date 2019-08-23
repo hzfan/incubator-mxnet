@@ -77,6 +77,7 @@ PackedFunc GetFunction(const std::shared_ptr<Module> &module,
     }
     func_name << "_" << arg.shape_.ndim();
   }
+  std::cout << "func_name = " << func_name << std::endl;
   return module->GetFunction(func_name.str(), false);
 }
 
