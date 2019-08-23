@@ -62,7 +62,7 @@ NNVM_REGISTER_OP(_contrib_tvm_vadd)
     .set_attr<mxnet::FCompute>("FCompute<cpu>", mxnet::op::TVMBroadcastCompute<func_vadd_cpu>);
 
 
-static constexpr char func_vadd_cpu_1024[] = "vadd_2014";
+static constexpr char func_vadd_cpu_1024[] = "vadd_1024";
 NNVM_REGISTER_OP(_contrib_tvm_vadd_1024)
     .set_num_inputs(2)
     .set_num_outputs(1)
