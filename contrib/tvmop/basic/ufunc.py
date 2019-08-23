@@ -28,7 +28,7 @@ def compute_add(dtype, ndim):
     return s, A, B, C
 
 @defop(name="vadd", target="cpu", auto_broadcast=True,
-       dtype=AllTypes, ndim=list(range(1, 6)))
+       dtype=['float32'], ndim=[2]])
 def vadd(dtype, ndim):
     print("====================vadd=============================")
     print("dtype = {}".format(dtype))
@@ -67,7 +67,7 @@ def compute_add_1024(dtype, ndim):
 
 
 @defop(name="vadd_1024", target="cpu", auto_broadcast=True,
-       dtype=AllTypes, ndim=list(range(1, 6)))
+       dtype=['float32']], ndim=[2])
 def vadd_1024(dtype, ndim):
     print("====================vadd16===========================")
     print("dtype = {}".format(dtype))
