@@ -43,8 +43,8 @@ def test_add():
     print("cost: {} ms".format(cost * 1000))
     # np add
     print("np add:")
-    a = np.random.uniform(shape=(n, m))
-    b = np.random.uniform(shape=(n, m))
+    a = np.random.uniform(size=(n, m))
+    b = np.random.uniform(size=(n, m))
     cost = measure_cost(50000, np.add, a, b)
     print("cost: {} ms".format(cost * 1000))
 
