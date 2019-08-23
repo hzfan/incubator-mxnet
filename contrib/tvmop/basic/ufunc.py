@@ -58,9 +58,9 @@ def vadd_gpu(dtype, ndim):
 
 
 def compute_add_1024(dtype, ndim):
-    A = tvm.placeholder([128 for _ in range(ndim)], name='A', dtype=dtype)
-    B = tvm.placeholder([128 for _ in range(ndim)], name='B', dtype=dtype)
-    C = tvm.compute([128 for _ in range(ndim)],
+    A = tvm.placeholder([256 for _ in range(ndim)], name='A', dtype=dtype)
+    B = tvm.placeholder([256 for _ in range(ndim)], name='B', dtype=dtype)
+    C = tvm.compute([256 for _ in range(ndim)],
                     lambda *index: A[index] + B[index], name='C')
     s = tvm.create_schedule(C.op)
     return s, A, B, C
