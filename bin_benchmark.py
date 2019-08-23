@@ -34,15 +34,17 @@ def measure_cost(repeat, func_name, *args, **kwargs):
 
 def test_add():
     # tvm add
+    n = 1024
+    m = 1024
     print("tvm add:")
-    a = mx.nd.ones(1048576).reshape(1024, 1024)
-    b = mx.nd.ones(1024).reshape(1, 1024)
+    a = mx.nd.ones(n * m).reshape(n, m)
+    b = mx.nd.ones(m).reshape(1, m)
     cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
     print("cost: {} ms".format(cost * 1000))
     # np add
     print("np add:")
-    a = np.ones(1048576).reshape(1024, 1024)
-    b = np.ones(1024).reshape(1, 1024)
+    a = np.ones(n * m).reshape(n, m)
+    b = np.ones(m).reshape(1, m)
     cost = measure_cost(500, np.add, a, b)
     print("cost: {} ms".format(cost * 1000))
 
