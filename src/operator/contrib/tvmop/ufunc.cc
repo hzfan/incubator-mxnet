@@ -61,6 +61,16 @@ NNVM_REGISTER_OP(_contrib_tvm_vadd)
 #endif  // MXNET_USE_CUDA
     .set_attr<mxnet::FCompute>("FCompute<cpu>", mxnet::op::TVMBroadcastCompute<func_vadd_cpu>);
 
+
+static constexpr char func_vadd_cpu_1024[] = "vadd_2014";
+NNVM_REGISTER_OP(_contrib_tvm_vadd)
+    .set_num_inputs(2)
+    .set_num_outputs(1)
+    .add_argument("a", "NDArray-or-Symbol", "first input")
+    .add_argument("b", "NDArray-or-Symbol", "second input")
+    .set_attr<mxnet::FInferShape>("FInferShape", BinaryBroadcastShape)
+    .set_attr<nnvm::FInferType>("FInferType", mxnet::op::ElemwiseType<2, 1>)
+    .set_attr<mxnet::FCompute>("FCompute<cpu>", mxnet::op::TVMBroadcastCompute<func_vadd_cpu_1024>);
 }  // namespace op
 }  // namespace mxnet
 #endif  // MXNET_USE_TVM_OP

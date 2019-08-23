@@ -30,7 +30,7 @@ def compute_add(dtype, ndim):
 @defop(name="vadd", target="cpu", auto_broadcast=True,
        dtype=AllTypes, ndim=list(range(1, 6)))
 def vadd(dtype, ndim):
-    print("=======================================================")
+    print("====================vadd=============================")
     print("dtype = {}".format(dtype))
     print("ndim = {}".format(ndim))
     s, A, B, C = compute_add(dtype, ndim)
@@ -43,6 +43,7 @@ def vadd(dtype, ndim):
     print(tvm.lower(s, [A, B, C], simple_mode=True))
     return s, [A, B, C]
 
+
 @defop(name="cuda_vadd", target="cuda", auto_broadcast=True,
        dtype=["float32", "float64"], ndim=list(range(1, 6)))
 def vadd_gpu(dtype, ndim):
@@ -53,4 +54,30 @@ def vadd_gpu(dtype, ndim):
     bx, tx = s[C].split(fused, factor=64)
     s[C].bind(bx, tvm.thread_axis("blockIdx.x"))
     s[C].bind(tx, tvm.thread_axis("threadIdx.x"))
+    return s, [A, B, C]
+
+
+def compute_add_1024(dtype, ndim):
+    A = tvm.placeholder([1024 for _ in range(ndim)], name='A', dtype=dtype)
+    B = tvm.placeholder([1024 for _ in range(ndim)], name='B', dtype=dtype)
+    C = tvm.compute([tvm.var() for _ in range(ndim)],
+                    lambda *index: A[index] + B[index], name='C')
+    s = tvm.create_schedule(C.op)
+    return s, A, B, C
+
+
+@defop(name="vadd_1024", target="cpu", auto_broadcast=True,
+       dtype=AllTypes, ndim=list(range(1, 6)))
+def vadd_1024(dtype, ndim):
+    print("====================vadd16===========================")
+    print("dtype = {}".format(dtype))
+    print("ndim = {}".format(ndim))
+    s, A, B, C = compute_add_1024(dtype, ndim)
+    print(tvm.lower(s, [A, B, C], simple_mode=True))
+    bx, tx = s[C].split(C.op.axis[0], nparts=16)
+    s[C].parallel(bx)
+    # axes = [axis for axis in C.op.axis]
+    # fused = s[C].fuse(*axes)
+    # s[C].parallel(fused)
+    print(tvm.lower(s, [A, B, C], simple_mode=True))
     return s, [A, B, C]
