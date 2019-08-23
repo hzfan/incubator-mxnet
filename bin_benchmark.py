@@ -45,6 +45,7 @@ def test_add():
     print("np add:")
     a = np.array(mx.nd.random.uniform(shape=(n, m)), dtype='float32')
     b = np.array(mx.nd.random.uniform(shape=(n, m)), dtype='float32')
+    print("generate done")
     cost = measure_cost(1, np.add, a, b)
     print("cost: {} ms".format(cost * 1000))
 
