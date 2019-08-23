@@ -34,8 +34,8 @@ def measure_cost(repeat, func_name, *args, **kwargs):
 
 def test_add():
     # tvm add
-    n = 1024
-    m = 1024
+    n = 1023
+    m = 1023
     print("tvm add:")
     a = mx.nd.ones(n * m).reshape(n, m)
     b = mx.nd.ones(m).reshape(1, m)
