@@ -34,12 +34,12 @@ def vadd(dtype, ndim):
     print("dtype = {}".format(dtype))
     print("ndim = {}".format(ndim))
     s, A, B, C = compute_add(dtype, ndim)
-    # bx, tx = s[C].split(C.op.axis[0], nparts=16)
-    # s[C].parallel(bx)
     print(tvm.lower(s, [A, B, C], simple_mode=True))
-    axes = [axis for axis in C.op.axis]
-    fused = s[C].fuse(*axes)
-    s[C].parallel(fused)
+    bx, tx = s[C].split(C.op.axis[0], nparts=16)
+    s[C].parallel(bx)
+    # axes = [axis for axis in C.op.axis]
+    # fused = s[C].fuse(*axes)
+    # s[C].parallel(fused)
     print(tvm.lower(s, [A, B, C], simple_mode=True))
     return s, [A, B, C]
 
