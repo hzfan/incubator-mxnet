@@ -34,8 +34,8 @@ def measure_cost(repeat, func_name, *args, **kwargs):
 
 def test_add():
     # tvm add
-    n = 1025
-    m = 1025
+    n = 1024
+    m = 1024
     print("tvm add:")
     a = mx.nd.random.uniform(shape=(n, m), dtype='float32')
     b = mx.nd.random.uniform(shape=(n, m), dtype='float32')
