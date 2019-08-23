@@ -42,12 +42,12 @@ def test_add():
     cost = measure_cost(5000, mx.nd.contrib.tvm_vadd, a, b)
     print("cost: {} ms".format(cost * 1000))
     # np add
-    print("np add:")
-    a = np.array(mx.nd.random.uniform(shape=(n, m)), dtype='float32')
-    b = np.array(mx.nd.random.uniform(shape=(n, m)), dtype='float32')
-    print("generate done")
-    cost = measure_cost(1, np.add, a, b)
-    print("cost: {} ms".format(cost * 1000))
+    # print("np add:")
+    # a = mx.nd.random.uniform(shape=(n, m), dtype='float32')
+    # b = np.array(mx.nd.random.uniform(shape=(n, m)), dtype='float32')
+    # print("generate done")
+    # cost = measure_cost(1, np.add, a, b)
+    # print("cost: {} ms".format(cost * 1000))
 
 
 if __name__ == "__main__":
