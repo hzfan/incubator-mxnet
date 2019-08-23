@@ -47,22 +47,22 @@ def test_add():
     # b = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
     # cost = measure_cost(500, mx.nd.contrib.tvm_vadd_1024, a, b)
     # print("cost: {} ms".format(cost * 1000))
-    print("tvm 1023 add:")
-    n = 255
-    m = 255
-    k = 255
-    a = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
-    b = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
-    cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
-    print("cost: {} ms".format(cost * 1000))
-    # print("tvm 1025 add:")
-    # n = 257
-    # m = 257
-    # k = 257
+    # print("tvm 1023 add:")
+    # n = 255
+    # m = 255
+    # k = 255
     # a = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
     # b = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
     # cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
     # print("cost: {} ms".format(cost * 1000))
+    print("tvm 1025 add:")
+    n = 257
+    m = 257
+    k = 257
+    a = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
+    b = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
+    cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
+    print("cost: {} ms".format(cost * 1000))
 
     # np add
     # print("np add:")
