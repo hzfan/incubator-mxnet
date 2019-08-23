@@ -37,14 +37,14 @@ def test_add():
     n = 1024
     m = 1024
     print("tvm add:")
-    a = mx.nd.ones(n * m).reshape(n, m)
-    b = mx.nd.ones(m).reshape(1, m)
+    a = mx.nd.random.uniform(shape=(n, m))
+    b = mx.nd.random.uniform(shape=(n, m))
     cost = measure_cost(50000, mx.nd.contrib.tvm_vadd, a, b)
     print("cost: {} ms".format(cost * 1000))
     # np add
     print("np add:")
-    a = np.ones(n * m).reshape(n, m)
-    b = np.ones(m).reshape(1, m)
+    a = np.random.uniform(shape=(n, m))
+    b = np.random.uniform(shape=(n, m))
     cost = measure_cost(50000, np.add, a, b)
     print("cost: {} ms".format(cost * 1000))
 
