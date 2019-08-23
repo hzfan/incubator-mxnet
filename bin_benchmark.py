@@ -54,7 +54,7 @@ def test_add():
     a = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
     b = mx.nd.random.uniform(shape=(n, m, k), dtype='float32')
     cost = measure_cost(500, mx.nd.contrib.tvm_vadd, a, b)
-    # print("cost: {} ms".format(cost * 1000))
+    print("cost: {} ms".format(cost * 1000))
     # print("tvm 1025 add:")
     # n = 257
     # m = 257
