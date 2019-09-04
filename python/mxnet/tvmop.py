@@ -16,9 +16,21 @@
 # under the License.
 
 # coding: utf-8
-from .opdef import defop
-from .utils import AllTypes, RealTypes
-from .utils import assign_by_req, reduce_axes
+"""Init tvm ops."""
+import json
 
-from . import basic
-from . import core
+from ._ctypes.space import _set_tvm_op_config
+from .base import check_call, _LIB, c_str
+from .runtime import Features
+from .space import ConfigSpaces
+from .libinfo import find_lib_path, find_conf_path
+
+if Features().is_enabled("TVM_OP"):
+    _LIB_TVM_OP = find_lib_path("libtvmop")
+    check_call(_LIB.MXLoadTVMOp(c_str(_LIB_TVM_OP[0])))
+
+    # op sch config
+    _CONF_TVM_OP = find_conf_path("tvmop")
+    with open(_CONF_TVM_OP[0], "r") as f:
+        ret = ConfigSpaces.from_json_dict(json.load(f))
+    _set_tvm_op_config(ret)
