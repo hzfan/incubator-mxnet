@@ -63,6 +63,21 @@ class TVMOpModule {
               const std::vector<mxnet::TBlob>& tblobs,
               TVMArgs tvm_args) const;
 
+  /*!
+   * \brief Launch operator kernels which have been pre-compiled into a lib file
+   * by TVM compiler.
+   * \param func_name Function name that corresponds to the operator kernel
+   * \param ctx Operator context that includes device and stream information.
+   * \param tblobs Tensor blobs whose dtype and shape information are extracted
+   * to construct the function name. Each configuration of dtype and shape has
+   * a unique kernel.
+   * \param tvm_args Arguments to be passed to kernel function.
+   */
+  void CallEx(const std::string &func_name,
+              const mxnet::OpContext& ctx,
+              const std::vector<mxnet::TBlob>& tblobs,
+              TVMArgs tvm_args) const;
+
   static TVMOpModule *Get() {
     static TVMOpModule inst;
     return &inst;

@@ -4591,6 +4591,85 @@ def test_np_nan_to_num():
             assert_almost_equal(mx_out.asnumpy(), np_out, rtol=1e-3, atol=1e-5, use_broadcast=False)
 
 
+def mathematical_core_binary(name,
+                             hybrid_block,
+                             imperative_call,
+                             forward_numpy_call,
+                             backward_numpy_call):
+    def reduce_to(x_grad, x):
+        idx = len(x_grad.shape) - len(x.shape)
+        axes = []
+        for (i, size) in enumerate(x_grad.shape):
+            if i < idx or x.shape[i - idx] == 1:
+                axes.append(i)
+        x_grad = _np.apply_over_axes(_np.sum, x_grad, axes)
+        return _np.reshape(x_grad, x.shape)
+
+            
+    def get_grad(a, b):
+        c = forward_numpy_call(a, b)
+        a_bc = _np.broadcast_to(a, c.shape)
+        b_bc = _np.broadcast_to(b, c.shape)
+        a_grad, b_grad = backward_numpy_call(a_bc, b_bc)
+        return reduce_to(a_grad, a), reduce_to(b_grad, b)
+
+
+    configs = [
+        [[5, 6, 7, 8, 9], [1]],
+        [[6, 4, 5, 2, 1], [6, 1, 5, 1, 1]],
+        [[3, 5, 6], [1, 6]],
+        [[3, 5, 6], [5, 1]],
+        [[3, 5, 6], [5, 6]],
+        [[4, 3, 2, 1], [2, 1]],
+        [[4, 3, 2, 2], [4, 1, 1, 2]],
+        [[6, 6], [6, 6]],
+    ]
+    types = ['float32', 'float64', 'int8', 'int32', 'int64']
+    for hybridize in [True, False]:
+        for dtype in types:
+            for config in configs:
+                test = hybrid_block()
+                if hybridize:
+                    test.hybridize()
+                rtol, atol = 1e-3, 1e-5
+                a_shape = config[0]
+                b_shape = config[1]
+                a_np = _np.array(_np.random.uniform(-2.0, 2.0, a_shape), dtype=dtype)
+                b_np = _np.array(_np.random.uniform(-2.0, 2.0, b_shape), dtype=dtype)
+                a = np.array(a_np, dtype=dtype)
+                b = np.array(b_np, dtype=dtype)
+                a.attach_grad()
+                b.attach_grad()
+                with mx.autograd.record():
+                    c = test(a, b)
+                c_np = forward_numpy_call(a_np, b_np)
+                # Test forward
+                assert c.shape == c_np.shape
+                assert_almost_equal(c.asnumpy(), c_np, rtol=rtol, atol=atol)
+                # Test backward
+                # c.bakcward()
+                # a_grad_np, b_grad_np = get_grad(a_np, b_np)
+                # assert_almost_equal(a.grad.asnumpy(), a_grad_np, rtol=rtol, atol=atol)
+                # assert_almost_equal(b.grad.asnumpy(), b_grad_np, rtol=rtol, atol=atol)
+                # Test imperative
+                c = imperative_call(a, b)
+                c_np = forward_numpy_call(a_np, b_np)
+                assert_almost_equal(c.asnumpy(), c_np, rtol=rtol, atol=atol)
+
+
+@with_seed()
+@use_np
+def test_np_mathematical():
+    # multiply
+    class TestMultiply(HybridBlock):
+        def __init__(self):
+            super(TestMultiply, self).__init__()
+        def hybrid_forward(self, F, a, b):
+            return F.np.multiply(a, b)
+    mathematical_core_binary("multiply", TestMultiply, np.multiply, 
+                             _np.multiply, lambda a, b: (b, a))
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule()

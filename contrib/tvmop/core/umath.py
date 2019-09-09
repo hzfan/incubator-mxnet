@@ -120,3 +120,52 @@ for op_name in _bin_scalar_logic_op_map.keys():
           **_bin_scalar_logic_cpu_attrs)(_binary_logic_cpu)
     defop(name='{}_gpu'.format(op_name), op=op_name,
           **_bin_scalar_logic_gpu_attrs)(_binary_logic_gpu)
+
+
+_bin_op_map = {
+    'multiply': lambda a, b, *idx: a[idx] * b[idx],
+}
+
+def _compute_binary(op, dtype, ndim):
+    a = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='a')
+    b = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='b')
+    c = tvm.compute([tvm.var() for _ in range(ndim)],
+                    lambda *idx: _bin_op_map[op](a, b, *idx), name='c')
+    s = tvm.create_schedule(c.op)
+    return s, a, b, c
+
+_bin_cpu_attrs = {
+    'compute_func': _compute_binary,
+    'target': 'cpu',
+    'auto_broadcast': True,
+    'itype': AllTypes,
+    'ndim': list(range(6))
+}
+
+_bin_gpu_attrs = {
+    'compute_func': _compute_binary,
+    'target': 'gpu',
+    'auto_broadcast': True,
+    'itype': AllTypes,
+    'ndim': list(range(6))
+}
+
+def _binary_cpu(compute_func, op, itype, ndim):
+    s, a, b, c = compute_func(op, itype, ndim)
+    axes = [axis for axis in c.op.axis]
+    fused = s[c].fuse(*axes)
+    s[c].parallel(fused)
+    return s, [a, b, c]
+
+def _binary_gpu(compute_func, op, itype, ndim):
+    s, a, b, c = compute_func(op, itype, ndim)
+    axes = [axis for axis in c.op.axis]
+    fused = s[c].fuse(*axes)
+    bx, tx = s[c].split(fused, factor=64)
+    s[c].bind(bx, tvm.thread_axis('blockIdx.x'))
+    s[c].bind(tx, tvm.thread_axis('threadIdx.x'))
+    return s, [a, b, c]
+
+for op_name in _bin_op_map.keys():
+    defop(name='{}_cpu'.format(op_name), op=op_name, **_bin_cpu_attrs)(_binary_cpu)
+    defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_gpu_attrs)(_binary_gpu)
