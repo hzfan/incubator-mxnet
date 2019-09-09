@@ -4615,6 +4615,8 @@ def mathematical_core_binary(name,
 
 
     configs = [
+        [[], []],
+        [[3, 4], []],
         [[5, 6, 7, 8, 9], [1]],
         [[6, 4, 5, 2, 1], [6, 1, 5, 1, 1]],
         [[3, 5, 6], [1, 6]],
@@ -4647,10 +4649,10 @@ def mathematical_core_binary(name,
                 assert c.shape == c_np.shape
                 assert_almost_equal(c.asnumpy(), c_np, rtol=rtol, atol=atol)
                 # Test backward
-                # c.bakcward()
-                # a_grad_np, b_grad_np = get_grad(a_np, b_np)
-                # assert_almost_equal(a.grad.asnumpy(), a_grad_np, rtol=rtol, atol=atol)
-                # assert_almost_equal(b.grad.asnumpy(), b_grad_np, rtol=rtol, atol=atol)
+                c.backward()
+                a_grad_np, b_grad_np = get_grad(a_np, b_np)
+                assert_almost_equal(a.grad.asnumpy(), a_grad_np, rtol=rtol, atol=atol)
+                assert_almost_equal(b.grad.asnumpy(), b_grad_np, rtol=rtol, atol=atol)
                 # Test imperative
                 c = imperative_call(a, b)
                 c_np = forward_numpy_call(a_np, b_np)

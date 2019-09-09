@@ -17,6 +17,7 @@
 
 import tvm
 from .. import defop, AllTypes
+from .. import assign_by_req, reduce_axes
 
 _bin_logic_op_map = {
     'equal': lambda a, b, *idx: a[idx] == b[idx],
@@ -146,7 +147,7 @@ _bin_gpu_attrs = {
     'compute_func': _compute_binary,
     'target': 'gpu',
     'auto_broadcast': True,
-    'itype': AllTypes,
+    'itype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
     'ndim': list(range(6))
 }
 
@@ -169,3 +170,74 @@ def _binary_gpu(compute_func, op, itype, ndim):
 for op_name in _bin_op_map.keys():
     defop(name='{}_cpu'.format(op_name), op=op_name, **_bin_cpu_attrs)(_binary_cpu)
     defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_gpu_attrs)(_binary_gpu)
+
+_bin_backward_op_map = {
+    'backward_multiply': (lambda a, b, *idx: b[idx],
+                          lambda a, b, *idx: b[idx]),
+}
+
+def _compute_binary_backward(op, dtype, ndim, reduce1st, req):
+    axes = ([reduce1st, 1 - reduce1st] * ndim)[:ndim]
+    oshape = [tvm.var() for _ in range(ndim)]
+    ograd = tvm.placeholder(oshape, name='X', dtype=dtype)
+    a = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='a')
+    b = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='b')
+    grad = tvm.compute(oshape, lambda *idx: op(a, b, *idx) * ograd[idx])
+    ret = reduce_axes(grad, axes, tvm.sum)
+    igrad_old, igrad = assign_by_req(ret, req)
+    s = tvm.create_schedule(igrad.op)
+    s[grad].compute_inline()
+    return s, ograd, a, b, igrad_old, igrad, [ret, igrad]
+
+_bin_backward_cpu_attrs = {
+    'compute_func': _compute_binary_backward,
+    'itype': AllTypes,
+    'ndim': [9],
+    'output': [0, 1],
+    'reduce1st': [0, 1],
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ["output", "reduce1st", "req"],
+    'target': 'cpu',
+    'auto_broadcast': True,
+}
+
+_bin_backward_gpu_attrs = {
+    'compute_func': _compute_binary_backward,
+    'itype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
+    'ndim': [9],
+    'output': [0, 1],
+    'reduce1st': [0, 1],
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ["output", "reduce1st", "req"],
+    'target': 'gpu',
+    'auto_broadcast': True,
+}
+
+def _binary_backward_cpu(compute_func, op, itype, ndim, output, reduce1st, req):
+    op = _bin_backward_op_map[op][output]
+    s, ograd, a, b, igrad_old, igrad, c_list = compute_func(op, itype, ndim, reduce1st, req)
+    for t in c_list:
+        axes = [axis for axis in t.op.axis]
+        fused = s[t].fuse(*axes)
+        s[t].parallel(fused)
+    return s, [ograd, a, b, igrad_old, igrad]
+
+
+def _binary_backward_gpu(compute_func, op, itype, ndim, output, reduce1st, req):
+    op = _bin_backward_op_map[op][output]
+    s, ograd, a, b, igrad_old, igrad, c_list = compute_func(op, itype, ndim, reduce1st, req)
+    num_thread = 64
+    for t in c_list:
+        block_x = tvm.thread_axis("blockIdx.x")
+        thread_x = tvm.thread_axis("threadIdx.x")
+        axes = [axis for axis in t.op.axis]
+        fused = s[t].fuse(*axes)
+        bx, tx = s[t].split(fused, factor=num_thread)
+        s[t].bind(bx, block_x)
+        s[t].bind(tx, thread_x)
+    return s, [ograd, a, b, igrad_old, igrad]
+
+# register binary element-wise ops backward with broadcasting supported
+for op_name in _bin_backward_op_map.keys():
+    defop(name='{}_cpu'.format(op_name), op=op_name, **_bin_backward_cpu_attrs)(_binary_backward_cpu)
+    defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_backward_gpu_attrs)(_binary_backward_gpu)

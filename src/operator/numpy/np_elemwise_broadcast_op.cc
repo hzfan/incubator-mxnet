@@ -419,10 +419,11 @@ MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_rldexp_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Backward<cpu, mshadow_op::rldexp_grad>);
 
 #if MXNET_USE_TVM_OP
+
 static constexpr char func_multiply_cpu[] = "multiply_cpu";
 static constexpr char func_multiply_gpu[] = "multiply_gpu";
-// static constexpr char func_backward_multiply_cpu[] = "backward_multiply_cpu";
-// static constexpr char func_backward_multiply_gpu[] = "backward_multpluy_gpu";
+static constexpr char func_backward_multiply_cpu[] = "backward_multiply_cpu";
+static constexpr char func_backward_multiply_gpu[] = "backward_multiply_gpu";
 static constexpr char func_logaddexp_cpu[] = "logaddexp_cpu";
 
 TBlob PrependAxes(const TBlob& src, const int dst_ndim) {
@@ -464,18 +465,186 @@ void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
   tvm::runtime::TVMOpModule::Get()->CallEx(func, ctx, tblobs, tvm_args);
 }
 
+enum AxisType
+{
+  XReduce,     // axis k's broadcast axis
+  YReduce,     // axis 1 - k's broadcast axis
+  XYIter       // other axis
+};
+
+enum ReductionType
+{
+  Reduce,      // axis k's broadcast axis
+  Iter         // axis k's iter axis
+};
+
+inline std::string set_attr(const std::string& name,
+                            const std::string& val) {
+  return name + '_' + val;
+}
+
+inline std::string set_req(OpReqType req) {
+  MXNET_ASSIGN_REQ_SWITCH(req, req_type, {
+    if (req_type == kWriteTo) {
+      return "req_kWriteTo";
+    } else {
+      return "req_kAddTo";
+    }
+  })
+}
+
+template<const char* func>
+void TVMBinaryBroadcastBackwardUseIn(const nnvm::NodeAttrs& attrs,
+                                     const mxnet::OpContext& ctx,
+                                     const std::vector<TBlob>& inputs,
+                                     const std::vector<OpReqType>& req,
+                                     const std::vector<TBlob>& outputs) {
+  CHECK_EQ(inputs.size(), 3U);
+  CHECK_EQ(outputs.size(), 2U);
+  const int maxdim = 9;
+  const int ndim = inputs[0].shape_.ndim();
+  const int nin = outputs.size();
+  const TShape& oshape = inputs[0].shape_;
+  TShape ishape[nin];
+  for (int k = 0; k < nin; ++k) {
+    ishape[k] = PrependAxes(inputs[1 + k], ndim).shape_;
+  }
+  for (int k = 0; k < 2; ++k) {
+    // dispatch by broadcast dims
+    // seperate outputs[k] iter dim from outputs[1 - k] reduce dim
+    const TShape& xs = ishape[k], ys = ishape[1 - k];
+    // get axis type
+    std::vector<AxisType> axis_type(ndim);
+    for (int i = 0; i < ndim; ++i) {
+      if (oshape[i] != xs[i]) {
+        axis_type[i] = XReduce;
+      } else if (oshape[i] != ys[i]) {
+        axis_type[i] = YReduce;
+      } else {
+        axis_type[i] = XYIter;
+      }
+    }
+    // get reduction type of x with seperation dims inserted
+    std::vector<ReductionType> seperated_type;
+    std::vector<AxisType> seperated_axis_type;
+    std::vector<int> seperated_shape;
+    for (int i = 0; i < ndim; ++i) {
+      ReductionType val;
+      if (i > 0 && axis_type[i - 1] != XReduce && axis_type[i] != XReduce
+          && axis_type[i - 1] != axis_type[i]) {
+        seperated_type.push_back(Reduce);
+        seperated_axis_type.push_back(XReduce);
+        seperated_shape.push_back(1);
+      }
+      if (axis_type[i] == XReduce) {
+        val = Reduce;
+      } else {
+        val = Iter;
+      }
+      seperated_type.push_back(val);
+      seperated_shape.push_back(oshape[i]);
+      seperated_axis_type.push_back(axis_type[i]);
+    }
+    // Sequeeze continuous dims of the same type
+    std::vector<AxisType> otype;
+    std::vector<int> ov;
+    int size = seperated_type.size();
+    for (int i = 0; i < size; ++i) {
+      if (i > 0 && seperated_type[i] == seperated_type[i - 1]) {
+        ov.back() *= seperated_shape[i];
+        CHECK_EQ(otype.back(), seperated_axis_type[i]);
+      } else {
+        ov.push_back(seperated_shape[i]);
+        otype.push_back(seperated_axis_type[i]);
+      }
+    }
+    // Padding to maxdim
+    for (int i = ov.size(); i < maxdim; ++i) {
+      ov.push_back(1);
+      otype.push_back(XReduce);
+    }
+    // Calculate reduct1st
+    int reduce1st = otype[0] == XReduce;
+    // Calculate iv, xy, and yv
+    std::vector<int> iv, xv, yv;
+    for (int i = reduce1st; i < maxdim; i += 2) {
+      iv.push_back(ov[i]);
+    }
+    for (int i = 0; i < maxdim; ++i) {
+      if (otype[i] == XReduce) {
+        xv.push_back(1);
+      } else {
+        xv.push_back(ov[i]);
+      }
+    }
+    for (int i = 0; i < maxdim; ++i) {
+      if (otype[i] == YReduce) {
+        yv.push_back(1);
+      } else {
+        yv.push_back(ov[i]);
+      }
+    }
+
+    // Prepare tblobs and TVMArgs
+    TShape oshape_tvm(ov.begin(), ov.end());
+    TShape xshape_tvm(xv.begin(), xv.end());
+    TShape yshape_tvm(yv.begin(), yv.end());
+    TShape ishape_tvm(iv.begin(), iv.end());
+    std::vector<TBlob> tblobs = {inputs[0].reshape(oshape_tvm),
+                                 inputs[1 + k].reshape(xshape_tvm),
+                                 inputs[2 - k].reshape(yshape_tvm),
+                                 outputs[k].reshape(ishape_tvm),
+                                 outputs[k].reshape(ishape_tvm)};
+    std::vector<int> type_codes;
+    std::vector<TVMValue> values;
+    const int num_args = 5;
+    type_codes.resize(num_args);
+    values.resize(num_args);
+    for (size_t i = 0; i < num_args; ++i) {
+      type_codes[i] = kArrayHandle;
+      values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
+    }
+    
+    // Set attrs
+    std::string funcname = std::string(func);
+    funcname += set_attr("output", std::to_string(k));
+    funcname += set_attr("reduce1st", std::to_string(reduce1st));
+    funcname += set_req(req[k]);
+
+    tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
+    tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
+  }
+}
+
+#define MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_IN(name)  \
+  NNVM_REGISTER_OP(_backward_npi_##name)                                   \
+  .set_num_inputs(3)                                                       \
+  .set_num_outputs(2)                                                      \
+  .set_attr<nnvm::TIsBackward>("TIsBackward", true)                        \
+  .set_attr<nnvm::FInplaceOption>("FInplaceOption",                        \
+    [](const NodeAttrs& attrs){                                            \
+      return std::vector<std::pair<int, int> >{{0, 1}};                    \
+    })                                                                     \
+  .set_attr<FCompute>("FCompute<cpu>",                                     \
+    TVMBinaryBroadcastBackwardUseIn<func_backward_##name##_cpu>);
+
 // MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_logaddexp)
 // .set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute<func_logaddexp_cpu>)
 // .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_npi_logaddexp"});
 
 MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_multiply)
 .set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute<func_multiply_cpu>)
-.set_attr<nnvm::FGradient>("FGradient", MakeZeroGradNodes);
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_npi_multiply"});
 
+MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_IN(multiply);
 
 #if MXNET_USE_CUDA
 NNVM_REGISTER_OP(_npi_multiply)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute<func_multiply_gpu>);
+
+NNVM_REGISTER_OP(_backward_npi_multiply)
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseIn<func_backward_multiply_gpu>);
+
 #endif  // MXNET_USE_CUDA
 
 #endif  // MXNET_USE_TVM_OP
