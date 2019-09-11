@@ -89,6 +89,7 @@ if __name__ == "__main__":
                 func_lower = tvm.lower(sch, args,
                                        name=name,
                                        binds=operator_def.get_binds(args))
+                print(name)
                 func_list.append(func_lower)
 
     lowered_funcs = {get_target("cpu"): func_list_llvm}

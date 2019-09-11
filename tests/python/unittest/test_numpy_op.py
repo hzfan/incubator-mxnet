@@ -4631,7 +4631,7 @@ def mathematical_core_binary(name,
         [[4, 3, 2, 2], [4, 1, 1, 2]],
         [[6, 6], [6, 6]],
     ]
-    types = ['float32', 'float64', 'int8', 'int32', 'int64']
+    types = ['float32', 'float64', 'int32', 'int64']  # 'int8' incurs overflow
     for hybridize in [True, False]:
         for dtype in types:
             for config in configs:
@@ -4663,7 +4663,7 @@ def mathematical_core_binary(name,
                 c_np = forward_numpy_call(a_np, b_np)
                 assert_almost_equal(c.asnumpy(), c_np, rtol=rtol, atol=atol)
     # test scalar
-    types = ['float32', 'float64']
+    types = ['float32', 'float64']  # integer tyeps incur casting problem
     for dtype in types:
         for config in configs:
             for shape in config:
@@ -4679,8 +4679,6 @@ def mathematical_core_binary(name,
                 assert_almost_equal(out.asnumpy(), out_np, rtol=rtol, atol=atol)
                 # Test backward
                 out.backward()
-                print("X_np = {}".format(X_np))
-                print("scalar = {}".format(scalar))
                 X_grad_np = get_grad(X_np, scalar)
                 assert_almost_equal(X.grad.asnumpy(), X_grad_np, rtol=rtol, atol=atol)
                 # Test forward
@@ -4706,6 +4704,14 @@ def test_np_mathematical():
             return F.np.multiply(a, b)
     mathematical_core_binary("multiply", TestMultiply, np.multiply, 
                              _np.multiply, lambda a, b: (b, a))
+    # add
+    class TestAdd(HybridBlock):
+        def __init__(self):
+            super(TestAdd, self).__init__()
+        def hybrid_forward(self, F, a, b):
+            return F.np.add(a, b)
+    mathematical_core_binary("add", TestAdd, np.add, _np.add,
+                             lambda a, b: (_np.ones_like(a), _np.ones_like(b)))
 
 
 if __name__ == '__main__':

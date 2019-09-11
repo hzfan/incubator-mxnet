@@ -93,8 +93,8 @@ NNVM_REGISTER_OP(_backward_npi_hypot)
 .set_attr<FCompute>("FCompute<gpu>", BinaryBroadcastBackwardUseIn<gpu, mshadow_op::hypot_grad_left,
                                                                   mshadow_op::hypot_grad_right>);
 
-NNVM_REGISTER_OP(_npi_add_scalar)
-.set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, op::mshadow_op::plus>);
+// NNVM_REGISTER_OP(_npi_add_scalar)
+// .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, op::mshadow_op::plus>);
 
 NNVM_REGISTER_OP(_npi_subtract_scalar)
 .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, op::mshadow_op::minus>);
