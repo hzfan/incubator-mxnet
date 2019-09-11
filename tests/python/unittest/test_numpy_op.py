@@ -4611,7 +4611,12 @@ def mathematical_core_binary(name,
         a_bc = _np.broadcast_to(a, c.shape)
         b_bc = _np.broadcast_to(b, c.shape)
         a_grad, b_grad = backward_numpy_call(a_bc, b_bc)
-        return reduce_to(a_grad, a), reduce_to(b_grad, b)
+        if hasattr(a, 'shape') and hasattr(b, 'shape'):
+            return reduce_to(a_grad, a), reduce_to(b_grad, b)
+        elif hasattr(a, 'shape'):
+            return reduce_to(a_grad, a)
+        elif hasattr(b, 'shape'):
+            return reduce_to(b_grad, b)
 
 
     configs = [
@@ -4657,6 +4662,37 @@ def mathematical_core_binary(name,
                 c = imperative_call(a, b)
                 c_np = forward_numpy_call(a_np, b_np)
                 assert_almost_equal(c.asnumpy(), c_np, rtol=rtol, atol=atol)
+    # test scalar
+    types = ['float32', 'float64']
+    for dtype in types:
+        for config in configs:
+            for shape in config:
+                X_np = _np.array(_np.random.uniform(-2.0, 2.0, shape), dtype=dtype)
+                scalar = _np.random.uniform(-2.0, 2.0)
+                X = np.array(X_np, dtype=dtype)
+                X.attach_grad()
+                # Test forward
+                with mx.autograd.record():
+                    out = imperative_call(X, scalar)
+                out_np = forward_numpy_call(X_np, scalar)
+                assert out.shape == out_np.shape
+                assert_almost_equal(out.asnumpy(), out_np, rtol=rtol, atol=atol)
+                # Test backward
+                out.backward()
+                print("X_np = {}".format(X_np))
+                print("scalar = {}".format(scalar))
+                X_grad_np = get_grad(X_np, scalar)
+                assert_almost_equal(X.grad.asnumpy(), X_grad_np, rtol=rtol, atol=atol)
+                # Test forward
+                with mx.autograd.record():
+                    out = imperative_call(scalar, X)
+                out_np = forward_numpy_call(scalar, X_np)
+                assert out.shape == out_np.shape
+                assert_almost_equal(out.asnumpy(), out_np, rtol=rtol, atol=atol)
+                # Test backward
+                out.backward()
+                X_grad_np = get_grad(scalar, X_np)
+                assert_almost_equal(X.grad.asnumpy(), X_grad_np, rtol=rtol, atol=atol)
 
 
 @with_seed()

@@ -102,8 +102,8 @@ NNVM_REGISTER_OP(_npi_subtract_scalar)
 NNVM_REGISTER_OP(_npi_rsubtract_scalar)
 .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, mshadow_op::rminus>);
 
-NNVM_REGISTER_OP(_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, op::mshadow_op::mul>);
+// NNVM_REGISTER_OP(_npi_multiply_scalar)
+// .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, op::mshadow_op::mul>);
 
 NNVM_REGISTER_OP(_npi_mod_scalar)
 .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Compute<gpu, mshadow_op::mod>);
