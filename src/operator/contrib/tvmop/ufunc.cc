@@ -29,8 +29,9 @@
 #include <tvm/runtime/c_runtime_api.h>
 #include <mxnet/base.h>
 #include <string>
-#include "../../tensor/elemwise_binary_broadcast_op.h"
+#include "./utils-inl.h"
 #include "../../tvmop/op_module.h"
+#include "../../tensor/elemwise_binary_broadcast_op.h"
 #include "../../tensor/elemwise_binary_op.h"
 
 namespace mxnet {
@@ -51,6 +52,20 @@ TBlob padding(const TBlob& tblob, const int max_dim) {
   return tblob.reshape(tshape);
 }
 
+std::string AddSch(const std::string name,
+                   const nnvm::NodeAttrs& attrs,
+                   const mxnet::ShapeVector& in_attrs,
+                   const mxnet::ShapeVector& out_attrs) {
+  const ::tvm::runtime::TVMOpConfig& config = tvm::runtime::GetOpConfig(name);
+  int ndim = out_attrs[0].ndim();
+  int idx_ifactor = SplitSch(config, "ifactor", {out_attrs[0][ndim - 1]});
+  int idx = idx_ifactor;
+  if (idx_ifactor == -1) {
+    return "fallback";
+  }
+  return "index_" + std::to_string(idx);
+}
+
 template<const char* func>
 void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
                       const mxnet::OpContext& ctx,
@@ -60,11 +75,13 @@ void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(inputs.size(), 2U);
   CHECK_EQ(outputs.size(), 1U);
   TBlob idata[2], odata;
+  const int odim = outputs[0].shape_.ndim();
   for (int k = 0; k < 2; ++k) {
-    idata[k] = padding(inputs[k], max_dim);
+    idata[k] = padding(inputs[k], odim);
   }
-  odata = padding(outputs[0], max_dim);
-  tvm::runtime::TVMOpModule::Get()->Call(func, ctx, {idata[0], idata[1], odata});
+  odata = outputs[0];
+  std::string funcname = std::string(func);
+  tvm::runtime::TVMOpModule::Get()->Call(funcname, ctx, {idata[0], idata[1], odata});
 }
 
 template<const char* func>

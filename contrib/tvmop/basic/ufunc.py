@@ -17,31 +17,40 @@
 
 # coding: utf-8
 import tvm
+from tvm import autotvm
 from .. import defop, AllTypes
 from .. import assign_by_req, reduce_axes
 
-def compute_add(dtype, ndim):
-    A = tvm.placeholder([tvm.var() for _ in range(ndim)], name='A', dtype=dtype)
-    B = tvm.placeholder([tvm.var() for _ in range(ndim)], name='B', dtype=dtype)
-    C = tvm.compute([tvm.var() for _ in range(ndim)],
+def compute_add(A, B):
+    oshape = [tvm.var() for _ in range(len(A.shape))]
+    C = tvm.compute(oshape,
                     lambda *index: A[index] + B[index], name='C')
     s = tvm.create_schedule(C.op)
-    return s, A, B, C
+    return s, C
 
 
 @defop(name="vadd", target="cpu", auto_broadcast=True,
-       dtype=AllTypes, ndim=[5])
+       dtype=AllTypes, ndim=[1, 2, 3, 4, 5])
 def vadd(dtype, ndim):
-    s, A, B, C = compute_add(dtype, ndim)
-    axes = [axis for axis in C.op.axis]
-    fused = s[C].fuse(*axes)
-    s[C].parallel(fused)
-
+    # cfg = autotvm.get_config()
+    # cfg.define_knob("ifactor", [4] if fallback else [4])
+    # ishape = [tvm.var("i{}".format(i)) for i in range(ndim - 1)] \
+    #          + [tvm.var("i{}".format(ndim - 1)) if fallback \
+    #          else cfg["ifactor"].val * tvm.var("i{}".format(ndim - 1))]
+    ashape = [tvm.var() for _ in range(ndim)]
+    bshape = [tvm.var() for _ in range(ndim)]
+    A = tvm.placeholder(ashape, name='A', dtype=dtype)
+    B = tvm.placeholder(bshape, name='B', dtype=dtype)
+    s, C = compute_add(A, B)
+    s[C].parallel(C.op.axis[0])
+    # iaxis = C.op.axis[-1]
+    # bx, tx = s[C].split(iaxis, factor=cfg["ifactor"].val)
+    # s[C].vectorize(tx)
     return s, [A, B, C]
 
 
 @defop(name="cuda_vadd", target="cuda", auto_broadcast=True,
-       dtype=["float32", "float64"], ndim=[5])
+       dtype=["float32", "float64"], ndim=[1, 2, 3, 4, 5])
 def vadd_gpu(dtype, ndim):
     s, A, B, C = compute_add(dtype, ndim)
     s = tvm.create_schedule(C.op)
@@ -72,7 +81,7 @@ def compute_backward_vadd(dtype, ndim, reduce1st, req):
 
 
 @defop(name="backward_vadd", target="cpu", dtype=AllTypes, 
-       ndim=[5], reduce1st=[0, 1],
+       ndim=[1, 2, 3, 4, 5], reduce1st=[0, 1],
        req=["kWriteTo", "kAddTo"], attrs=["reduce1st", "req"])
 def backward_vadd(dtype, ndim, reduce1st, req):
     s, X, in_grad_a, in_grad, c_list = compute_backward_vadd(dtype, ndim, reduce1st, req)
@@ -84,7 +93,7 @@ def backward_vadd(dtype, ndim, reduce1st, req):
 
 
 @defop(name="cuda_backward_vadd", target="gpu", dtype=["float32", "float64"],
-       ndim=[5], reduce1st=[0, 1],
+       ndim=[1, 2, 3, 4 ,5], reduce1st=[0, 1],
        req=["kWriteTo", "kAddTo"], attrs=["reduce1st", "req"])
 def backward_vadd_gpu(dtype, ndim, reduce1st, req):
     s, X, in_grad_a, in_grad, c_list = compute_backward_vadd(dtype, ndim, reduce1st, req)

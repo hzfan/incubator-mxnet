@@ -29,33 +29,13 @@
 #include <tvm/runtime/c_runtime_api.h>
 #include <mxnet/base.h>
 #include <string>
-#include "../../tensor/elemwise_binary_broadcast_op.h"
+#include "./utils-inl.h"
 #include "../../tvmop/op_module.h"
+#include "../../tensor/elemwise_binary_broadcast_op.h"
 #include "../../tensor/elemwise_binary_op.h"
 
 namespace mxnet {
 namespace op {
-
-int SplitSch(const ::tvm::runtime::TVMOpConfig& config,
-             const ::std::string& name,
-             const std::vector<int>& size) {
-  const ::tvm::runtime::OtherOptionSpace& space = config.get_space(name);
-  int weight = config.get_weight(name);
-  int num_space = space.size(), num_size = size.size();
-  for (int i = 0; i < num_space; ++i) {
-    bool flag = true;
-    for (int j = 0; j < num_size; ++j) {
-      if (size[j] % space[i].get_val() != 0) {
-        flag = false;
-        break;
-      }
-    }
-    if (flag) {
-      return i * weight;
-    }
-  }
-  return -1;
-}
 
 std::string DotSch(const std::string name,
                    const nnvm::NodeAttrs& attrs,
