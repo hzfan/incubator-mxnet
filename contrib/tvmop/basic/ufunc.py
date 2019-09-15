@@ -85,7 +85,6 @@ def compute_backward_vadd(dtype, ndim, reduce1st, req):
        req=["kWriteTo", "kAddTo"], attrs=["reduce1st", "req"])
 def backward_vadd(dtype, ndim, reduce1st, req):
     s, X, old, new, c_list = compute_backward_vadd(dtype, ndim, reduce1st, req)
-    print("len of axis = {}".format(len(new.op.axis)))
     if len(new.op.axis) > 0:
         s[new].parallel(new.op.axis[0])
     return s, [X, old, new]
