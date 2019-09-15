@@ -65,7 +65,7 @@ def test_add():
         k = size
         dtype = 'float32'
         a_np = _np.array(_np.random.uniform(-2.0, 2.0, size=(n, m, k)), dtype=dtype)
-        b_np = _np.array(_np.random.uniform(-2.0, 2.0, size=(1, m, 1)), dtype=dtype)
+        b_np = _np.array(_np.random.uniform(-2.0, 2.0, size=(n, m, k)), dtype=dtype)
 
         cost_tvm = []
         cost_mx = []
