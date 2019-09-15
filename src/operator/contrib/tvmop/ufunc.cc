@@ -110,9 +110,6 @@ void TVMBinaryBackwardComputeUseNone(const nnvm::NodeAttrs& attrs,
         ov.back() *= ograd.size(i);
       }
     }
-    for (int i = ov.size(); i < max_dim; ++i) {
-      ov.push_back(1);
-    }
     for (uint32_t i = flag; i < ov.size(); i += 2) {
       iv.push_back(ov[i]);
     }

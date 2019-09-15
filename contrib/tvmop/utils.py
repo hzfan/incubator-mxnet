@@ -21,13 +21,13 @@ import tvm
 AllTypes = ["float32", "float64", "float16", "uint8", "int8", "int32", "int64"]
 RealTypes = ["float32", "float64", "float16"]
 
-def assign_by_req(a, req):
-    b = tvm.placeholder(a.shape, name='assign_by_req_b', dtype=a.dtype)
+def assign_by_req(delta, req):
+    old = tvm.placeholder(delta.shape, name='old', dtype=delta.dtype)
     if (req == "kAddTo"):
-        c = tvm.compute(a.shape, lambda *idx: a[idx] + b[idx])
+        new = tvm.compute(delta.shape, lambda *idx: old[idx] + delta[idx])
     else:
-        c = tvm.compute(a.shape, lambda *idx: a[idx])
-    return b, c
+        new = delta
+    return old, new
 
 
 def reduce_axes(X, axes, reducer):
@@ -40,7 +40,7 @@ def reduce_axes(X, axes, reducer):
             j += (val == 0)
             k += (val != 0)
         return tuple(ret)
-    
+
     ishape = X.shape
     odim = (len(ishape) + 1 - axes[0]) // 2
     oshape = [tvm.var() for _ in range(odim)]

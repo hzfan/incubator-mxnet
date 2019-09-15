@@ -75,21 +75,20 @@ def compute_backward_vadd(dtype, ndim, reduce1st, req):
     reducer = tvm.comm_reducer(lambda x, y: x + y,
         lambda t: tvm.const(0, dtype=t), name="sum")
     ret = reduce_axes(X, axes, reducer)
-    in_grad_a, in_grad = assign_by_req(ret, req)
-    s = tvm.create_schedule(in_grad.op)
-    return s, X, in_grad_a, in_grad, [ret, in_grad]
+    old, new = assign_by_req(ret, req)
+    s = tvm.create_schedule(new.op)
+    return s, X, old, new, [ret, new]
 
 
 @defop(name="backward_vadd", target="cpu", dtype=AllTypes, 
        ndim=[1, 2, 3, 4, 5], reduce1st=[0, 1],
        req=["kWriteTo", "kAddTo"], attrs=["reduce1st", "req"])
 def backward_vadd(dtype, ndim, reduce1st, req):
-    s, X, in_grad_a, in_grad, c_list = compute_backward_vadd(dtype, ndim, reduce1st, req)
-    for t in c_list:
-        axes = [axis for axis in t.op.axis]
-        fused = s[t].fuse(*axes)
-        s[t].parallel(fused)
-    return s, [X, in_grad_a, in_grad]
+    s, X, old, new, c_list = compute_backward_vadd(dtype, ndim, reduce1st, req)
+    print("len of axis = {}".format(len(new.op.axis)))
+    if len(new.op.axis) > 0:
+        s[new].parallel(new.op.axis[0])
+    return s, [X, old, new]
 
 
 @defop(name="cuda_backward_vadd", target="gpu", dtype=["float32", "float64"],

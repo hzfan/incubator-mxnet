@@ -34,6 +34,21 @@ def measure_mx_cost(repeat, func_name, *args, **kwargs):
     return diff / repeat
 
 
+def measure_mx_backward(repeat, func_name, *args, **kwargs):
+    assert repeat == 1
+    for arg in args:
+        arg.attach_grad()
+    with mx.autograd.record():
+        mx_out = func_name(*args, **kwargs)
+    mx.nd.waitall()
+    start = time.time()
+    mx_out.backward()
+    mx.nd.waitall()
+    end = time.time()
+    diff = end - start
+    return diff / repeat
+        
+
 def measure_np_cost(repeat, func_name, *args, **kwargs):
     start = time.time()
     for _ in range(repeat):
@@ -56,9 +71,12 @@ def stabalize(x, nremoved):
 
 def test_add():
     shapes = [32, 64, 128, 256, 512]
-    repeat = 1
+    forward_repeat = 1
+    backward_repeat = 1
     times = 100
     nremoved = 2
+    enable_gpu = False
+    ctx = mx.gpu(0) if enable_gpu else mx.cpu()
     for size in shapes:
         n = size
         m = size
@@ -70,28 +88,44 @@ def test_add():
         cost_tvm = []
         cost_mx = []
         cost_np = []
+        cost_tvm_backward = []
+        cost_mx_backward = []
         print("===========================size = {}======================================".format(size))
         for i in range(times):
-            a = mx.nd.array(a_np, dtype=dtype)
-            b = mx.nd.array(b_np, dtype=dtype)
-            cost = measure_mx_cost(repeat, mx.nd.contrib.tvm_vadd, a, b)
+            a = mx.nd.array(a_np, dtype=dtype, ctx=ctx)
+            b = mx.nd.array(b_np, dtype=dtype, ctx=ctx)
+            cost = measure_mx_cost(forward_repeat, mx.nd.contrib.tvm_vadd, a, b)
             cost_tvm.append(cost)
 
         for i in range(times):
-            a = np.array(a_np, dtype=dtype)
-            b = np.array(b_np, dtype=dtype)
-            cost = measure_mx_cost(repeat, np.add, a, b)
+            a = np.array(a_np, dtype=dtype, ctx=ctx)
+            b = np.array(b_np, dtype=dtype, ctx=ctx)
+            cost = measure_mx_cost(forward_repeat, np.add, a, b)
             cost_mx.append(cost)
 
         for i in range(times):
             a = a_np
             b = b_np
-            cost = measure_np_cost(repeat, _np.add, a, b)
+            cost = measure_np_cost(forward_repeat, _np.add, a, b)
             cost_np.append(cost)
 
+        for i in range(times):
+            a = mx.nd.array(a_np, dtype=dtype, ctx=ctx)
+            b = mx.nd.array(b_np, dtype=dtype, ctx=ctx)
+            cost = measure_mx_backward(backward_repeat, mx.nd.contrib.tvm_vadd, a, b)
+            cost_tvm_backward.append(cost)
+        
+        for i in range(times):
+            a = np.array(a_np, dtype=dtype, ctx=ctx)
+            b = np.array(b_np, dtype=dtype, ctx=ctx)
+            cost = measure_mx_backward(backward_repeat, np.add, a, b)
+            cost_mx_backward.append(cost)   
+        
         cost_tvm = stabalize(cost_tvm, nremoved)
         cost_mx = stabalize(cost_mx, nremoved)
         cost_np = stabalize(cost_np, nremoved)
+        cost_tvm_backward = stabalize(cost_tvm_backward, nremoved)
+        cost_mx_backward = stabalize(cost_mx_backward, nremoved)
         print("tvm:")
         print("mean: {}".format(_np.mean(cost_tvm)))
         print("std:  {}".format(_np.std(cost_tvm) / _np.mean(cost_tvm)))
@@ -101,6 +135,12 @@ def test_add():
         print("np:")
         print("mean: {}".format(_np.mean(cost_np)))
         print("std:  {}".format(_np.std(cost_np) / _np.mean(cost_np)))
+        print("tvm_backward:")
+        print("mean: {}".format(_np.mean(cost_tvm_backward)))
+        print("std:  {}".format(_np.std(cost_tvm_backward) / _np.mean(cost_tvm_backward)))
+        print("mx:")
+        print("mean: {}".format(_np.mean(cost_mx_backward)))
+        print("std:  {}".format(_np.std(cost_mx_backward) / _np.mean(cost_mx_backward)))
 
 
 if __name__ == "__main__":

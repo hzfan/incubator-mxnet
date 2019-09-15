@@ -71,6 +71,7 @@ if __name__ == "__main__":
                                                    name=subname,
                                                    binds=op.get_binds(args))
                             func_list.append(func_lower)
+                            print(subname)
                             print(tvm.lower(sch, args, simple_mode=True))
                         # register config space
                         config_spaces[name] = ConfigSpace.from_tvm(config_space)
@@ -82,11 +83,15 @@ if __name__ == "__main__":
                             ''.join(["%s_%d" % (arg.dtype, len(arg.shape)) for arg in args])
                         func_lower = tvm.lower(sch, args, name=subname, binds=op.get_binds(args))
                         func_list.append(func_lower)
+                        print(subname)
+                        print(tvm.lower(sch, args, simple_mode=True))
                     else:
                         sch, args = op.func(**each_kwargs)
                         subname = name + ''.join(["%s_%d" % (arg.dtype, len(arg.shape)) for arg in args])
                         func_lower = tvm.lower(sch, args, name=subname, binds=op.get_binds(args))
                         func_list.append(func_lower)
+                        print(subname)
+                        print(tvm.lower(sch, args, simple_mode=True))
 
     lowered_funcs = {get_target("cpu") : func_list_llvm}
     if len(func_list_cuda) > 0:
