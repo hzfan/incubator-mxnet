@@ -52,11 +52,16 @@ def vadd(dtype, ndim):
 @defop(name="cuda_vadd", target="cuda", auto_broadcast=True,
        dtype=["float32", "float64"], ndim=[1, 2, 3, 4, 5])
 def vadd_gpu(dtype, ndim):
-    s, A, B, C = compute_add(dtype, ndim)
-    s = tvm.create_schedule(C.op)
+    ashape = [tvm.var() for _ in range(ndim)]
+    bshape = [tvm.var() for _ in range(ndim)]
+    A = tvm.placeholder(ashape, name='A', dtype=dtype)
+    B = tvm.placeholder(bshape, name='B', dtype=dtype)
+    s, C = compute_add(A, B)
     axes = [axis for axis in C.op.axis]
-    fused = s[C].fuse(*axes)
-    bx, tx = s[C].split(fused, factor=64)
+    if ndim == 1:
+        bx, tx = s[C].split(C.op.axis[0], factor=64)
+    else:
+        bx, tx = C.op.axis[0], C.op.axis[1]
     s[C].bind(bx, tvm.thread_axis("blockIdx.x"))
     s[C].bind(tx, tvm.thread_axis("threadIdx.x"))
     return s, [A, B, C]

@@ -26,7 +26,7 @@ def assign_by_req(delta, req):
     if (req == "kAddTo"):
         new = tvm.compute(delta.shape, lambda *idx: old[idx] + delta[idx])
     else:
-        new = delta
+        new = tvm.compute(delta.shape, lambda *idx: delta[idx])
     return old, new
 
 
