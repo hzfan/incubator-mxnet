@@ -94,33 +94,26 @@ def stabalize(x):
 
 def test_add():
     configs = [
-        (32, 32, 32),
-        (64, 64, 64),
-        (64, 64, 128),
-        (64, 64, 256),
-        (64, 64, 512),
-        (64, 64, 1024),
-        (128, 64, 64),
-        (128, 64, 128),
-        (128, 64, 256),
-        (128, 64, 512),
-        (128, 64, 1024),
-        (32, 32, 32),
-        (64, 64, 64),
-        (128, 128, 128),
-        (256, 256, 256),
+        ((32, 32, 32), (32, 32, 32)),
+        ((64, 64, 64), (64, 64, 64)),
+        ((128, 128, 128), (128, 128, 128)),
+        ((256, 256, 256), (256, 256, 256)),
+        ((32, 1, 32), (32, 32, 32)),
+        ((64, 1, 64), (64, 64, 64)),
+        ((128, 1, 128), (128, 128, 128)),
+        ((256, 1, 256), (256, 256, 256)),
     ]
     forward_repeat = 1
     backward_repeat = 1
     times = 100
     nremoved = 0
-    enable_gpu = True
+    enable_gpu = False
     ctx = mx.gpu(0) if enable_gpu else mx.cpu()
     for config in configs:
         dtype = 'float32'
         dsize = 4
-        a_np = _np.array(_np.random.uniform(-2.0, 2.0, size=config), dtype=dtype)
-        b_np = _np.array(_np.random.uniform(-2.0, 2.0, size=config), dtype=dtype)
+        a_np = _np.array(_np.random.uniform(-2.0, 2.0, size=config[0]), dtype=dtype)
+        b_np = _np.array(_np.random.uniform(-2.0, 2.0, size=config[1]), dtype=dtype)
         c_np = _np.add(a_np, b_np)
 
         cost_tvm = []
