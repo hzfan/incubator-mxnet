@@ -89,7 +89,7 @@ void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
     if (xshape[i] != oshape[i]) {
       axis_type.push_back(ReduceX);
     } else if (yshape[i] != oshape[i]) {
-      axis_type.push_back(ReduceY)
+      axis_type.push_back(ReduceY);
     } else {
       axis_type.push_back(Iter);
     }
