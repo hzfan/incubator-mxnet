@@ -66,6 +66,12 @@ std::string AddSch(const std::string name,
   return "index_" + std::to_string(idx);
 }
 
+enum AxisType {
+  ReduceX,
+  ReduceY,
+  Iter
+};
+
 template<const char* func>
 void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
                       const mxnet::OpContext& ctx,
@@ -74,14 +80,37 @@ void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
                       const std::vector<TBlob>& outputs) {
   CHECK_EQ(inputs.size(), 2U);
   CHECK_EQ(outputs.size(), 1U);
-  TBlob idata[2], odata;
-  const int odim = outputs[0].shape_.ndim();
-  for (int k = 0; k < 2; ++k) {
-    idata[k] = padding(inputs[k], odim);
+  TShape xshape = padding(inputs[0], odim).shape_;
+  TShape yshape = padding(inputs[1], odim).shape_;
+  const TShape& oshape = outputs[0].shape_;
+  const int odim = oshape.ndim();
+  std::vector<AxisType> axis_type;
+  for (int i = 0; i < odim; ++i) {
+    if (xshape[i] != oshape[i]) {
+      axis_type.push_back(ReduceX);
+    } else if (yshape[i] != oshape[i]) {
+      axis_type.push_back(ReduceY)
+    } else {
+      axis_type.push_back(Iter);
+    }
   }
-  odata = outputs[0];
+  std::vector<int> ov, xv, yv;
+  for (int i = 0; i < odim; ++i) {
+    if (i == 0 || axis_type[i] != axis_type[i - 1]) {
+      ov.push_back(oshape[i]);
+      xv.push_back(xshape[i]);
+      yv.push_back(yshape[i]);
+    } else {
+      ov.back() *= oshape[i];
+      xv.back() *= xshape[i];
+      yv.back() *= yshape[i];
+    }
+  }
+  TBlob xdata = inputs[0].reshape(TShape(xv.begin(), xv.end()));
+  TBlob ydata = inputs[1].reshape(TShape(yv.begin(), yv.end()));
+  TBlob odata = outputs[0].reshape(TShape(ov.begin(), ov.end()));
   std::string funcname = std::string(func);
-  tvm::runtime::TVMOpModule::Get()->Call(funcname, ctx, {idata[0], idata[1], odata});
+  tvm::runtime::TVMOpModule::Get()->Call(funcname, ctx, {xdata, ydata, odata});
 }
 
 template<const char* func>
