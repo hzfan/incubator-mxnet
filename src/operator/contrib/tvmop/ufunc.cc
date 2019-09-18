@@ -80,10 +80,10 @@ void TVMBinaryCompute(const nnvm::NodeAttrs& attrs,
                       const std::vector<TBlob>& outputs) {
   CHECK_EQ(inputs.size(), 2U);
   CHECK_EQ(outputs.size(), 1U);
-  TShape xshape = padding(inputs[0], odim).shape_;
-  TShape yshape = padding(inputs[1], odim).shape_;
   const TShape& oshape = outputs[0].shape_;
   const int odim = oshape.ndim();
+  TShape xshape = padding(inputs[0], odim).shape_;
+  TShape yshape = padding(inputs[1], odim).shape_;
   std::vector<AxisType> axis_type;
   for (int i = 0; i < odim; ++i) {
     if (xshape[i] != oshape[i]) {
