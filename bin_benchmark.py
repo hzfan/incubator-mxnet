@@ -55,8 +55,8 @@ def measure_mx_cost(repeat, func_name, *args, **kwargs):
     mx.nd.waitall()
     start = time.time()
     for _ in range(repeat):
-        func_name(*args, **kwargs)
-    mx.nd.waitall()
+        func_name(*args, **kwargs).wait_to_read()
+    # mx.nd.waitall()
     end = time.time()
     diff = end - start
     return diff / repeat
