@@ -40,7 +40,7 @@ if __name__ == "__main__":
                         help="Target path which stores compiled library")
     arguments = parser.parse_args()
 
-    autotvm.measure.measure_methods.set_cuda_target_arch("-gencode=arch=sm_30,code=sm_30 -gencode=arch=sm_35,code=sm_35")
+    autotvm.measure.measure_methods.set_cuda_target_arch("-gencode=arch=sm_35,code=sm_35")
 
     func_list_llvm = []
     func_list_cuda = []
