@@ -107,7 +107,7 @@ def test_add():
     backward_repeat = 1
     times = 100
     nremoved = 0
-    enable_gpu = False
+    enable_gpu = True
     ctx = mx.gpu(0) if enable_gpu else mx.cpu()
     for config in configs:
         dtype = 'float32'
