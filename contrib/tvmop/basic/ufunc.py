@@ -58,8 +58,8 @@ def vadd_gpu(dtype, ndim):
     B = tvm.placeholder(bshape, name='B', dtype=dtype)
     s, C = compute_add(A, B)
     axes = [axis for axis in C.op.axis]
-    fused = s[C].fuse(*axes)
-    bx, tx = s[C].split(fused, factor=256)
+    # fused = s[C].fuse(*axes)
+    bx, tx = s[C].split(axes[0], factor=256)
     s[C].bind(bx, tvm.thread_axis("blockIdx.x"))
     s[C].bind(tx, tvm.thread_axis("threadIdx.x"))
     return s, [A, B, C]
