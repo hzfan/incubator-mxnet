@@ -4607,7 +4607,7 @@ def mathematical_core_binary(name,
         x_grad = _np.apply_over_axes(_np.sum, x_grad, axes)
         return _np.reshape(x_grad, x.shape)
 
-            
+
     def get_grad(a, b):
         c = forward_numpy_call(a, b)
         a_bc = _np.broadcast_to(a, c.shape)
@@ -4623,6 +4623,7 @@ def mathematical_core_binary(name,
 
     configs = [
         [[], []],
+        [[0], [0]],
         [[3, 4], []],
         [[5, 6, 7, 8, 9], [1]],
         [[6, 4, 5, 2, 1], [6, 1, 5, 1, 1]],
@@ -4704,7 +4705,7 @@ def test_np_mathematical():
             super(TestMultiply, self).__init__()
         def hybrid_forward(self, F, a, b):
             return F.np.multiply(a, b)
-    mathematical_core_binary("multiply", TestMultiply, np.multiply, 
+    mathematical_core_binary("multiply", TestMultiply, np.multiply,
                              _np.multiply, lambda a, b: (b, a))
     # add
     class TestAdd(HybridBlock):

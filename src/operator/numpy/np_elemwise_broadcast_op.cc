@@ -419,6 +419,7 @@ MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_rldexp_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Backward<cpu, mshadow_op::rldexp_grad>);
 
 #if MXNET_USE_TVM_OP
+TBlob PrependAxes(const TBlob& src, const int dst_ndim);
 
 inline std::string set_attr(const std::string& name,
                             const std::string& val) {
@@ -441,17 +442,6 @@ static constexpr char func_add_gpu[] = "add_gpu";
 static constexpr char func_backward_add_cpu[] = "backward_add_cpu";
 static constexpr char func_backward_add_gpu[] = "backward_add_gpu";
 static constexpr char func_logaddexp_cpu[] = "logaddexp_cpu";
-
-TBlob PrependAxes(const TBlob& src, const int dst_ndim) {
-  CHECK_LE(src.shape_.ndim(), dst_ndim);
-  const int src_ndim = src.shape_.ndim();
-  if (src_ndim == dst_ndim) return src;
-  mxnet::TShape dst_shape(dst_ndim, 1);
-  for (int i = dst_ndim - src_ndim; i < dst_ndim; ++i) {
-    dst_shape[i] = src.shape_[i - dst_ndim + src_ndim];
-  }
-  return src.reshape(dst_shape);
-}
 
 template<const char* func>
 void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
