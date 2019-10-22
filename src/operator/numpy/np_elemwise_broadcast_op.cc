@@ -112,19 +112,6 @@ bool NumpyBinaryMixedPrecisionType(const nnvm::NodeAttrs& attrs,
   .add_argument("rhs", "NDArray-or-Symbol", "Second input to the function")
 #endif
 
-MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_add)
-#ifndef _WIN32
-.set_attr<FCompute>(
-  "FCompute<cpu>",
-  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::plus, op::mshadow_op::mixed_plus,
-                                      op::mshadow_op::mixed_plus>)
-#else
-.set_attr<FCompute>(
-  "FCompute<cpu>",
-  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::plus>)
-#endif
-.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_broadcast_add"});
-
 MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_subtract)
 #ifndef _WIN32
 .set_attr<FCompute>(
@@ -137,19 +124,6 @@ MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_subtract)
   NumpyBinaryBroadcastCompute<cpu, op::mshadow_op::minus>)
 #endif
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_broadcast_sub"});
-
-MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_multiply)
-#ifndef _WIN32
-.set_attr<FCompute>(
-  "FCompute<cpu>",
-  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::mul, op::mshadow_op::mixed_mul,
-                                      op::mshadow_op::mixed_mul>)
-#else
-.set_attr<FCompute>(
-  "FCompute<cpu>",
-  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::mul>)
-#endif
-.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_broadcast_mul"});
 
 MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_mod)
 .set_attr<FCompute>("FCompute<cpu>", BinaryBroadcastCompute<cpu, mshadow_op::mod>)
@@ -214,10 +188,6 @@ NNVM_REGISTER_OP(_npi_lcm_scalar)
 .add_argument("scalar", "int", "scalar input")
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, mshadow_op::lcm>);
 
-// MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_add_scalar)
-// .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, op::mshadow_op::plus>)
-// .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_copy"});
-
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_subtract_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, op::mshadow_op::minus>)
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_copy"});
@@ -225,10 +195,6 @@ MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_subtract_scalar)
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_rsubtract_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, mshadow_op::rminus>)
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"negative"});
-
-// MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_multiply_scalar)
-// .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, op::mshadow_op::mul>)
-// .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_mul_scalar"});
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_mod_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, mshadow_op::mod>)
@@ -477,15 +443,15 @@ void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
 
 enum AxisType
 {
-  XReduce,     // axis k's broadcast axis
-  YReduce,     // axis 1 - k's broadcast axis
+  XReduce,     // operand X's broadcast axis
+  YReduce,     // operand Y's broadcast axis
   XYIter       // other axis
 };
 
 enum ReductionType
 {
-  Reduce,      // axis k's broadcast axis
-  Iter         // axis k's iter axis
+  Reduce,      // broadcast axis
+  Iter         // iter axis
 };
 
 template<const char* func>
@@ -494,6 +460,18 @@ void TVMBinaryBroadcastBackwardUseIn(const nnvm::NodeAttrs& attrs,
                                      const std::vector<TBlob>& inputs,
                                      const std::vector<OpReqType>& req,
                                      const std::vector<TBlob>& outputs) {
+  /* Suppose that the two operands are operand X and operand Y, and we are
+   * calculating the gradient of operand X. Each axis is labeled as X if
+   * it's X’s broadcast axis, Y if its Y’s broadcast axis, and 0 is it’s
+   * not a broadcast axis. Also note that no axis can be X and Y’s broadcast
+   * axis at the same time. We may compress consecutive X axes and consecutive
+   * non-X axes, but this results in the mix of axes labeled as Y and 0. To handle
+   * this, for each pair of adjacent axes labeled as Y and 0, a dummy axis (of size 1)
+   * with label X is inserted in the middle. After that all consecutive X axes and
+   * non-X axes are compressed, with the cost of at most `n - 1` dummy axes,
+   * where `n` denotes the maximum dimension of input operands.
+   */
+#if MXNET_USE_TVM_OP
   CHECK_EQ(inputs.size(), 3U);
   CHECK_EQ(outputs.size(), 2U);
   const int ndim = inputs[0].shape_.ndim();
@@ -609,6 +587,10 @@ void TVMBinaryBroadcastBackwardUseIn(const nnvm::NodeAttrs& attrs,
     tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
     tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
   }
+#else
+  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
+                "to enable TVM-generated kernels for operator " << func;
+#endif  // MXNET_USE_TVM_OP
 }
 
 template<const char* func>
@@ -617,6 +599,15 @@ void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
                                        const std::vector<TBlob>& inputs,
                                        const std::vector<OpReqType>& req,
                                        const std::vector<TBlob>& outputs) {
+  /* The backward of broadcast op is basically a reduction on broadcast axes.
+   * We label the reduce axes as 1 and other axes as 0, and they form a bit string.
+   * Each bit string correponds to a kernel, so the number of kernels is as many as `2^n`
+   * To reduce it, the bit string is compressed by combining consecutive 0s or 1s.
+   * In this way, the number of bit string (the number of kernels) is reduced to `2 * n`
+   * They compressed bit string is stored in `axes`. And `reduce1st` represents the first bit
+   * of the compressed bit string. Credit to @junrushao1994 and @yzhliu.
+   */
+#if MXNET_USE_TVM_OP
   CHECK_EQ(inputs.size(), 1U);
   CHECK_EQ(outputs.size(), 2U);
   const TShape& oshape = PrependAxes(inputs[0], maxdim).shape_;
@@ -680,6 +671,10 @@ void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
     tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
     tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
   }
+#else
+  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
+                "to enable TVM-generated kernels for operator " << func;
+#endif  // MXNET_USE_TVM_OP
 }
 
 #define MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_NONE(name)  \
@@ -744,6 +739,7 @@ void TVMBinaryBroadcastScalarCompute(const nnvm::NodeAttrs& attrs,
                                      const std::vector<TBlob>& inputs,
                                      const std::vector<OpReqType>& req,
                                      const std::vector<TBlob>& outputs) {
+#if MXNET_USE_TVM_OP
   CHECK_EQ(inputs.size(), 1U);
   CHECK_EQ(outputs.size(), 1U);
   if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
@@ -785,6 +781,10 @@ void TVMBinaryBroadcastScalarCompute(const nnvm::NodeAttrs& attrs,
 
   tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
+#else
+  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
+                "to enable TVM-generated kernels for operator " << func;
+#endif  // MXNET_USE_TVM_OP
 }
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_multiply_scalar)
@@ -818,6 +818,44 @@ NNVM_REGISTER_OP(_npi_add_scalar)
 NNVM_REGISTER_OP(_backward_npi_add_scalar)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute<func_backward_add_gpu>);
 #endif  // MXNET_USE_CUDA
+
+#else
+
+MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_add)
+#ifndef _WIN32
+.set_attr<FCompute>(
+  "FCompute<cpu>",
+  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::plus, op::mshadow_op::mixed_plus,
+                                      op::mshadow_op::mixed_plus>)
+#else
+.set_attr<FCompute>(
+  "FCompute<cpu>",
+  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::plus>)
+#endif
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_broadcast_add"});
+
+
+MXNET_OPERATOR_REGISTER_NP_BINARY_MIXED_PRECISION(_npi_multiply)
+#ifndef _WIN32
+.set_attr<FCompute>(
+  "FCompute<cpu>",
+  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::mul, op::mshadow_op::mixed_mul,
+                                      op::mshadow_op::mixed_mul>)
+#else
+.set_attr<FCompute>(
+  "FCompute<cpu>",
+  NumpyBinaryBroadcastComputeWithBool<cpu, op::mshadow_op::mul>)
+#endif
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_broadcast_mul"});
+
+
+MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_add_scalar)
+.set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, op::mshadow_op::plus>)
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_copy"});
+
+MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_multiply_scalar)
+.set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, op::mshadow_op::mul>)
+.set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_mul_scalar"});
 
 #endif  // MXNET_USE_TVM_OP
 
