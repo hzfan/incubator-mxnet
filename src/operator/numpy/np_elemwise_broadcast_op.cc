@@ -441,15 +441,13 @@ void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
 }
 
-enum AxisType
-{
+enum AxisType {
   XReduce,     // operand X's broadcast axis
   YReduce,     // operand Y's broadcast axis
   XYIter       // other axis
 };
 
-enum ReductionType
-{
+enum ReductionType {
   Reduce,      // broadcast axis
   Iter         // iter axis
 };
@@ -475,10 +473,9 @@ void TVMBinaryBroadcastBackwardUseIn(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(inputs.size(), 3U);
   CHECK_EQ(outputs.size(), 2U);
   const int ndim = inputs[0].shape_.ndim();
-  const int nin = outputs.size();
   const TShape& oshape = inputs[0].shape_;
-  TShape ishape[nin];
-  for (int k = 0; k < nin; ++k) {
+  TShape ishape[2];
+  for (int k = 0; k < 2; ++k) {
     ishape[k] = PrependAxes(inputs[1 + k], ndim).shape_;
   }
   for (int k = 0; k < 2; ++k) {
@@ -633,7 +630,7 @@ void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
     }
     // Prepend to maxdim
     std::vector<int> ov(maxdim - tv.size(), 1), iv;
-    for (auto const& i: tv) {
+    for (auto const& i : tv) {
       ov.push_back(i);
     }
     // Calculate reduce1st
