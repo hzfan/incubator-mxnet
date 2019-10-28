@@ -4022,6 +4022,8 @@ def test_np_einsum():
         # ('abiz,abjz->abij', [(64, 8, 128, 512), (64, 8, 128, 512)], lambda *args: (_np.matmul(_np.ones((64, 8, 128, 128)), args[1]),
         #                                                                            _np.matmul(_np.ones((64, 8, 128, 128)), args[0]))),
     ]
+    # issue #16616
+    # temporarily disable the flaky float16 tests 
     dtypes = ['float32', 'float64', 'int32']
     acc_type = {'float16': 'float32', 'float32': 'float64', 'float64': 'float64',
                 'int32': 'int64'}
