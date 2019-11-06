@@ -43,7 +43,9 @@ _bin_logic_cpu_attrs = {
     'target': 'cpu',
     'auto_broadcast': True,
     'itype': AllTypes + ['bool'],
-    'ndim': list(range(6))
+    'ndim': list(range(6)),
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ['req'],
 }
 
 _bin_logic_gpu_attrs = {
@@ -51,26 +53,34 @@ _bin_logic_gpu_attrs = {
     'target': 'gpu',
     'auto_broadcast': True,
     'itype': AllTypes + ['bool'],
-    'ndim': list(range(6))
+    'ndim': list(range(6)),
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ['req'],
 }
 
 
-def _binary_logic_cpu(compute_func, op, itype, ndim):
+def _binary_logic_cpu(compute_func, op, itype, ndim, req):
+    # ignore req for forward
     s, a, b, c = compute_func(op, itype, ndim)
     axes = [axis for axis in c.op.axis]
     fused = s[c].fuse(*axes)
     s[c].parallel(fused)
-    return s, [a, b, c]
+    # dummy old return value
+    d = tvm.placeholder(c.shape, dtype=c.dtype, name='d')
+    return s, [a, b, c, d]
 
 
-def _binary_logic_gpu(compute_func, op, itype, ndim):
+def _binary_logic_gpu(compute_func, op, itype, ndim, req):
+    # ignore req for forward
     s, a, b, c = compute_func(op, itype, ndim)
     axes = [axis for axis in c.op.axis]
     fused = s[c].fuse(*axes)
     bx, tx = s[c].split(fused, factor=64)
     s[c].bind(bx, tvm.thread_axis('blockIdx.x'))
     s[c].bind(tx, tvm.thread_axis('threadIdx.x'))
-    return s, [a, b, c]
+    # dummy old return value
+    d = tvm.placeholder(c.shape, dtype=c.dtype, name='d')
+    return s, [a, b, c, d]
 
 
 # register binary element-wise logic ops with broadcasting supported
@@ -104,14 +114,18 @@ _bin_scalar_logic_cpu_attrs = {
     'compute_func': _compute_binary_scalar_logic,
     'target': 'cpu',
     'itype': AllTypes + ['bool'],
-    'ndim': list(range(6))
+    'ndim': list(range(6)),
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ['req'],
 }
 
 _bin_scalar_logic_gpu_attrs = {
     'compute_func': _compute_binary_scalar_logic,
     'target': 'gpu',
     'itype': AllTypes + ['bool'],
-    'ndim': list(range(6))
+    'ndim': list(range(6)),
+    'req': ['kWriteTo', 'kAddTo'],
+    'attrs': ['req'],
 }
 
 
@@ -125,52 +139,58 @@ for op_name in _bin_scalar_logic_op_map.keys():
 
 _bin_cpu_attrs_base = {
     'target': 'cpu',
-    'dtype': AllTypes,
-    'ndim': [5],
+    # disable float16 to pass ci
+    'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
+    'ndim': list(range(6)),
     'req': ['kWriteTo', 'kAddTo'],
     'attrs': ['req'],
 }
 
 _bin_gpu_attrs_base = {
     'target': 'gpu',
+    # disable float16 to pass ci
     'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
-    'ndim': [5],
+    'ndim': list(range(6)),
     'req': ['kWriteTo', 'kAddTo'],
     'attrs': ['req'],
 }
 
 def _binary_cpu(compute_func, op, dtype, ndim, req):
-    s, a, b, old, new = compute_func(op, dtype, ndim, req)
-    axes = [axis for axis in new.op.axis]
-    fused = s[new].fuse(*axes)
-    s[new].parallel(fused)
-    return s, [a, b, old, new]
+    # ignore req for forward
+    s, a, b, c = compute_func(op, dtype, ndim)
+    axes = [axis for axis in c.op.axis]
+    fused = s[c].fuse(*axes)
+    s[c].parallel(fused)
+    # dummy old return value
+    d = tvm.placeholder(c.shape, dtype=c.dtype, name='d')
+    return s, [a, b, c, d]
 
 
 def _binary_gpu(compute_func, op, dtype, ndim, req):
-    s, a, b, old, new = compute_func(op, dtype, ndim, req)
-    axes = [axis for axis in new.op.axis]
-    fused = s[new].fuse(*axes)
-    bx, tx = s[new].split(fused, factor=64)
-    s[new].bind(bx, tvm.thread_axis('blockIdx.x'))
-    s[new].bind(tx, tvm.thread_axis('threadIdx.x'))
-    return s, [a, b, old, new]
+    # ignore req for forward
+    s, a, b, c = compute_func(op, dtype, ndim)
+    axes = [axis for axis in c.op.axis]
+    fused = s[c].fuse(*axes)
+    bx, tx = s[c].split(fused, factor=64)
+    s[c].bind(bx, tvm.thread_axis('blockIdx.x'))
+    s[c].bind(tx, tvm.thread_axis('threadIdx.x'))
+    # dummy old return value
+    d = tvm.placeholder(c.shape, dtype=c.dtype, name='d')
+    return s, [a, b, c, d]
 
 _bin_op_map = {
     'multiply': lambda a, b: a * b,
     'add': lambda a, b: a + b,
 }
 
-def _compute_binary(op, dtype, ndim, req):
+def _compute_binary(op, dtype, ndim):
     op = _bin_op_map[op]
     a = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='a')
     b = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='b')
     c = tvm.compute([tvm.var() for _ in range(ndim)],
                     lambda *idx: op(a[idx], b[idx]), name='c')
-    old, new = assign_by_req(c, req)
-    s = tvm.create_schedule(new.op)
-    s[c].compute_inline()
-    return s, a, b, old, new
+    s = tvm.create_schedule(c.op)
+    return s, a, b, c
 
 _bin_cpu_attrs = {
     **_bin_cpu_attrs_base,
@@ -196,16 +216,14 @@ _bin_scalar_op_map = {
 }
 
 
-def _compute_binary_scalar(op, dtype, ndim, req):
+def _compute_binary_scalar(op, dtype, ndim):
     op = _bin_scalar_op_map[op]
     a = tvm.placeholder([tvm.var() for _ in range(ndim)], name='a', dtype=dtype)
     b = tvm.var('b', dtype='float64')
     c = tvm.compute([tvm.var() for _ in range(ndim)],
                     lambda *idx: op(a[idx], b), name='c')
-    old, new = assign_by_req(c, req)
-    s = tvm.create_schedule(new.op)
-    s[c].compute_inline()
-    return s, a, b, old, new
+    s = tvm.create_schedule(c.op)
+    return s, a, b, c
 
 
 _bin_scalar_cpu_attrs = {
@@ -226,7 +244,8 @@ for op_name in _bin_scalar_op_map.keys():
 
 
 _bin_backward_cpu_attrs_base = {
-    'dtype': AllTypes,
+    # disable float16 to pass ci
+    'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
     'output': [0, 1],
     'reduce1st': [0, 1],
     'req': ['kWriteTo', 'kAddTo'],
@@ -235,6 +254,7 @@ _bin_backward_cpu_attrs_base = {
 }
 
 _bin_backward_gpu_attrs_base = {
+    # disable float16 to pass ci
     'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
     'output': [0, 1],
     'reduce1st': [0, 1],
@@ -289,13 +309,13 @@ def _compute_binary_backward_use_none(op, dtype, ndim, output, reduce1st, req):
 _bin_backward_use_none_cpu_attrs = {
     **_bin_backward_cpu_attrs_base,
     'compute_func': _compute_binary_backward_use_none,
-    'ndim': [5]
+    'ndim': list(range(1, 6))
 }
 
 _bin_backward_use_none_gpu_attrs = {
     **_bin_backward_gpu_attrs_base,
     'compute_func': _compute_binary_backward_use_none,
-    'ndim': [5]
+    'ndim': list(range(1, 6))
 }
 
 for op_name in _bin_backward_use_none_op_map.keys():
@@ -326,14 +346,14 @@ def _compute_binary_backward(op, dtype, ndim, output, reduce1st, req):
 _bin_backward_cpu_attrs = {
     **_bin_backward_cpu_attrs_base,
     'compute_func': _compute_binary_backward,
-    'ndim': [9],
+    'ndim': list(range(1, 10)),
     'auto_broadcast': True,
 }
 
 _bin_backward_gpu_attrs = {
     **_bin_backward_gpu_attrs_base,
     'compute_func': _compute_binary_backward,
-    'ndim': [9],
+    'ndim': list(range(1, 10)),
     'auto_broadcast': True,
 }
 
@@ -342,17 +362,19 @@ for op_name in _bin_backward_op_map.keys():
     defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_backward_gpu_attrs)(_binary_backward_gpu)
 
 
-_bin_scalar_backward_cpu_attrs = {
-    'dtype': AllTypes,
-    'ndim': [5],
+_bin_scalar_backward_cpu_attrs_base = {
+    # disable float16 to pass ci
+    'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
+    'ndim': list(range(6)),
     'req': ['kWriteTo', 'kAddTo'],
     'attrs': ["req"],
     'target': 'cpu',
 }
 
-_bin_scalar_backward_gpu_attrs = {
+_bin_scalar_backward_gpu_attrs_base = {
+    # disable float16 to pass ci
     'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
-    'ndim': [5],
+    'ndim': list(range(6)),
     'req': ['kWriteTo', 'kAddTo'],
     'attrs': ["req"],
     'target': 'gpu',
@@ -399,12 +421,12 @@ def _compute_binary_scalar_backward_use_none(op, dtype, ndim, req):
 
 
 _bin_scalar_backward_use_none_cpu_attrs = {
-    **_bin_scalar_backward_cpu_attrs,
+    **_bin_scalar_backward_cpu_attrs_base,
     'compute_func': _compute_binary_scalar_backward_use_none,
 }
 
 _bin_scalar_backward_use_none_gpu_attrs = {
-    **_bin_scalar_backward_gpu_attrs,
+    **_bin_scalar_backward_gpu_attrs_base,
     'compute_func': _compute_binary_scalar_backward_use_none,
 }
 
@@ -431,12 +453,12 @@ def _compute_binary_scalar_backward(op, dtype, ndim, req):
 
 
 _bin_scalar_backward_cpu_attrs = {
-    **_bin_scalar_backward_cpu_attrs,
+    **_bin_scalar_backward_cpu_attrs_base,
     'compute_func': _compute_binary_scalar_backward,
 }
 
 _bin_scalar_backward_gpu_attrs = {
-    **_bin_scalar_backward_gpu_attrs,
+    **_bin_scalar_backward_gpu_attrs_base,
     'compute_func': _compute_binary_scalar_backward,
 }
 

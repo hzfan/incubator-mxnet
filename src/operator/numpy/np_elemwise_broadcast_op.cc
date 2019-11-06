@@ -385,20 +385,7 @@ MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_rldexp_scalar)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Backward<cpu, mshadow_op::rldexp_grad>);
 
 #if MXNET_USE_TVM_OP
-TBlob PrependAxes(const TBlob& src, const int dst_ndim);
 
-inline std::string set_attr(const std::string& name,
-                            const std::string& val) {
-  return name + '_' + val;
-}
-
-inline std::string set_req(OpReqType req) {
-  if (req == kWriteTo)
-    return "req_kWriteTo";
-  return "req_kAddTo";
-}
-
-static constexpr int maxdim = 5;
 static constexpr char func_multiply_cpu[] = "multiply_cpu";
 static constexpr char func_multiply_gpu[] = "multiply_gpu";
 static constexpr char func_backward_multiply_cpu[] = "backward_multiply_cpu";
@@ -407,272 +394,38 @@ static constexpr char func_add_cpu[] = "add_cpu";
 static constexpr char func_add_gpu[] = "add_gpu";
 static constexpr char func_backward_add_cpu[] = "backward_add_cpu";
 static constexpr char func_backward_add_gpu[] = "backward_add_gpu";
-static constexpr char func_logaddexp_cpu[] = "logaddexp_cpu";
 
-template<const char* func>
-void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
-                               const mxnet::OpContext& ctx,
-                               const std::vector<TBlob>& inputs,
-                               const std::vector<OpReqType>& req,
-                               const std::vector<TBlob>& outputs) {
-  CHECK_EQ(inputs.size(), 2U);
-  CHECK_EQ(outputs.size(), 1U);
-  if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
-  // prepare tblobs and TVMArgs
-  std::vector<TBlob> tblobs = {inputs[0], inputs[1], outputs[0], outputs[0]};
-  std::vector<int> type_codes;
-  std::vector<TVMValue> values;
+// template<const char* func>
+// void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
+//                                const mxnet::OpContext& ctx,
+//                                const std::vector<TBlob>& inputs,
+//                                const std::vector<OpReqType>& req,
+//                                const std::vector<TBlob>& outputs) {
+//   CHECK_EQ(inputs.size(), 2U);
+//   CHECK_EQ(outputs.size(), 1U);
+//   if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
+//   // prepare tblobs and TVMArgs
+//   std::vector<TBlob> tblobs = {inputs[0], inputs[1], outputs[0], outputs[0]};
+//   std::vector<int> type_codes;
+//   std::vector<TVMValue> values;
 
-  const size_t num_args = 4;
-  type_codes.resize(num_args);
-  values.resize(num_args);
-  for (size_t i = 0; i < num_args; ++i) {
-    tblobs[i] = PrependAxes(tblobs[i], maxdim);
-    type_codes[i] = kArrayHandle;
-    values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
-  }
+//   const size_t num_args = 4;
+//   type_codes.resize(num_args);
+//   values.resize(num_args);
+//   for (size_t i = 0; i < num_args; ++i) {
+//     tblobs[i] = PrependAxes(tblobs[i], maxdim);
+//     type_codes[i] = kArrayHandle;
+//     values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
+//   }
 
-  std::string funcname = std::string(func);
-  MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
-    funcname += set_req(req_type);
-  });
+//   std::string funcname = std::string(func);
+//   MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
+//     funcname += set_req(req_type);
+//   });
 
-  tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-  tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-}
-
-enum AxisType {
-  XReduce,     // operand X's broadcast axis
-  YReduce,     // operand Y's broadcast axis
-  XYIter       // other axis
-};
-
-enum ReductionType {
-  Reduce,      // broadcast axis
-  Iter         // iter axis
-};
-
-template<const char* func>
-void TVMBinaryBroadcastBackwardUseIn(const nnvm::NodeAttrs& attrs,
-                                     const mxnet::OpContext& ctx,
-                                     const std::vector<TBlob>& inputs,
-                                     const std::vector<OpReqType>& req,
-                                     const std::vector<TBlob>& outputs) {
-  /* Suppose that the two operands are operand X and operand Y, and we are
-   * calculating the gradient of operand X. Each axis is labeled as X if
-   * it's X’s broadcast axis, Y if its Y’s broadcast axis, and 0 is it’s
-   * not a broadcast axis. Also note that no axis can be X and Y’s broadcast
-   * axis at the same time. We may compress consecutive X axes and consecutive
-   * non-X axes, but this results in the mix of axes labeled as Y and 0. To handle
-   * this, for each pair of adjacent axes labeled as Y and 0, a dummy axis (of size 1)
-   * with label X is inserted in the middle. After that all consecutive X axes and
-   * non-X axes are compressed, with the cost of at most `n - 1` dummy axes,
-   * where `n` denotes the maximum dimension of input operands.
-   */
-#if MXNET_USE_TVM_OP
-  CHECK_EQ(inputs.size(), 3U);
-  CHECK_EQ(outputs.size(), 2U);
-  const int ndim = inputs[0].shape_.ndim();
-  const TShape& oshape = inputs[0].shape_;
-  TShape ishape[2];
-  for (int k = 0; k < 2; ++k) {
-    ishape[k] = PrependAxes(inputs[1 + k], ndim).shape_;
-  }
-  for (int k = 0; k < 2; ++k) {
-    // dispatch by broadcast dims
-    // seperate outputs[k] iter dim from outputs[1 - k] reduce dim
-    const TShape& xs = ishape[k], ys = ishape[1 - k];
-    // get axis type
-    std::vector<AxisType> axis_type(ndim);
-    for (int i = 0; i < ndim; ++i) {
-      if (oshape[i] != xs[i]) {
-        axis_type[i] = XReduce;
-      } else if (oshape[i] != ys[i]) {
-        axis_type[i] = YReduce;
-      } else {
-        axis_type[i] = XYIter;
-      }
-    }
-    // get reduction type of x with seperation dims inserted
-    std::vector<ReductionType> seperated_type;
-    std::vector<AxisType> seperated_axis_type;
-    std::vector<int> seperated_shape;
-    for (int i = 0; i < ndim; ++i) {
-      ReductionType val;
-      if (i > 0 && axis_type[i - 1] != XReduce && axis_type[i] != XReduce
-          && axis_type[i - 1] != axis_type[i]) {
-        seperated_type.push_back(Reduce);
-        seperated_axis_type.push_back(XReduce);
-        seperated_shape.push_back(1);
-      }
-      if (axis_type[i] == XReduce) {
-        val = Reduce;
-      } else {
-        val = Iter;
-      }
-      seperated_type.push_back(val);
-      seperated_shape.push_back(oshape[i]);
-      seperated_axis_type.push_back(axis_type[i]);
-    }
-    // Sequeeze continuous dims of the same type
-    std::vector<AxisType> otype;
-    std::vector<int> ov;
-    int size = seperated_type.size();
-    for (int i = 0; i < size; ++i) {
-      if (i > 0 && seperated_type[i] == seperated_type[i - 1]) {
-        ov.back() *= seperated_shape[i];
-        CHECK_EQ(otype.back(), seperated_axis_type[i]);
-      } else {
-        ov.push_back(seperated_shape[i]);
-        otype.push_back(seperated_axis_type[i]);
-      }
-    }
-    // Padding to maxdim
-    for (int i = ov.size(); i < 2 * maxdim - 1; ++i) {
-      ov.push_back(1);
-      otype.push_back(XReduce);
-    }
-    // Calculate reduce1st
-    int reduce1st = otype[0] == XReduce;
-    // Calculate iv, xy, and yv
-    std::vector<int> iv, xv, yv;
-    for (int i = reduce1st; i < 2 * maxdim - 1; i += 2) {
-      iv.push_back(ov[i]);
-    }
-    for (int i = 0; i < 2 * maxdim - 1; ++i) {
-      if (otype[i] == XReduce) {
-        xv.push_back(1);
-      } else {
-        xv.push_back(ov[i]);
-      }
-    }
-    for (int i = 0; i < 2 * maxdim - 1; ++i) {
-      if (otype[i] == YReduce) {
-        yv.push_back(1);
-      } else {
-        yv.push_back(ov[i]);
-      }
-    }
-
-    // Prepare tblobs and TVMArgs
-    TShape oshape_tvm(ov.begin(), ov.end());
-    TShape xshape_tvm(xv.begin(), xv.end());
-    TShape yshape_tvm(yv.begin(), yv.end());
-    TShape ishape_tvm(iv.begin(), iv.end());
-    std::vector<TBlob> tblobs = {inputs[0].reshape(oshape_tvm),
-                                 inputs[1 + k].reshape(xshape_tvm),
-                                 inputs[2 - k].reshape(yshape_tvm),
-                                 outputs[k].reshape(ishape_tvm),
-                                 outputs[k].reshape(ishape_tvm)};
-    std::vector<int> type_codes;
-    std::vector<TVMValue> values;
-    const int num_args = 5;
-    type_codes.resize(num_args);
-    values.resize(num_args);
-    for (size_t i = 0; i < num_args; ++i) {
-      type_codes[i] = kArrayHandle;
-      values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
-    }
-
-    // Set attrs
-    std::string funcname = std::string(func);
-    funcname += set_attr("output", std::to_string(k));
-    funcname += set_attr("reduce1st", std::to_string(reduce1st));
-    MXNET_ASSIGN_REQ_SWITCH(req[k], req_type, {
-      funcname += set_req(req_type);
-    });
-    tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-    tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-  }
-#else
-  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
-                "to enable TVM-generated kernels for operator " << func;
-#endif  // MXNET_USE_TVM_OP
-}
-
-template<const char* func>
-void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
-                                       const mxnet::OpContext& ctx,
-                                       const std::vector<TBlob>& inputs,
-                                       const std::vector<OpReqType>& req,
-                                       const std::vector<TBlob>& outputs) {
-  /* The backward of broadcast op is basically a reduction on broadcast axes.
-   * We label the reduce axes as 1 and other axes as 0, and they form a bit string.
-   * Each bit string correponds to a kernel, so the number of kernels is as many as `2^n`
-   * To reduce it, the bit string is compressed by combining consecutive 0s or 1s.
-   * In this way, the number of bit string (the number of kernels) is reduced to `2 * n`
-   * They compressed bit string is stored in `axes`. And `reduce1st` represents the first bit
-   * of the compressed bit string. Credit to @junrushao1994 and @yzhliu.
-   */
-#if MXNET_USE_TVM_OP
-  CHECK_EQ(inputs.size(), 1U);
-  CHECK_EQ(outputs.size(), 2U);
-  const TShape& oshape = PrependAxes(inputs[0], maxdim).shape_;
-  for (int k = 0; k < 2; ++k) {
-    // dispatch by backward
-    TShape ishape = PrependAxes(outputs[k], maxdim).shape_;
-    std::vector<ReductionType> reduction_type;
-    for (int i = 0; i < maxdim; ++i) {
-      if (oshape[i] != ishape[i]) {
-        reduction_type.push_back(Reduce);
-      } else {
-        reduction_type.push_back(Iter);
-      }
-    }
-    // Calculate ov
-    std::vector<int> tv;
-    for (int i = 0; i < maxdim; ++i) {
-      if (i > 0 && reduction_type[i] == reduction_type[i - 1]) {
-        tv.back() *= oshape[i];
-      } else {
-        tv.push_back(oshape[i]);
-      }
-    }
-    // Prepend to maxdim
-    std::vector<int> ov(maxdim - tv.size(), 1), iv;
-    for (auto const& i : tv) {
-      ov.push_back(i);
-    }
-    // Calculate reduce1st
-    int reduce1st = reduction_type[0] == Reduce;
-    reduce1st = (reduce1st + maxdim - tv.size()) % 2;
-
-    // Calculate iv
-    for (uint32_t i = reduce1st; i < ov.size(); i += 2) {
-      iv.push_back(ov[i]);
-    }
-
-    // Prepare tblobs and TVMArgs
-    TShape oshape_tvm(ov.begin(), ov.end());
-    TShape ishape_tvm(iv.begin(), iv.end());
-    std::vector<TBlob> tblobs = {inputs[0].reshape(oshape_tvm),
-                                 outputs[k].reshape(ishape_tvm),
-                                 outputs[k].reshape(ishape_tvm)};
-    std::vector<int> type_codes;
-    std::vector<TVMValue> values;
-    const size_t num_args = 3;
-    type_codes.resize(num_args);
-    values.resize(num_args);
-    for (size_t i = 0; i < num_args; ++i) {
-      type_codes[i] = kArrayHandle;
-      values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
-    }
-
-    std::string funcname = std::string(func);
-    funcname += set_attr("output", std::to_string(k));
-    funcname += set_attr("reduce1st", std::to_string(reduce1st));
-    MXNET_ASSIGN_REQ_SWITCH(req[k], req_type, {
-      funcname += set_req(req_type);
-    });
-
-    tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-    tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-  }
-#else
-  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
-                "to enable TVM-generated kernels for operator " << func;
-#endif  // MXNET_USE_TVM_OP
-}
+//   tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
+//   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
+// }
 
 #define MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_NONE(name)  \
   NNVM_REGISTER_OP(_backward_npi_##name)                                     \
@@ -680,7 +433,7 @@ void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
   .set_num_outputs(2)                                                        \
   .set_attr<nnvm::TIsBackward>("TIsBackward", true)                          \
   .set_attr<FCompute>("FCompute<cpu>",                                       \
-    TVMBinaryBroadcastBackwardUseNone<func_backward_##name##_cpu>);
+    TVMBinaryBroadcastBackwardUseNone{func_backward_##name##_cpu});
 
 #define MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_IN(name)  \
   NNVM_REGISTER_OP(_backward_npi_##name)                                   \
@@ -692,32 +445,32 @@ void TVMBinaryBroadcastBackwardUseNone(const nnvm::NodeAttrs& attrs,
       return std::vector<std::pair<int, int> >{{0, 0}};                    \
     })                                                                     \
   .set_attr<FCompute>("FCompute<cpu>",                                     \
-    TVMBinaryBroadcastBackwardUseIn<func_backward_##name##_cpu>);
+    TVMBinaryBroadcastBackwardUseIn{func_backward_##name##_cpu});
 
 MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_multiply)
-.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute<func_multiply_cpu>)
+.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute{func_multiply_cpu})
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_npi_multiply"});
 
 MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_IN(multiply);
 
 MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_add)
-.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute<func_add_cpu>)
+.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastCompute{func_add_cpu})
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_npi_add"});
 
 MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_NONE(add);
 
 #if MXNET_USE_CUDA
 NNVM_REGISTER_OP(_npi_multiply)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute<func_multiply_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute{func_multiply_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_multiply)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseIn<func_backward_multiply_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseIn{func_backward_multiply_gpu});
 
 NNVM_REGISTER_OP(_npi_add)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute<func_multiply_add>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute{func_multiply_add});
 
 NNVM_REGISTER_OP(_backward_npi_add)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseNone<func_backward_add_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseNone{func_backward_add_gpu});
 
 #endif  // MXNET_USE_CUDA
 
@@ -730,90 +483,90 @@ static constexpr char func_add_scalar_gpu[] = "add_scalar_gpu";
 static constexpr char func_backward_add_scalar_cpu[] = "backward_add_scalar_cpu";
 static constexpr char func_backward_add_scalar_gpu[] = "backward_add_scalar_gpu";
 
-template<const char* func>
-void TVMBinaryBroadcastScalarCompute(const nnvm::NodeAttrs& attrs,
-                                     const mxnet::OpContext& ctx,
-                                     const std::vector<TBlob>& inputs,
-                                     const std::vector<OpReqType>& req,
-                                     const std::vector<TBlob>& outputs) {
-#if MXNET_USE_TVM_OP
-  CHECK_EQ(inputs.size(), 1U);
-  CHECK_EQ(outputs.size(), 1U);
-  if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
+// template<const char* func>
+// void TVMBinaryBroadcastScalarCompute(const nnvm::NodeAttrs& attrs,
+//                                      const mxnet::OpContext& ctx,
+//                                      const std::vector<TBlob>& inputs,
+//                                      const std::vector<OpReqType>& req,
+//                                      const std::vector<TBlob>& outputs) {
+// #if MXNET_USE_TVM_OP
+//   CHECK_EQ(inputs.size(), 1U);
+//   CHECK_EQ(outputs.size(), 1U);
+//   if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
 
-  // prepare tblobs and TVMArgs
-  std::vector<TBlob> tblobs = {inputs[0], outputs[0], outputs[0]};
-  std::vector<int> type_codes;
-  std::vector<TVMValue> values;
+//   // prepare tblobs and TVMArgs
+//   std::vector<TBlob> tblobs = {inputs[0], outputs[0], outputs[0]};
+//   std::vector<int> type_codes;
+//   std::vector<TVMValue> values;
 
-  // prepend axes
-  for (uint32_t i = 0; i < tblobs.size(); ++i)
-    tblobs[i] = PrependAxes(tblobs[i], maxdim);
+//   // prepend axes
+//   for (uint32_t i = 0; i < tblobs.size(); ++i)
+//     tblobs[i] = PrependAxes(tblobs[i], maxdim);
 
-  const size_t num_args = 4;  // one input tensor, one scalar param, and one output
-  type_codes.resize(num_args);
-  values.resize(num_args);
+//   const size_t num_args = 4;  // one input tensor, one scalar param, and one output
+//   type_codes.resize(num_args);
+//   values.resize(num_args);
 
 
-  // input tensor setup
-  type_codes[0] = kArrayHandle;
-  values[0].v_handle = const_cast<DLTensor*>(&(tblobs[0].dltensor()));
+//   // input tensor setup
+//   type_codes[0] = kArrayHandle;
+//   values[0].v_handle = const_cast<DLTensor*>(&(tblobs[0].dltensor()));
 
-  // scalar param
-  type_codes[1] = kDLFloat;
-  values[1].v_float64 = nnvm::get<double>(attrs.parsed);
+//   // scalar param
+//   type_codes[1] = kDLFloat;
+//   values[1].v_float64 = nnvm::get<double>(attrs.parsed);
 
-  // output tensor
-  type_codes[2] = kArrayHandle;
-  values[2].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
+//   // output tensor
+//   type_codes[2] = kArrayHandle;
+//   values[2].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
 
-  // output tensor
-  type_codes[3] = kArrayHandle;
-  values[3].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
+//   // output tensor
+//   type_codes[3] = kArrayHandle;
+//   values[3].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
 
-  std::string funcname = std::string(func);
-  MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
-    funcname += set_req(req_type);
-  });
+//   std::string funcname = std::string(func);
+//   MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
+//     funcname += set_req(req_type);
+//   });
 
-  tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-  tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-#else
-  LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
-                "to enable TVM-generated kernels for operator " << func;
-#endif  // MXNET_USE_TVM_OP
-}
+//   tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
+//   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
+// #else
+//   LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
+//                 "to enable TVM-generated kernels for operator " << func;
+// #endif  // MXNET_USE_TVM_OP
+// }
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastScalarCompute<func_multiply_scalar_cpu>)
+.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastScalarCompute{func_multiply_scalar_cpu})
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_npi_multiply_scalar"});
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_backward_npi_multiply_scalar)
 .set_attr<nnvm::TIsBackward>("TIsBackward", true)
 .set_attr<FCompute>("FCompute<cpu>",
-  TVMBinaryBroadcastScalarCompute<func_backward_multiply_scalar_cpu>);
+  TVMBinaryBroadcastScalarCompute{func_backward_multiply_scalar_cpu});
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_add_scalar)
-.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastScalarCompute<func_add_scalar_cpu>)
+.set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastScalarCompute{func_add_scalar_cpu})
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_npi_add_scalar"});
 
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_backward_npi_add_scalar)
 .set_attr<nnvm::TIsBackward>("TIsBackward", true)
 .set_attr<FCompute>("FCompute<cpu>",
-  TVMBinaryBroadcastScalarCompute<func_backward_add_scalar_cpu>);
+  TVMBinaryBroadcastScalarCompute{func_backward_add_scalar_cpu});
 
 #if MXNET_USE_CUDA
 NNVM_REGISTER_OP(_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute<func_multiply_scalar_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_multiply_scalar_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute<func_backward_multiply_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_multiply_gpu});
 
 NNVM_REGISTER_OP(_npi_add_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute<func_add_scalar_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_add_scalar_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_add_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute<func_backward_add_gpu>);
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_add_gpu});
 #endif  // MXNET_USE_CUDA
 
 #else
