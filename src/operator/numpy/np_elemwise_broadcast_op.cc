@@ -560,13 +560,13 @@ NNVM_REGISTER_OP(_npi_multiply_scalar)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_multiply_scalar_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_multiply_gpu});
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_multiply_scalar_gpu});
 
 NNVM_REGISTER_OP(_npi_add_scalar)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_add_scalar_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_add_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_add_gpu});
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_add_scalar_gpu});
 #endif  // MXNET_USE_CUDA
 
 #else

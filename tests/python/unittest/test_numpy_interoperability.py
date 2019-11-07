@@ -669,8 +669,8 @@ def _add_workload_sum():
         OpArgMngr.add_workload('sum', d[-1::-2])
         OpArgMngr.add_workload('sum', d[::-3])
         OpArgMngr.add_workload('sum', d[-1::-3])
-        d = np.ones((1,), dtype=dt)
-        d += d
+        d = _np.ones((1,), dtype=dt)
+        d = np.array(d + d, dtype=dt)
         OpArgMngr.add_workload('sum', d)
     # OpArgMngr.add_workload('sum', np.array([3]), initial=2)
     # OpArgMngr.add_workload('sum', np.array([0.2]), initial=0.1)
@@ -903,8 +903,10 @@ def _add_workload_remainder():
         b = _np.array(1.0, dtype=ct)
         a = np.array(_np.nextafter(_np.array(0.0, dtype=ct), -b), dtype=ct)
         b = np.array(b, dtype=ct)
+        na = np.array(-a.asnumpy(), dtype=ct)
+        nb = np.array(-b.asnumpy(), dtype=ct)
         OpArgMngr.add_workload('remainder', a, b)
-        OpArgMngr.add_workload('remainder', -a, -b)
+        OpArgMngr.add_workload('remainder', na, nb)
 
     # Check nans, inf
     for ct in [np.float16, np.float32, np.float64]:
