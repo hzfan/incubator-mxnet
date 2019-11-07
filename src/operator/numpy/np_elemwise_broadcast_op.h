@@ -561,6 +561,7 @@ struct TVMBinaryBroadcastBackwardUseIn {
       // dispatch by broadcast dims
       // seperate outputs[k] iter dim from outputs[1 - k] reduce dim
       const TShape& xs = ishape[k], ys = ishape[1 - k];
+      if (xs.Size() == 0U) continue;  // skip zero-size tensor
       // get axis type
       std::vector<AxisType> axis_type(ndim);
       for (int i = 0; i < ndim; ++i) {
@@ -692,6 +693,7 @@ struct TVMBinaryBroadcastBackwardUseNone{
     for (int k = 0; k < 2; ++k) {
       // dispatch by backward
       TShape ishape = PrependAxes(outputs[k], maxdim).shape_;
+      if (ishape.Size() == 0U) continue;  // skip zero-size tensor
       std::vector<ReductionType> reduction_type;
       for (int i = 0; i < maxdim; ++i) {
         if (oshape[i] != ishape[i]) {

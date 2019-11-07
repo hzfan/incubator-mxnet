@@ -1581,6 +1581,7 @@ def test_np_binary_funcs():
             alltypes = alltypes if alltypes else [[_np.float16, _np.float32, _np.float64]]
         for dtypes, lgrad, rgrad in zip(alltypes, lgrads, rgrads if rgrads else lgrads):
             for dtype in dtypes:
+                print('dtype: {}'.format(dtype))
                 ldtype = rdtype = dtype
                 if isinstance(dtype, tuple):
                     assert len(dtype) == 2
@@ -1683,7 +1684,10 @@ def test_np_binary_funcs():
                 low, high, lgrads, rgrads = func_data
             else:
                 low, high, lgrads, rgrads, dtypes = func_data
+            print('{}:'.format(func))
+            print('{}, {}'.format(lshape, rshape))
             check_binary_func(func, lshape, rshape, low, high, lgrads, rgrads, dtypes)
+            mx.nd.waitall()
 
 
 @with_seed()
