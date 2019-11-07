@@ -1581,7 +1581,6 @@ def test_np_binary_funcs():
             alltypes = alltypes if alltypes else [[_np.float16, _np.float32, _np.float64]]
         for dtypes, lgrad, rgrad in zip(alltypes, lgrads, rgrads if rgrads else lgrads):
             for dtype in dtypes:
-                print('dtype: {}'.format(dtype))
                 ldtype = rdtype = dtype
                 if isinstance(dtype, tuple):
                     assert len(dtype) == 2
@@ -1684,10 +1683,7 @@ def test_np_binary_funcs():
                 low, high, lgrads, rgrads = func_data
             else:
                 low, high, lgrads, rgrads, dtypes = func_data
-            print('{}:'.format(func))
-            print('{}, {}'.format(lshape, rshape))
             check_binary_func(func, lshape, rshape, low, high, lgrads, rgrads, dtypes)
-            mx.nd.waitall()
 
 
 @with_seed()
@@ -4649,7 +4645,6 @@ def mathematical_core_binary(name,
     for hybridize in [True, False]:
         for dtype in types:
             for config in configs:
-                print("config: {}".format(config))
                 test = hybrid_block()
                 if hybridize:
                     test.hybridize()
@@ -4682,7 +4677,6 @@ def mathematical_core_binary(name,
     for dtype in types:
         for config in configs:
             for shape in config:
-                print(shape)
                 X_np = _np.array(_np.random.uniform(-2.0, 2.0, shape), dtype=dtype)
                 scalar = _np.random.uniform(-2.0, 2.0)
                 X = np.array(X_np, dtype=dtype)
