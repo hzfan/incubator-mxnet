@@ -37,6 +37,7 @@ from mxnet.test_utils import verify_generator, gen_buckets_probs_with_ppf
 from mxnet.numpy_op_signature import _get_builtin_op
 from mxnet.test_utils import is_op_runnable, has_tvm_ops
 from mxnet.operator import get_all_registered_operators
+from mxnet.runtime import Features
 
 
 @with_seed()
@@ -1573,8 +1574,11 @@ def test_np_binary_funcs():
 
         np_func = getattr(_np, func)
         mx_func = TestBinary(func)
-        # TODO: add fp16 back
-        alltypes = alltypes if alltypes else [[_np.float32, _np.float64]]
+        if Features().is_enabled("TVM_OP"):
+            # TODO: add fp16 back
+            alltypes = alltypes if alltypes else [[_np.float32, _np.float64]]
+        else:
+            alltypes = alltypes if alltypes else [[_np.float16, _np.float32, _np.float64]]
         for dtypes, lgrad, rgrad in zip(alltypes, lgrads, rgrads if rgrads else lgrads):
             for dtype in dtypes:
                 ldtype = rdtype = dtype
@@ -1684,6 +1688,8 @@ def test_np_binary_funcs():
 
 @with_seed()
 @use_np
+@unittest.skipIf(Features().is_enabled("TVM_OP"),
+                 'TVM binary ops do not support mixed precision')
 def test_np_mixed_precision_binary_funcs():
     def check_mixed_precision_binary_func(func, low, high, lshape, rshape, ltype, rtype):
         class TestMixedBinary(HybridBlock):

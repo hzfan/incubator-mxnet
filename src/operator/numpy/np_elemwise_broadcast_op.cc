@@ -467,7 +467,7 @@ NNVM_REGISTER_OP(_backward_npi_multiply)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseIn{func_backward_multiply_gpu});
 
 NNVM_REGISTER_OP(_npi_add)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute{func_multiply_add});
+.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastCompute{func_add_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_add)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastBackwardUseNone{func_backward_add_gpu});
