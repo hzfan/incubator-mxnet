@@ -247,9 +247,9 @@ _bin_backward_cpu_attrs_base = {
     # disable float16 to pass ci
     'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
     'output': [0, 1],
-    'reduce1st': [0, 1],
+    'reduce1st_dim': [0, 1],
     'req': ['kWriteTo', 'kAddTo'],
-    'attrs': ["output", "reduce1st", "req"],
+    'attrs': ["output", "reduce1st_dim", "req"],
     'target': 'cpu',
 }
 
@@ -257,15 +257,15 @@ _bin_backward_gpu_attrs_base = {
     # disable float16 to pass ci
     'dtype': ["float32", "float64", "uint8", "int8", "int32", "int64"],
     'output': [0, 1],
-    'reduce1st': [0, 1],
+    'reduce1st_dim': [0, 1],
     'req': ['kWriteTo', 'kAddTo'],
-    'attrs': ["output", "reduce1st", "req"],
+    'attrs': ["output", "reduce1st_dim", "req"],
     'target': 'gpu',
 }
 
 
-def _binary_backward_cpu(compute_func, op, dtype, ndim, output, reduce1st, req):
-    s, args, c_list = compute_func(op, dtype, ndim, output, reduce1st, req)
+def _binary_backward_cpu(compute_func, op, dtype, ndim, output, reduce1st_dim, req):
+    s, args, c_list = compute_func(op, dtype, ndim, output, reduce1st_dim, req)
     for t in c_list:
         axes = [axis for axis in t.op.axis]
         fused = s[t].fuse(*axes)
@@ -273,8 +273,8 @@ def _binary_backward_cpu(compute_func, op, dtype, ndim, output, reduce1st, req):
     return s, args
 
 
-def _binary_backward_gpu(compute_func, op, dtype, ndim, output, reduce1st, req):
-    s, args, c_list = compute_func(op, dtype, ndim, output, reduce1st, req)
+def _binary_backward_gpu(compute_func, op, dtype, ndim, output, reduce1st_dim, req):
+    s, args, c_list = compute_func(op, dtype, ndim, output, reduce1st_dim, req)
     num_thread = 64
     for t in c_list:
         block_x = tvm.thread_axis("blockIdx.x")
@@ -293,9 +293,9 @@ _bin_backward_use_none_op_map = {
 }
 
 
-def _compute_binary_backward_use_none(op, dtype, ndim, output, reduce1st, req):
+def _compute_binary_backward_use_none(op, dtype, ndim, output, reduce1st_dim, req):
     op = _bin_backward_use_none_op_map[op][output]
-    axes = ([reduce1st, 1 - reduce1st] * ndim)[:ndim]
+    axes = ([reduce1st_dim, 1 - reduce1st_dim] * ndim)[:ndim]
     oshape = [tvm.var() for _ in range(ndim)]
     ograd = tvm.placeholder(oshape, name='X', dtype=dtype)
     grad = tvm.compute(oshape, lambda *idx: op(ograd[idx]))
@@ -328,9 +328,9 @@ _bin_backward_op_map = {
 }
 
 
-def _compute_binary_backward(op, dtype, ndim, output, reduce1st, req):
+def _compute_binary_backward(op, dtype, ndim, output, reduce1st_dim, req):
     op = _bin_backward_op_map[op][output]
-    axes = ([reduce1st, 1 - reduce1st] * ndim)[:ndim]
+    axes = ([reduce1st_dim, 1 - reduce1st_dim] * ndim)[:ndim]
     oshape = [tvm.var() for _ in range(ndim)]
     ograd = tvm.placeholder(oshape, name='X', dtype=dtype)
     a = tvm.placeholder([tvm.var() for _ in range(ndim)], dtype=dtype, name='a')
