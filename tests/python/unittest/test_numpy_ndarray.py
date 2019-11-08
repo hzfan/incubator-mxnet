@@ -31,6 +31,7 @@ from mxnet.test_utils import verify_generator, gen_buckets_probs_with_ppf, asser
 from mxnet.ndarray.ndarray import py_slice
 from mxnet.base import integer_types
 import scipy.stats as ss
+from mxnet.runtime import Features
 
 
 @with_seed()
@@ -136,7 +137,11 @@ def test_np_zeros():
 
     shapes = [(0,), (2, 0, 2), (0, 0, 0, 0), ()]
     shapes += [rand_shape_nd(ndim, allow_zero_size=True) for ndim in range(5)]
-    dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
+    if Features().is_enabled("TVM_OP"):
+        # TODO: add fp16 back
+        dtypes = [_np.int8, _np.int32, _np.float32, _np.float64, None]
+    else:
+        dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
     for shape in shapes:
         for dtype in dtypes:
             check_zero_array_creation(shape, dtype)
@@ -190,7 +195,11 @@ def test_np_ones():
 
     shapes = [(0,), (2, 0, 2), (0, 0, 0, 0), ()]
     shapes += [rand_shape_nd(ndim, allow_zero_size=True) for ndim in range(5)]
-    dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
+    if Features().is_enabled("TVM_OP"):
+        # TODO: add fp16 back
+        dtypes = [_np.int8, _np.int32, _np.float32, _np.float64, None]
+    else:
+        dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
     for shape in shapes:
         for dtype in dtypes:
             check_ones_array_creation(shape, dtype)
@@ -239,7 +248,11 @@ def test_identity():
             assert np_out.dtype == _np.float64
 
     ns = [0, 1, 2, 3, 5, 15, 30, 200]
-    dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
+    if Features().is_enabled("TVM_OP"):
+        # TODO: add fp16 back
+        dtypes = [_np.int8, _np.int32, _np.float32, _np.float64, None]
+    else:
+        dtypes = [_np.int8, _np.int32, _np.float16, _np.float32, _np.float64, None]
     for n in ns:
         for dtype in dtypes:
             check_identity_array_creation(n, dtype)

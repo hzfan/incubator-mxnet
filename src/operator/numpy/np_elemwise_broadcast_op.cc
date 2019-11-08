@@ -483,60 +483,6 @@ static constexpr char func_add_scalar_gpu[] = "add_scalar_gpu";
 static constexpr char func_backward_add_scalar_cpu[] = "backward_add_scalar_cpu";
 static constexpr char func_backward_add_scalar_gpu[] = "backward_add_scalar_gpu";
 
-// template<const char* func>
-// void TVMBinaryBroadcastScalarCompute(const nnvm::NodeAttrs& attrs,
-//                                      const mxnet::OpContext& ctx,
-//                                      const std::vector<TBlob>& inputs,
-//                                      const std::vector<OpReqType>& req,
-//                                      const std::vector<TBlob>& outputs) {
-// #if MXNET_USE_TVM_OP
-//   CHECK_EQ(inputs.size(), 1U);
-//   CHECK_EQ(outputs.size(), 1U);
-//   if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
-
-//   // prepare tblobs and TVMArgs
-//   std::vector<TBlob> tblobs = {inputs[0], outputs[0], outputs[0]};
-//   std::vector<int> type_codes;
-//   std::vector<TVMValue> values;
-
-//   // prepend axes
-//   for (uint32_t i = 0; i < tblobs.size(); ++i)
-//     tblobs[i] = PrependAxes(tblobs[i], maxdim);
-
-//   const size_t num_args = 4;  // one input tensor, one scalar param, and one output
-//   type_codes.resize(num_args);
-//   values.resize(num_args);
-
-
-//   // input tensor setup
-//   type_codes[0] = kArrayHandle;
-//   values[0].v_handle = const_cast<DLTensor*>(&(tblobs[0].dltensor()));
-
-//   // scalar param
-//   type_codes[1] = kDLFloat;
-//   values[1].v_float64 = nnvm::get<double>(attrs.parsed);
-
-//   // output tensor
-//   type_codes[2] = kArrayHandle;
-//   values[2].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
-
-//   // output tensor
-//   type_codes[3] = kArrayHandle;
-//   values[3].v_handle = const_cast<DLTensor*>(&(tblobs[1].dltensor()));
-
-//   std::string funcname = std::string(func);
-//   MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
-//     funcname += set_req(req_type);
-//   });
-
-//   tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-//   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-// #else
-//   LOG(FATAL) << "Please add USE_TVM_OP=1 as a compile flag for compiling MXNet source code "
-//                 "to enable TVM-generated kernels for operator " << func;
-// #endif  // MXNET_USE_TVM_OP
-// }
-
 MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_multiply_scalar)
 .set_attr<FCompute>("FCompute<cpu>", TVMBinaryBroadcastScalarCompute{func_multiply_scalar_cpu})
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseNone{"_backward_npi_multiply_scalar"});
@@ -560,7 +506,8 @@ NNVM_REGISTER_OP(_npi_multiply_scalar)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_multiply_scalar_gpu});
 
 NNVM_REGISTER_OP(_backward_npi_multiply_scalar)
-.set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_backward_multiply_scalar_gpu});
+.set_attr<FCompute>("FCompute<gpu>",
+                    TVMBinaryBroadcastScalarCompute{func_backward_multiply_scalar_gpu});
 
 NNVM_REGISTER_OP(_npi_add_scalar)
 .set_attr<FCompute>("FCompute<gpu>", TVMBinaryBroadcastScalarCompute{func_add_scalar_gpu});

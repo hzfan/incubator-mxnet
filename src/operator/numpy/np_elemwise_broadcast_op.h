@@ -612,11 +612,11 @@ struct TVMBinaryBroadcastBackwardUseIn {
         ov.push_back(1);
         otype.push_back(XReduce);
       }
-      // Calculate reduce1st
-      int reduce1st = otype[0] == XReduce;
+      // Calculate reduce1st_dim
+      int reduce1st_dim = otype[0] == XReduce;
       // Calculate iv, xy, and yv
       std::vector<int> iv, xv, yv;
-      for (int i = reduce1st; i < 2 * maxdim - 1; i += 2) {
+      for (int i = reduce1st_dim; i < 2 * maxdim - 1; i += 2) {
         iv.push_back(ov[i]);
       }
       for (int i = 0; i < 2 * maxdim - 1; ++i) {
@@ -657,7 +657,7 @@ struct TVMBinaryBroadcastBackwardUseIn {
       // Set attrs
       std::string funcname = std::string(func);
       funcname += SetAttr("output", std::to_string(k));
-      funcname += SetAttr("reduce1st", std::to_string(reduce1st));
+      funcname += SetAttr("reduce1st_dim", std::to_string(reduce1st_dim));
       MXNET_ASSIGN_REQ_SWITCH(req[k], req_type, {
         funcname += SetReq(req_type);
       });
@@ -683,7 +683,7 @@ struct TVMBinaryBroadcastBackwardUseNone{
     * Each bit string correponds to a kernel, so the number of kernels is as many as `2^n`
     * To reduce it, the bit string is compressed by combining consecutive 0s or 1s.
     * In this way, the number of bit string (the number of kernels) is reduced to `2 * n`
-    * They compressed bit string is stored in `axes`. And `reduce1st` represents the first bit
+    * They compressed bit string is stored in `axes`. And `reduce1st_dim` represents the first bit
     * of the compressed bit string. Credit to @junrushao1994 and @yzhliu.
     */
 #if MXNET_USE_TVM_OP
@@ -716,12 +716,12 @@ struct TVMBinaryBroadcastBackwardUseNone{
       for (auto const& i : tv) {
         ov.push_back(i);
       }
-      // Calculate reduce1st
-      int reduce1st = reduction_type[0] == Reduce;
-      reduce1st = (reduce1st + maxdim - tv.size()) % 2;
+      // Calculate reduce1st_dim
+      int reduce1st_dim = reduction_type[0] == Reduce;
+      reduce1st_dim = (reduce1st_dim + maxdim - tv.size()) % 2;
 
       // Calculate iv
-      for (uint32_t i = reduce1st; i < ov.size(); i += 2) {
+      for (uint32_t i = reduce1st_dim; i < ov.size(); i += 2) {
         iv.push_back(ov[i]);
       }
 
@@ -743,7 +743,7 @@ struct TVMBinaryBroadcastBackwardUseNone{
 
       std::string funcname = std::string(func);
       funcname += SetAttr("output", std::to_string(k));
-      funcname += SetAttr("reduce1st", std::to_string(reduce1st));
+      funcname += SetAttr("reduce1st_dim", std::to_string(reduce1st_dim));
       MXNET_ASSIGN_REQ_SWITCH(req[k], req_type, {
         funcname += SetReq(req_type);
       });
