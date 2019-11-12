@@ -1759,6 +1759,8 @@ def test_np_mixed_precision_binary_funcs():
 
 @with_seed()
 @use_np
+@unittest.skipIf(Features().is_enabled("TVM_OP"),
+                 'TVM binary ops do not support boolean type')
 def test_np_boolean_binary_funcs():
     def check_boolean_binary_func(func, mx_x1, mx_x2):
         class TestBooleanBinary(HybridBlock):
