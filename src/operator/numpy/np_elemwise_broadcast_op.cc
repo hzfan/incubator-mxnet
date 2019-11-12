@@ -395,38 +395,6 @@ static constexpr char func_add_gpu[] = "add_gpu";
 static constexpr char func_backward_add_cpu[] = "backward_add_cpu";
 static constexpr char func_backward_add_gpu[] = "backward_add_gpu";
 
-// template<const char* func>
-// void TVMBinaryBroadcastCompute(const nnvm::NodeAttrs& attrs,
-//                                const mxnet::OpContext& ctx,
-//                                const std::vector<TBlob>& inputs,
-//                                const std::vector<OpReqType>& req,
-//                                const std::vector<TBlob>& outputs) {
-//   CHECK_EQ(inputs.size(), 2U);
-//   CHECK_EQ(outputs.size(), 1U);
-//   if (outputs[0].shape_.Size() == 0U) return;  // skip zero-size tensor
-//   // prepare tblobs and TVMArgs
-//   std::vector<TBlob> tblobs = {inputs[0], inputs[1], outputs[0], outputs[0]};
-//   std::vector<int> type_codes;
-//   std::vector<TVMValue> values;
-
-//   const size_t num_args = 4;
-//   type_codes.resize(num_args);
-//   values.resize(num_args);
-//   for (size_t i = 0; i < num_args; ++i) {
-//     tblobs[i] = PrependAxes(tblobs[i], maxdim);
-//     type_codes[i] = kArrayHandle;
-//     values[i].v_handle = const_cast<DLTensor*>(&(tblobs[i].dltensor()));
-//   }
-
-//   std::string funcname = std::string(func);
-//   MXNET_ASSIGN_REQ_SWITCH(req[0], req_type, {
-//     funcname += set_req(req_type);
-//   });
-
-//   tvm::runtime::TVMArgs tvm_args(&values[0], &type_codes[0], num_args);
-//   tvm::runtime::TVMOpModule::Get()->CallEx(funcname, ctx, tblobs, tvm_args);
-// }
-
 #define MXNET_OPERAOTR_REGISTER_BACKWARD_NP_BINARY_BROADCAST_USE_NONE(name)  \
   NNVM_REGISTER_OP(_backward_npi_##name)                                     \
   .set_num_inputs(1)                                                         \
