@@ -27,6 +27,7 @@ from mxnet.test_utils import is_op_runnable
 from common import assertRaises, with_seed
 from mxnet.numpy_dispatch_protocol import with_array_function_protocol, with_array_ufunc_protocol
 from mxnet.numpy_dispatch_protocol import _NUMPY_ARRAY_FUNCTION_LIST, _NUMPY_ARRAY_UFUNC_LIST
+from mxnet.runtime import Features
 
 
 _INT_DTYPES = [np.int8, np.int32, np.int64, np.uint8]
@@ -245,7 +246,12 @@ def _add_workload_linalg_norm():
         A = (1 / 10) * np.array([[1, 2, 3], [6, 0, 5], [3, 2, 1]], dtype=dt)
         OpArgMngr.add_workload('linalg.norm', A)
         OpArgMngr.add_workload('linalg.norm', A, 'fro')
-    for dt in [np.float16, np.float32, np.float64]:
+    if Features().is_enabled("TVM_OP"):
+        # TODO: add fp16 back
+        dtypes = [np.float32, np.float64]
+    else:
+        dtypes = [np.float16, np.float32, np.float64]
+    for dt in dtypes:
         OpArgMngr.add_workload('linalg.norm', np.array([[1, 0, 1], [0, 1, 1]], dtype=dt))
         OpArgMngr.add_workload('linalg.norm', np.array([[1, 0, 1], [0, 1, 1]], dtype=dt), 'fro')
 
