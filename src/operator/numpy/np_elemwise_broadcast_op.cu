@@ -66,12 +66,12 @@ NNVM_REGISTER_OP(_npi_subtract)
 #ifndef _WIN32
 .set_attr<FCompute>(
   "FCompute<gpu>",
-  MixedBinaryBroadcastCompute<gpu, op::mshadow_op::minus, op::mshadow_op::mixed_minus,
+  NumpyBinaryBroadcastCompute<gpu, op::mshadow_op::minus, op::mshadow_op::mixed_minus,
                               op::mshadow_op::mixed_rminus>);
 #else
 .set_attr<FCompute>(
   "FCompute<gpu>",
-  MixedBinaryBroadcastCompute<gpu, op::mshadow_op::minus>);
+  NumpyBinaryBroadcastCompute<gpu, op::mshadow_op::minus>);
 #endif
 
 NNVM_REGISTER_OP(_npi_mod)
@@ -168,10 +168,5 @@ NNVM_REGISTER_OP(_backward_npi_ldexp_scalar)
 
 NNVM_REGISTER_OP(_backward_npi_rldexp_scalar)
 .set_attr<FCompute>("FCompute<gpu>", BinaryScalarOp::Backward<gpu, mshadow_op::rldexp_grad>);
-
-NNVM_REGISTER_OP(_np_bitwise_xor)
-.set_attr<FCompute>("FCompute<gpu>", BinaryBroadcastCompute<gpu, mshadow_op::bitwise_xor>);
-
-
 }  // namespace op
 }  // namespace mxnet
