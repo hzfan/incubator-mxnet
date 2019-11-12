@@ -526,8 +526,8 @@ enum AxisType {
 };
 
 enum ReductionType {
-  Reduce,      // broadcast axis
-  Iter         // iter axis
+  ReduceAxis,      // broadcast axis
+  IterAxis         // iter axis
 };
 
 struct TVMBinaryBroadcastBackwardUseIn {
@@ -581,14 +581,14 @@ struct TVMBinaryBroadcastBackwardUseIn {
         ReductionType val;
         if (i > 0 && axis_type[i - 1] != XReduce && axis_type[i] != XReduce
             && axis_type[i - 1] != axis_type[i]) {
-          seperated_type.push_back(Reduce);
+          seperated_type.push_back(ReduceAxis);
           seperated_axis_type.push_back(XReduce);
           seperated_shape.push_back(1);
         }
         if (axis_type[i] == XReduce) {
-          val = Reduce;
+          val = ReduceAxis;
         } else {
-          val = Iter;
+          val = IterAxis;
         }
         seperated_type.push_back(val);
         seperated_shape.push_back(oshape[i]);
@@ -697,9 +697,9 @@ struct TVMBinaryBroadcastBackwardUseNone{
       std::vector<ReductionType> reduction_type;
       for (int i = 0; i < maxdim; ++i) {
         if (oshape[i] != ishape[i]) {
-          reduction_type.push_back(Reduce);
+          reduction_type.push_back(ReduceAxis);
         } else {
-          reduction_type.push_back(Iter);
+          reduction_type.push_back(IterAxis);
         }
       }
       // Calculate ov
@@ -717,7 +717,7 @@ struct TVMBinaryBroadcastBackwardUseNone{
         ov.push_back(i);
       }
       // Calculate reduce1st_dim
-      int reduce1st_dim = reduction_type[0] == Reduce;
+      int reduce1st_dim = reduction_type[0] == ReduceAxis;
       reduce1st_dim = (reduce1st_dim + maxdim - tv.size()) % 2;
 
       // Calculate iv
