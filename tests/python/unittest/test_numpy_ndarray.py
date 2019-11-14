@@ -28,6 +28,7 @@ from mxnet.gluon import HybridBlock
 from mxnet.test_utils import same, assert_almost_equal, rand_shape_nd, rand_ndarray, retry, use_np
 from common import with_seed, TemporaryDirectory
 from mxnet.test_utils import verify_generator, gen_buckets_probs_with_ppf, assert_exception, is_op_runnable, collapse_sum_like
+from mxnet.test_utils import is_op_runnable, has_tvm_ops
 from mxnet.ndarray.ndarray import py_slice
 from mxnet.base import integer_types
 import scipy.stats as ss
@@ -109,6 +110,8 @@ def test_np_array_creation():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_zeros uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_zeros():
     # test np.zeros in Gluon
     class TestZeros(HybridBlock):
@@ -167,6 +170,8 @@ def test_np_zeros():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_ones uses op multiply, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_ones():
     # test np.ones in Gluon
     class TestOnes(HybridBlock):
@@ -225,6 +230,8 @@ def test_np_ones():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_identity uses op multiply, whose tvm implementation must be run with compute capability >= 53.')
 def test_identity():
     class TestIdentity(HybridBlock):
         def __init__(self, shape, dtype=None):

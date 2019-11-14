@@ -761,6 +761,8 @@ def test_np_moment():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_linspace uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_linspace():
     configs = [
         (0.0, 1.0, 10),
@@ -1636,12 +1638,8 @@ def test_np_binary_funcs():
                 assertRaises(NotImplementedError, getattr(np, func), mx_test_x1, mx_test_x2,  order='mxnet')
 
     funcs = {
-        'add': (-1.0, 1.0, [lambda y, x1, x2: _np.ones(y.shape)], None),
-        'subtract':
-        (-1.0, 1.0, [lambda y, x1, x2: _np.ones(y.shape)],
-                    [lambda y, x1, x2: -_np.ones(y.shape)]),
-        'multiply': (-1.0, 1.0, [lambda y, x1, x2: _np.broadcast_to(x2, y.shape)],
-                                [lambda y, x1, x2: _np.broadcast_to(x1, y.shape)]),
+        'subtract': (-1.0, 1.0, [lambda y, x1, x2: _np.ones(y.shape)],
+                                [lambda y, x1, x2: -_np.ones(y.shape)]),
         'divide': (0.1, 1.0, [lambda y, x1, x2: _np.ones(y.shape) / x2],
                    [lambda y, x1, x2: -x1 / (x2 * x2)]),
         'mod': (1.0, 10.0,
@@ -1672,6 +1670,12 @@ def test_np_binary_funcs():
                          [lambda y, x1, x2: x2 / y]),
         'ldexp': (-3, 3, [None], None, [[_np.int32]]),
     }
+    if is_op_runnable():
+        funcs.update({
+            'add': (-1.0, 1.0, [lambda y, x1, x2: _np.ones(y.shape)], None),
+            'multiply': (-1.0, 1.0, [lambda y, x1, x2: _np.broadcast_to(x2, y.shape)],
+                                    [lambda y, x1, x2: _np.broadcast_to(x1, y.shape)]),
+        })
     shape_pairs = [((3, 2), (3, 2)),
                    ((3, 2), (3, 1)),
                    ((3, 1), (3, 0)),
@@ -1889,6 +1893,8 @@ def test_npx_sigmoid():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_arange uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_arange():
     configs = [
         (1, 10, 2),
@@ -2842,6 +2848,8 @@ def test_np_choice():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_eye uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_eye():
     configs = [
         4,
@@ -2914,6 +2922,8 @@ def test_np_eye():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_indices uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_indices():
     if Features().is_enabled("TVM_OP"):
         # TODO: add fp16 back
@@ -4731,16 +4741,17 @@ def test_np_mathematical():
             super(TestMultiply, self).__init__()
         def hybrid_forward(self, F, a, b):
             return F.np.multiply(a, b)
-    mathematical_core_binary("multiply", TestMultiply, np.multiply,
-                             _np.multiply, lambda a, b: (b, a))
     # add
     class TestAdd(HybridBlock):
         def __init__(self):
             super(TestAdd, self).__init__()
         def hybrid_forward(self, F, a, b):
             return F.np.add(a, b)
-    mathematical_core_binary("add", TestAdd, np.add, _np.add,
-                             lambda a, b: (_np.ones_like(a), _np.ones_like(b)))
+    if is_op_runnable():
+        mathematical_core_binary("multiply", TestMultiply, np.multiply,
+                                _np.multiply, lambda a, b: (b, a))
+        mathematical_core_binary("add", TestAdd, np.add, _np.add,
+                                lambda a, b: (_np.ones_like(a), _np.ones_like(b)))
 
 
 if __name__ == '__main__':

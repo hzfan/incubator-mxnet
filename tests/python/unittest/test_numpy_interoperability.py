@@ -39,7 +39,9 @@ _TVM_OPS = [
     'less',
     'less_equal',
     'greater',
-    'greater_equal'
+    'greater_equal',
+    'multiply',
+    'add',
 ]
 
 
@@ -197,6 +199,9 @@ def _add_workload_transpose():
 
 
 def _add_workload_linalg_norm():
+    # norm uses op multiply, whose tvm implementation must be run with compute capability >= 53.
+    if not is_op_runnable():
+        return
     OpArgMngr.add_workload('linalg.norm', np.random.uniform(size=(4, 1)))
     for dt in ["double", "float32", "int64"]:
         OpArgMngr.add_workload('linalg.norm', np.array([], dtype=dt))
