@@ -42,6 +42,7 @@ _TVM_OPS = [
     'greater_equal',
     'multiply',
     'add',
+    'linalg.norm'
 ]
 
 
@@ -200,8 +201,6 @@ def _add_workload_transpose():
 
 def _add_workload_linalg_norm():
     # norm uses op multiply, whose tvm implementation must be run with compute capability >= 53.
-    if not is_op_runnable():
-        return
     OpArgMngr.add_workload('linalg.norm', np.random.uniform(size=(4, 1)))
     for dt in ["double", "float32", "int64"]:
         OpArgMngr.add_workload('linalg.norm', np.array([], dtype=dt))
@@ -248,7 +247,7 @@ def _add_workload_linalg_norm():
         A = np.array([[1, 3], [5, 7]], dtype=dt)
         OpArgMngr.add_workload('linalg.norm', A)
         OpArgMngr.add_workload('linalg.norm', A, 'fro')
-        A = (1 / 10) * np.array([[1, 2, 3], [6, 0, 5], [3, 2, 1]], dtype=dt)
+        A = np.array([[.1, .2, .3], [.6, .0, .5], [.3, .2, .1]], dtype=dt)
         OpArgMngr.add_workload('linalg.norm', A)
         OpArgMngr.add_workload('linalg.norm', A, 'fro')
     if Features().is_enabled("TVM_OP"):
@@ -485,14 +484,14 @@ def _add_workload_broadcast_to():
 
 
 def _add_workload_clip():
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("float"), -12.8, 100.2)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("float"), 0, 0)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("int"), -120, 100)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("int"), 0.0, 2.0)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("int"), 0, 0)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("uint8"), 0, 0)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("uint8"), 0.0, 2.0)
-    OpArgMngr.add_workload('clip', (np.random.normal(size=(1000,)) * 1024).astype("uint8"), -120, 100)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("float"), -12.8, 100.2)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("float"), 0, 0)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("int"), -120, 100)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("int"), 0.0, 2.0)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("int"), 0, 0)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("uint8"), 0, 0)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("uint8"), 0.0, 2.0)
+    OpArgMngr.add_workload('clip', (np.random.normal(scale=1024, size=(1000,))).astype("uint8"), -120, 100)
     # OpArgMngr.add_workload('clip', np.random.normal(size=(1000,)), np.zeros((1000,))+0.5, 1)
     # OpArgMngr.add_workload('clip', np.random.normal(size=(1000,)), 0, np.zeros((1000,))+0.5)
     # OpArgMngr.add_workload('clip', np.array([0, 1, 2, 3, 4, 5, 6, 7]), 3)
@@ -694,7 +693,7 @@ def _add_workload_take():
         OpArgMngr.add_workload('take', np.array([[1, 2], [3, 4]], dtype=int), np.array(4, int), mode=mode)
         OpArgMngr.add_workload('take', np.array([[1, 2], [3, 4]], dtype=int), np.array([-1], int), mode=mode)
         OpArgMngr.add_workload('take', np.array([[1, 2], [3, 4]], dtype=int), np.array([4], int), mode=mode)
-    x = (np.random.normal(size=24)*100).reshape((2, 3, 4))
+    x = (np.random.normal(scale=100, size=24)).reshape((2, 3, 4))
     # OpArgMngr.add_workload('take', x, np.array([-1], int), axis=0)
     OpArgMngr.add_workload('take', x, np.array([-1], int), axis=0, mode='clip')
     OpArgMngr.add_workload('take', x, np.array([2], int), axis=0, mode='clip')
@@ -1164,7 +1163,7 @@ def _add_workload_diff():
     OpArgMngr.add_workload('diff', x, axis=0)
     OpArgMngr.add_workload('diff', x, axis=1)
     OpArgMngr.add_workload('diff', x, axis=-2)
-    x = 20 * np.random.uniform(size=(10,20,30))
+    x = np.random.uniform(high=20, size=(10,20,30))
     OpArgMngr.add_workload('diff', x)
     OpArgMngr.add_workload('diff', x, n=2)
     OpArgMngr.add_workload('diff', x, axis=0)
@@ -1189,8 +1188,8 @@ def _add_workload_resize():
 @use_np
 def _prepare_workloads():
     array_pool = {
-        '4x1': np.random.uniform(size=(4, 1)) + 2,
-        '1x2': np.random.uniform(size=(1, 2)) + 2,
+        '4x1': np.array(_np.random.uniform(size=(4, 1)) + 2, dtype='float32'),
+        '1x2': np.array(_np.random.uniform(size=(1, 2)) + 2, dtype='float32'),
         '1x1x0': np.array([[[]]])
     }
 

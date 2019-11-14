@@ -534,6 +534,9 @@ def test_np_ndarray_binary_element_wise_ops():
 
 
 @with_seed()
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_hybrid_block_multiple_outputs uses op multiply and add, '
+                     'whose tvm implementation must be run with compute capability >= 53.')
 def test_np_hybrid_block_multiple_outputs():
     @use_np
     class TestAllNumpyOutputs(HybridBlock):

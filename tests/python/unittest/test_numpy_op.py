@@ -837,6 +837,8 @@ def test_np_linspace():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_logspace uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_logspace():
     class TestLogspace(HybridBlock):
         def __init__(self, start, stop, num=50, endpoint=None, base=50.0, dtype=None, axis=0):
@@ -2541,6 +2543,8 @@ def test_np_clip():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_npx_random_bernoulli uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_npx_random_bernoulli():
     def _test_bernoulli_exception(prob, logit):
         output = npx.random.bernoulli(prob=prob, logit=logit).asnumpy()
@@ -2629,6 +2633,8 @@ def test_npx_special_unary_func():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_random uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_random():
     shapes = [(), (1,), (2, 3), (4, 0, 5), 6, (7, 8), None]
     dtypes = ['float16', 'float32', 'float64']
@@ -3010,6 +3016,8 @@ def test_np_repeat():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_linalg_norm uses op multiply, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_linalg_norm():
     @use_np
     class TestLinalgNorm(HybridBlock):
@@ -3541,6 +3549,8 @@ def test_np_trace():
 
 @with_seed()
 @use_np
+@unittest.skipUnless(is_op_runnable(),
+                     'test_np_windows uses op add, whose tvm implementation must be run with compute capability >= 53.')
 def test_np_windows():
     class TestWindows(HybridBlock):
         def __init__(self, func, M, dtype):
