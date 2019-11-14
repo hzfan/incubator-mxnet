@@ -282,8 +282,6 @@ def test_identity():
 @with_seed()
 def test_np_ndarray_binary_element_wise_ops():
     np_op_map = {
-        '+': _np.add,
-        '*': _np.multiply,
         '-': _np.subtract,
         '/': _np.divide,
         'mod': _np.mod,
@@ -298,7 +296,9 @@ def test_np_ndarray_binary_element_wise_ops():
             '>': _np.greater,
             '>=': _np.greater_equal,
             '<': _np.less,
-            '<=': _np.less_equal
+            '<=': _np.less_equal,
+            '+': _np.add,
+            '*': _np.multiply,
         })
 
     def _get_grad_func(op, scalar=None, reverse=False):
