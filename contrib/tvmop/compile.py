@@ -100,6 +100,17 @@ if __name__ == "__main__":
         else:
             logging.info('Cuda arch {} set for compiling TVM operator kernels.'.format(cuda_arch))
             set_cuda_target_arch(cuda_arch)
+        for operator_def in __OP_DEF__:
+            for sch, args, name in operator_def.invoke_all():
+                name = operator_def.get_op_name(name, args)
+                if tvm.module.enabled(get_target(operator_def.target)):
+                    if operator_def.target != "cpu":
+                    func_lower = tvm.lower(sch, args,
+                                           name=name,
+                                           binds=operator_def.get_binds(args))
+                    print("build {}...".format(name))
+                    tvm.build(func_lower, target="cuda")
+
     func_binary = tvm.build(lowered_funcs, name="tvmop")
     func_binary.export_library(arguments.target_path)
 
