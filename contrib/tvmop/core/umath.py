@@ -84,9 +84,9 @@ def _binary_logic_gpu(compute_func, op, itype, ndim, req):
 
 
 # register binary element-wise logic ops with broadcasting supported
-for op_name in _bin_logic_op_map.keys():
-    defop(name='{}_cpu'.format(op_name), op=op_name, **_bin_logic_cpu_attrs)(_binary_logic_cpu)
-    defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_logic_gpu_attrs)(_binary_logic_gpu)
+# for op_name in _bin_logic_op_map.keys():
+#     defop(name='{}_cpu'.format(op_name), op=op_name, **_bin_logic_cpu_attrs)(_binary_logic_cpu)
+#     defop(name='{}_gpu'.format(op_name), op=op_name, **_bin_logic_gpu_attrs)(_binary_logic_gpu)
 
 
 # Note that `b.dtype` is hard-coded as 'float64'.
@@ -130,11 +130,11 @@ _bin_scalar_logic_gpu_attrs = {
 
 
 # register binary element-wise scalar logic ops
-for op_name in _bin_scalar_logic_op_map.keys():
-    defop(name='{}_cpu'.format(op_name), op=op_name,
-          **_bin_scalar_logic_cpu_attrs)(_binary_logic_cpu)
-    defop(name='{}_gpu'.format(op_name), op=op_name,
-          **_bin_scalar_logic_gpu_attrs)(_binary_logic_gpu)
+# for op_name in _bin_scalar_logic_op_map.keys():
+#     defop(name='{}_cpu'.format(op_name), op=op_name,
+#           **_bin_scalar_logic_cpu_attrs)(_binary_logic_cpu)
+#     defop(name='{}_gpu'.format(op_name), op=op_name,
+#           **_bin_scalar_logic_gpu_attrs)(_binary_logic_gpu)
 
 
 _bin_cpu_attrs_base = {
