@@ -135,4 +135,4 @@ set(USE_VTA_TSIM OFF)
 set(USE_RELAY_DEBUG OFF)
 
 # Use OPENMP thread pool to be compatible with MXNet
-set(USE_OPENMP ON)
+set(USE_OPENMP gnu)
