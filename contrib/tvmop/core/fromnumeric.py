@@ -201,46 +201,46 @@ def compute_backward_cumprod(dtype, ndim, axis, req):
     return s, out_grad, X, in_grad_old, in_grad, c_list, s_list
 
 
-@defop(name="backward_cumprod", target="cpu", auto_broadcast=False,
-    dtype=["float32", "float64", "uint8", "int8", "int32", "int64"],
-    ndim=list(range(0, 6)), axis=list(range(0, 5)) + [None],
-    req=["kWriteTo", "kAddTo"], attrs=["axis", "req"],
-    attrs_valid=lambda **kwargs: kwargs['axis'] is None or kwargs['axis'] < kwargs['ndim'])
-def backward_cumprod(dtype, ndim, axis, req):
-    s, out_grad, X, in_grad_old, in_grad, c_list, s_list = compute_backward_cumprod(dtype, ndim, axis, req)
-    for t in s_list:
-        axes = [axis for axis in t.op.axis[1:]]
-        fused = s[t].fuse(*axes)
-        s[t].parallel(fused)
-    for t in c_list:
-        axes = [axis for axis in t.op.axis]
-        fused = s[t].fuse(*axes)
-        s[t].parallel(fused)
-    return s, [out_grad, X, in_grad, in_grad_old]
+# @defop(name="backward_cumprod", target="cpu", auto_broadcast=False,
+#     dtype=["float32", "float64", "uint8", "int8", "int32", "int64"],
+#     ndim=list(range(0, 6)), axis=list(range(0, 5)) + [None],
+#     req=["kWriteTo", "kAddTo"], attrs=["axis", "req"],
+#     attrs_valid=lambda **kwargs: kwargs['axis'] is None or kwargs['axis'] < kwargs['ndim'])
+# def backward_cumprod(dtype, ndim, axis, req):
+#     s, out_grad, X, in_grad_old, in_grad, c_list, s_list = compute_backward_cumprod(dtype, ndim, axis, req)
+#     for t in s_list:
+#         axes = [axis for axis in t.op.axis[1:]]
+#         fused = s[t].fuse(*axes)
+#         s[t].parallel(fused)
+#     for t in c_list:
+#         axes = [axis for axis in t.op.axis]
+#         fused = s[t].fuse(*axes)
+#         s[t].parallel(fused)
+#     return s, [out_grad, X, in_grad, in_grad_old]
 
 
-@defop(name="cuda_backward_cumprod", target="gpu", auto_broadcast=False,
-    dtype=["float32", "float64", "uint8", "int8", "int32", "int64"],
-    ndim=list(range(0, 6)), axis=list(range(0, 5)) + [None],
-    req=["kWriteTo", "kAddTo"], attrs=["axis", "req"],
-    attrs_valid=lambda **kwargs: kwargs['axis'] is None or kwargs['axis'] < kwargs['ndim'])
-def cuda_backward_cumprod(dtype, ndim, axis, req):
-    s, out_grad, X, in_grad_old, in_grad, c_list, s_list = compute_backward_cumprod(dtype, ndim, axis, req)
-    num_thread = 64
-    for t in s_list:
-        block_x = tvm.thread_axis("blockIdx.x")
-        thread_x = tvm.thread_axis("threadIdx.x")
-        axes = [axis for axis in t.op.axis[1:]]
-        fused = s[t].fuse(*axes)
-        bx, tx = s[t].split(fused, factor=num_thread)
-        s[t].bind(bx, block_x)
-        s[t].bind(tx, thread_x)
-    for t in c_list:
-        block_x = tvm.thread_axis("blockIdx.x")
-        thread_x = tvm.thread_axis("threadIdx.x")
-        axes = [axis for axis in t.op.axis]
-        fused = s[t].fuse(*axes)
-        bx, tx = s[t].split(fused, factor=num_thread)
-        s[t].bind(bx, block_x)
-        s[t].bind(tx, thread_x)
-    return s, [out_grad, X, in_grad, in_grad_old]
+# @defop(name="cuda_backward_cumprod", target="gpu", auto_broadcast=False,
+#     dtype=["float32", "float64", "uint8", "int8", "int32", "int64"],
+#     ndim=list(range(0, 6)), axis=list(range(0, 5)) + [None],
+#     req=["kWriteTo", "kAddTo"], attrs=["axis", "req"],
+#     attrs_valid=lambda **kwargs: kwargs['axis'] is None or kwargs['axis'] < kwargs['ndim'])
+# def cuda_backward_cumprod(dtype, ndim, axis, req):
+#     s, out_grad, X, in_grad_old, in_grad, c_list, s_list = compute_backward_cumprod(dtype, ndim, axis, req)
+#     num_thread = 64
+#     for t in s_list:
+#         block_x = tvm.thread_axis("blockIdx.x")
+#         thread_x = tvm.thread_axis("threadIdx.x")
+#         axes = [axis for axis in t.op.axis[1:]]
+#         fused = s[t].fuse(*axes)
+#         bx, tx = s[t].split(fused, factor=num_thread)
+#         s[t].bind(bx, block_x)
+#         s[t].bind(tx, thread_x)
+#     for t in c_list:
+#         block_x = tvm.thread_axis("blockIdx.x")
+#         thread_x = tvm.thread_axis("threadIdx.x")
+#         axes = [axis for axis in t.op.axis]
+#         fused = s[t].fuse(*axes)
+#         bx, tx = s[t].split(fused, factor=num_thread)
+#         s[t].bind(bx, block_x)
+#         s[t].bind(tx, thread_x)
+#     return s, [out_grad, X, in_grad, in_grad_old]
