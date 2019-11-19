@@ -90,18 +90,36 @@ if __name__ == "__main__":
                                        name=name,
                                        binds=operator_def.get_binds(args))
                 func_list.append(func_lower)
+    if len(func_list_cuda) == 0:
+        func_binary = tvm.build({get_target("cpu"): func_list_llvm}, name="tvmop")
+        func_binary.export_library(arguments.target_path)
+    else:
+        temp = tvm.contrib.util.tempdir()
 
-    lowered_funcs = {get_target("cpu"): func_list_llvm}
-    if len(func_list_cuda) > 0:
-        lowered_funcs[get_target("cuda")] = func_list_cuda
+        def build(name, lowered_funcs):
+            func_binary = tvm.build(lowered_funcs, name=name)
+            func_binary.export_library(temp.relpath(name + '.tar'))
+            os.mkdir(temp.relpath(name))
+            tvm.contrib.tar.untar(temp.relpath(name + '.tar'), temp.relpath(name))
+
         cuda_arch = get_cuda_arch(arguments.cuda_arch)
         if cuda_arch is None:
             logging.info('No cuda arch specified. TVM will try to detect it from the build platform.')
         else:
             logging.info('Cuda arch {} set for compiling TVM operator kernels.'.format(cuda_arch))
             set_cuda_target_arch(cuda_arch)
-    func_binary = tvm.build(lowered_funcs, name="tvmop")
-    func_binary.export_library(arguments.target_path)
+        names = []
+        build('llvm', {get_target("cpu"): func_list_llvm})
+        names.append('llvm')
+        chunk_size = 20
+        for i in range(0, len(func_list_cuda), chunk_size):
+            name = 'cuda{}'.format(i)
+            build(name, {get_target("cuda"): func_list_cuda[i: i + chunk_size]})
+            names.append(name)
+        files = []
+        for name in names:
+            files.extend([os.path.join(temp.relpath(name), file) for file in os.listdir(temp.relpath(name))])
+        tvm.contrib.cc.create_shared(arguments.target_path, files)
 
     config_spaces = ConfigSpaces()
     for operator_def in __OP_DEF__:
