@@ -3159,6 +3159,11 @@ def test_np_linalg_svd():
         I_np = _np.ones_like(UT) * _np.eye(shape[-2])
         assert I.shape == I_np.shape
         assert_almost_equal(I, I_np, rtol=rtol, atol=atol)
+        # check VT @ V == I
+        I = _np.matmul(_np.swapaxes(V, -2, -1), V)
+        I_np = _np.ones(list(shape[:-2]) + [shape[-1], shape[-1]]) * _np.eye(shape[-1])
+        assert I.shape == I_np.shape
+        assert_almost_equal(I, I_np, rtol=rtol, atol=atol)
 
     shapes = [
         (3, 3),
