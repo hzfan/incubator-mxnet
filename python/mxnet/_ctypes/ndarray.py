@@ -94,7 +94,9 @@ def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op, output_is_list
     # return output stypes to avoid the c_api call for checking
     # a handle's stype in _ndarray_cls
     out_stypes = ctypes.POINTER(ctypes.c_int)()
-
+    
+    import time
+    start = time.time()
     check_call(_LIB.MXImperativeInvokeEx(
         ctypes.c_void_p(handle),
         ctypes.c_int(len(ndargs)),
@@ -105,6 +107,8 @@ def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op, output_is_list
         c_str_array(keys),
         c_str_array([str(s) for s in vals]),
         ctypes.byref(out_stypes)))
+    end = time.time()
+    print("FFI and Engine: {}".format(end - start))
 
     create_ndarray_fn = _np_ndarray_cls if is_np_op else _ndarray_cls
     if original_output is not None:
