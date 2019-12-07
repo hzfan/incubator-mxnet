@@ -146,7 +146,6 @@ int MXImperativeInvokeEx(AtomicSymbolCreator creator,
                          const char **param_keys,
                          const char **param_vals,
                          const int **out_stypes) {  // outputs storage types
-  auto start = std::chrono::system_clock::now();
   MXAPIThreadLocalEntry<> *ret = MXAPIThreadLocalStore<>::Get();
   API_BEGIN();
   MXImperativeInvokeImpl(creator, num_inputs, inputs, num_outputs, outputs,
@@ -159,8 +158,6 @@ int MXImperativeInvokeEx(AtomicSymbolCreator creator,
   }
   *out_stypes = dmlc::BeginPtr(ret->out_types);
   auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  std::cout << "Engine time: " << elapsed_seconds.count() << std::endl;
   API_END();
 }
 
