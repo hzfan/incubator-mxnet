@@ -37,6 +37,8 @@
 #include "../common/exec_utils.h"
 #include "../imperative/imperative_utils.h"
 #include "../imperative/cached_op.h"
+#include <chrono>
+#include <ctime>
 
 using namespace mxnet;
 
@@ -144,6 +146,7 @@ int MXImperativeInvokeEx(AtomicSymbolCreator creator,
                          const char **param_keys,
                          const char **param_vals,
                          const int **out_stypes) {  // outputs storage types
+  auto start = std::chrono::system_clock::now();
   MXAPIThreadLocalEntry<> *ret = MXAPIThreadLocalStore<>::Get();
   API_BEGIN();
   MXImperativeInvokeImpl(creator, num_inputs, inputs, num_outputs, outputs,
@@ -155,6 +158,9 @@ int MXImperativeInvokeEx(AtomicSymbolCreator creator,
     ret->out_types.emplace_back(out_array[i]->storage_type());
   }
   *out_stypes = dmlc::BeginPtr(ret->out_types);
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "Engine time: " << elapsed_seconds.count() << std::endl;
   API_END();
 }
 
