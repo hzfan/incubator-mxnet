@@ -94,7 +94,8 @@ def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op, output_is_list
     # return output stypes to avoid the c_api call for checking
     # a handle's stype in _ndarray_cls
     out_stypes = ctypes.POINTER(ctypes.c_int)()
-
+    
+    print("MXImperativeInvokeEx...")
     check_call(_LIB.MXImperativeInvokeEx(
         ctypes.c_void_p(handle),
         ctypes.c_int(len(ndargs)),
