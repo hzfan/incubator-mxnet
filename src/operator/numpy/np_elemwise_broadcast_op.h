@@ -371,6 +371,8 @@ void NumpyBinaryBroadcastComputeWithBool(const nnvm::NodeAttrs& attrs,
                                          const std::vector<TBlob>& outputs) {
   using namespace mshadow;
   using namespace mxnet_op;
+  std::cout << "here!" << std::endl;
+  
   CHECK_EQ(inputs.size(), 2U);
   CHECK_EQ(outputs.size(), 1U);
 
