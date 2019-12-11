@@ -901,3 +901,6 @@ if(BUILD_CYTHON_MODULES)
     message(FATAL_ERROR "No python interpreter found to build cython modules")
   endif()
 endif()
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pybind11/tools/FindPythonLibsNew.cmake)
+message(STATUS "Python path: ${PYTHON_INCLUDE_DIRS}")
