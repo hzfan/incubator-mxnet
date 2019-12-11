@@ -78,7 +78,7 @@ def shape(a):
 
 
 @set_module('mxnet.ndarray.numpy')
-def zeros(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=redefined-outer-name
+def zeros(shape, dtype, order='C', ctx=None):  # pylint: disable=redefined-outer-name
     """Return a new array of given shape and type, filled with zeros.
     This function currently only supports storing multi-dimensional data
     in row-major (C-style).

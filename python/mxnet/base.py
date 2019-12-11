@@ -870,6 +870,7 @@ def _init_np_op_module(root_module_name, np_module_name, mx_module_name, make_op
         submodule_dict[submodule_name] = sys.modules[op_submodule_name % submodule_name[1:-1]]
     for name in op_names:
         hdl = OpHandle()
+        print(name)
         check_call(_LIB.NNGetOpHandle(c_str(name), ctypes.byref(hdl)))
         submodule_name = _get_op_submodule_name(name, op_name_prefix, submodule_name_list)
         if len(submodule_name) > 0:
