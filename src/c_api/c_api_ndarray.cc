@@ -31,6 +31,7 @@
 #include <mxnet/imperative.h>
 #include <nnvm/node.h>
 #include <nnvm/op_attr_types.h>
+#include <pybind11/pybind11.h>
 #include <string>
 #include "./c_api_common.h"
 #include "../common/utils.h"
