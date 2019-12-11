@@ -903,4 +903,6 @@ if(BUILD_CYTHON_MODULES)
 endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pybind11/tools/FindPythonLibsNew.cmake)
-message(STATUS "Python path: ${PYTHON_INCLUDE_DIRS}")
+message(STATUS "Found Python include path: ${PYTHON_INCLUDE_DIRS}")
+include_directories(3rdparty/pybind11/include)
+include_directories(${PYTHON_INCLUDE_DIRS})
