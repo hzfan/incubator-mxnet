@@ -29,6 +29,7 @@
 #include <mxnet/operator_util.h>
 #include <mxnet/op_attr_types.h>
 #include <mxnet/imperative.h>
+#include <mxnet/pybind11.h>
 #include <nnvm/node.h>
 #include <nnvm/op_attr_types.h>
 #include <string>
