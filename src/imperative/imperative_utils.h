@@ -392,28 +392,20 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
     } else if (param_keys[i].cast<std::string>() == "ctx") {
       param.ctx = param_vals[i].cast<std::string>();
     } else if (param_keys[i].cast<std::string>() == "dtype") {
-      switch (param_vals[i].cast<std::string>()) {
-        case ("float32"):
-          param.dtype = mshadow::kFloat32;
-          break;
-        case ("float64"):
-          param.dtype = mshadow::kFloat64;
-          break;
-        case ("float16"):
-          param.dtype = mshadow::kFloat16;
-          break;
-        case ("uint8"):
-          param.dtype = mshadow::kUint8;
-          break;
-        case ("int8"):
-          param.dtype = mshadow::kInt8;
-          break;
-        case ("int32"):
-          param.dtype = mshadow::kInt32;
-          break;
-        case ("int64"):
-          param.dtype = mshadow::kInt64;
-          break;
+      if (param_vals[i].cast<std::string>() == "float32") {
+        param.dtype = mshadow::kFloat32;
+      } else if (param_vals[i].cast<std::string>() == "float64") {
+        param.dtype = mshadow::kFloat64;
+      } else if (param_vals[i].cast<std::string>() == "float16") {
+        param.dtype = mshadow::kFloat16;
+      } else if (param_vals[i].cast<std::string>() == "uint8") {
+        param.dtype = mshadow::kUint8;
+      } else if (param_vals[i].cast<std::string>() == "int8") {
+        param.dtype = mshadow::kInt8;
+      } else if (param_vals[i].cast<std::string>() == "int32") {
+        param.dtype = mshadow::kInt32;
+      } else if (param_vals[i].cast<std::string>() == "int64") {
+        param.dtype = mshadow::kInt64;
       }
     }
   }
