@@ -19,6 +19,7 @@
 #include <mxnet/operator.h>
 #include <mxnet/executor.h>
 #include <mxnet/imperative.h>
+#include <mxnet/pybind11.h>
 #include <nnvm/pass_functions.h>
 #include <utility>
 #include <algorithm>
@@ -344,6 +345,69 @@ inline nnvm::NodeAttrs ParseAttrs(const nnvm::Op *op,
     op->attr_parser(&attrs);
   }
 
+  return attrs;
+}
+
+/*!
+ * \brief Parse parameter attributes into a nnvm::NodeAttrs structure
+ * \param op Pointer to the nnvm Operator object
+ * \param num_inputs Number of operator inputs
+ * \param num_params Number of parameters
+ * \param param_keys Array of string pointers representing the parameter keys
+ * \param param_vals Array of string pointers representing the associated values
+ * \return nnvm::NodeAttrs structure representing the parsed attributes
+ */
+inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
+                                        const num_inputs num_inputs,
+                                        py::list param_keys,
+                                        py::list param_vals) {
+  nnvm::NodeAttrs attrs;
+  InitOpParam param;
+  attrs.op = op;
+  // InitOpParam::shape
+  size_t num_params = py::len(param_keys);
+  for (size_t i = 0; i < num_params; ++i) {
+    if (param_keys[i].cast<std::string>() == "shape") {
+      param.shape = param_vals[i].cast<TShape>();
+    } else if (param_keys[i].cast<std::string>() == "ctx") {
+      param.ctx = param_vals[i].cast<std::string>();
+    } else if (param_keys[i].cast<std::string>() == "dtype") {
+      switch (param_vals[i].cast<std::string>()) {
+        case ("float32"):
+          param.dtype = mshadow::kFloat32;
+          break;
+        case ("float64"):
+          param.dtype = mshadow::kFloat64;
+          break;
+        case ("float16"):
+          param.dtype = mshadow::kFloat16;
+          break;
+        case ("uint8"):
+          param.dtype = mshadow::kUint8;
+          break;
+        case ("int8"):
+          param.dtype = mshadow::kInt8;
+          break;
+        case ("int32"):
+          param.dtype = mshadow::kInt32;
+          break;
+        case ("int64"):
+          param.dtype = mshadow::kInt64;
+          break;
+      }
+    }
+  }
+  std::cout << "shape: " << param.shape << std::endl;
+  std::cout << "ctx: " << param.ctx << std::endl;
+  std::cout << "dtype: " << param.dtype << std::endl;
+  attrs.parsed = std::move(param);
+  // attrs.dict.reserve(num_params+1);
+  // for (int i = 0; i < num_params; ++i) {
+  //   attrs.dict.emplace(param_keys[i], param_vals[i]);
+  // }
+  // if (num_args.count(op)) {
+  //   attrs.dict.emplace(num_args[op], std::to_string(num_inputs));
+  // }
   return attrs;
 }
 

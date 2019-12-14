@@ -117,6 +117,38 @@ def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op, output_is_list
                                   stype=out_stypes[i]) for i in range(num_output.value)]
 
 
+def _imperative_invoke_zeros(handle, ndargs, keys, vals, out, is_np_op, output_is_list):
+    """ctypes implementation of imperative invoke wrapper"""
+    # if out is not None:
+    #     original_output = out
+    #     if isinstance(out, NDArrayBase):
+    #         out = (out,)
+    #     num_output = ctypes.c_int(len(out))
+    #     output_vars = c_handle_array(out)
+    #     output_vars = ctypes.cast(output_vars, ctypes.POINTER(NDArrayHandle))
+    # else:
+    original_output = None
+    output_vars = []
+    num_output = 0
+
+    _LIB.MXImperativeInvokeExZeros(
+        handle,
+        ndargs,
+        output_vars,
+        keys,
+        vals)
+
+    # create_ndarray_fn = _np_ndarray_cls if is_np_op else _ndarray_cls
+    # if original_output is not None:
+    #     return original_output
+    # if num_output.value == 1 and not output_is_list:
+    #     return create_ndarray_fn(ctypes.cast(output_vars[0], NDArrayHandle),
+    #                              stype=out_stypes[0])
+    # else:
+    #     return [create_ndarray_fn(ctypes.cast(output_vars[i], NDArrayHandle),
+    #                               stype=out_stypes[i]) for i in range(num_output.value)]
+
+
 class CachedOp(object):
     """Cached operator handle."""
     __slots__ = ["handle", "is_np_sym", "_monitor_callback"]
