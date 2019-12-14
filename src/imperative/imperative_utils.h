@@ -26,6 +26,8 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <dmlc/parameter.h>
+#include <dmlc/optional.h>
 #include "../executor/graph_executor.h"
 #include "../executor/exec_pass.h"
 #include "../c_api/c_api_common.h"
@@ -348,6 +350,24 @@ inline nnvm::NodeAttrs ParseAttrs(const nnvm::Op *op,
   return attrs;
 }
 
+struct InitOpParam : public dmlc::Parameter<InitOpParam> {
+  mxnet::TShape shape;
+  std::string ctx;
+  int dtype;
+  DMLC_DECLARE_PARAMETER(InitOpParam) {
+    DMLC_DECLARE_FIELD(shape)
+    .set_default(mxnet::TShape(0, 1))
+    .describe("The shape of the output");
+    DMLC_DECLARE_FIELD(ctx)
+    .set_default("")
+    .describe("Context of output, in format [cpu|gpu|cpu_pinned](n)."
+              "Only used for imperative calls.");
+    DMLC_DECLARE_FIELD(dtype).set_default(mshadow::kFloat32)
+    MXNET_ADD_ALL_TYPES_WITH_BOOL
+    .describe("Target data type.");
+  }
+};
+
 /*!
  * \brief Parse parameter attributes into a nnvm::NodeAttrs structure
  * \param op Pointer to the nnvm Operator object
@@ -358,9 +378,9 @@ inline nnvm::NodeAttrs ParseAttrs(const nnvm::Op *op,
  * \return nnvm::NodeAttrs structure representing the parsed attributes
  */
 inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
-                                        const num_inputs num_inputs,
-                                        py::list param_keys,
-                                        py::list param_vals) {
+                                       const int num_inputs,
+                                       py::list param_keys,
+                                       py::list param_vals) {
   nnvm::NodeAttrs attrs;
   InitOpParam param;
   attrs.op = op;

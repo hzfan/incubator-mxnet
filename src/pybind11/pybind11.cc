@@ -1,5 +1,7 @@
 #include <mxnet/c_api.h>
 #include <mxnet/tuple.h>
+#include <mxnet/base.h>
+#include <mxnet/imperative.h>
 #include <mxnet/pybind11.h>
 
 void MXImperativeInvokeExZeros(size_t creator_s,
@@ -9,7 +11,8 @@ void MXImperativeInvokeExZeros(size_t creator_s,
                                py::list param_vals) {
   const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(creator_s);
   size_t num_inputs = inputs_s.size();
-  ParseAttrsZeros(op, num_inputs, param_keys, param_vals);
+  nnvm::NodeAttrs attrs = imperative::ParseAttrsZeros(op, num_inputs, 
+                                                      param_keys, param_vals);
 }
 
 
