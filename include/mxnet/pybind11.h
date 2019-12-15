@@ -16,6 +16,7 @@ namespace detail {
           PyObject *item = PySequence_GetItem(source, i);
           value[i] = handle(item).cast<dim_t>();
           Py_DECREF(item);
+          return true;
         }
       }
     };
