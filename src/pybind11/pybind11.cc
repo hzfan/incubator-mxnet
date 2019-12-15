@@ -137,11 +137,11 @@ void MXImperativeInvokeExZeros(size_t creator_s,
                                                                             std::vector<size_t> outputs_s,
                                                                             py::list param_keys,
                                                                             py::list param_vals) {
-  const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(creator_s);
-  int num_inputs = inputs_s.size();
-  int num_outputs = outputs_s.size();
-  nnvm::NodeAttrs attrs = ParseAttrsZeros(op, num_inputs, 
-                                          param_keys, param_vals);
+  // const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(creator_s);
+  // int num_inputs = inputs_s.size();
+  // int num_outputs = outputs_s.size();
+  // nnvm::NodeAttrs attrs = ParseAttrsZeros(op, num_inputs, 
+  //                                         param_keys, param_vals);
   // int infered_num_outputs;
   // int num_visible_outputs;
   // imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
