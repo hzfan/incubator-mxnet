@@ -74,9 +74,9 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
       }
     }
   }
-  std::cout << "shape: " << param.shape << std::endl;
-  std::cout << "ctx: " << param.ctx << std::endl;
-  std::cout << "dtype: " << param.dtype << std::endl;
+  // std::cout << "shape: " << param.shape << std::endl;
+  // std::cout << "ctx: " << param.ctx << std::endl;
+  // std::cout << "dtype: " << param.dtype << std::endl;
   attrs.parsed = std::move(param);
   // attrs.dict.reserve(num_params+1);
   // for (int i = 0; i < num_params; ++i) {
