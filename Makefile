@@ -180,7 +180,7 @@ $(error Please add the path of OpenCV shared library path into `USE_OPENCV_LIB_P
 		LDFLAGS += $(filter -lopencv_imgcodecs -lopencv_highgui, $(shell pkg-config --libs-only-l $(OPENCV_LIB)))
 	endif
 	LDFLAGS += -lopencv_imgproc -lopencv_core
-	BIN += bin/im2rec
+	# BIN += bin/im2rec
 else
 	CFLAGS += -DMXNET_USE_OPENCV=0
 endif
