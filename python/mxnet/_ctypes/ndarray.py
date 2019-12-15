@@ -23,6 +23,7 @@ from __future__ import absolute_import as _abs
 
 import ctypes
 
+from .. import libmxnet
 from ..base import _LIB
 from ..base import c_str_array, c_handle_array
 from ..base import NDArrayHandle, CachedOpHandle
@@ -131,7 +132,7 @@ def _imperative_invoke_zeros(handle, ndargs, keys, vals, out, is_np_op, output_i
     output_vars = []
     num_output = 0
 
-    _LIB.MXImperativeInvokeExZeros(
+    libmxnet.MXImperativeInvokeExZeros(
         handle,
         ndargs,
         output_vars,

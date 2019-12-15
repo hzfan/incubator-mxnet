@@ -1,3 +1,5 @@
+#include <tuple>
+
 #include <mxnet/c_api.h>
 #include <mxnet/base.h>
 #include <mxnet/imperative.h>
@@ -5,7 +7,11 @@
 #include <nnvm/pass_functions.h>
 #include <dmlc/parameter.h>
 #include <dmlc/optional.h>
+#include <pybind11/stl.h>
 #include "../operator/mxnet_op.h"
+#include "../imperative/imperative_utils.h"
+
+using namespace mxnet;
 
 struct InitOpParam : public dmlc::Parameter<InitOpParam> {
   mxnet::TShape shape;
@@ -49,19 +55,20 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
     } else if (param_keys[i].cast<std::string>() == "ctx") {
       param.ctx = param_vals[i].cast<std::string>();
     } else if (param_keys[i].cast<std::string>() == "dtype") {
-      if (param_vals[i].cast<std::string>() == "float32") {
+      const std::string dtype = param_vals[i].cast<std::string>();
+      if (dtype == "float32") {
         param.dtype = mshadow::kFloat32;
-      } else if (param_vals[i].cast<std::string>() == "float64") {
+      } else if (dtype == "float64") {
         param.dtype = mshadow::kFloat64;
-      } else if (param_vals[i].cast<std::string>() == "float16") {
+      } else if (dtype == "float16") {
         param.dtype = mshadow::kFloat16;
-      } else if (param_vals[i].cast<std::string>() == "uint8") {
+      } else if (dtype == "uint8") {
         param.dtype = mshadow::kUint8;
-      } else if (param_vals[i].cast<std::string>() == "int8") {
+      } else if (dtype == "int8") {
         param.dtype = mshadow::kInt8;
-      } else if (param_vals[i].cast<std::string>() == "int32") {
+      } else if (dtype == "int32") {
         param.dtype = mshadow::kInt32;
-      } else if (param_vals[i].cast<std::string>() == "int64") {
+      } else if (dtype == "int64") {
         param.dtype = mshadow::kInt64;
       }
     }
@@ -80,15 +87,83 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
   return attrs;
 }
 
-void MXImperativeInvokeExZeros(size_t creator_s,
-                               std::vector<size_t> inputs_s,
-                               std::vector<size_t> outputs_s,
-                               py::list param_keys,
-                               py::list param_vals) {
+void SetNDInputsOutputsZeros(const nnvm::Op* op,
+                        std::vector<NDArray*>* ndinputs,
+                        std::vector<NDArray*>* ndoutputs,
+                        int num_inputs,
+                        const NDArrayHandle *inputs,
+                        int *num_outputs,
+                        int infered_num_outputs,
+                        int num_visible_outputs,
+                        NDArrayHandle **outputs) {
+  NDArray** out_array = *reinterpret_cast<NDArray***>(outputs);
+
+  ndinputs->clear();
+  ndinputs->reserve(num_inputs);
+  for (int i = 0; i < num_inputs; ++i) {
+    NDArray* inp = reinterpret_cast<NDArray*>(inputs[i]);
+    if (!features::is_enabled(features::INT64_TENSOR_SIZE)) {
+      CHECK_LT(inp->shape().Size(), (int64_t{1} << 31) - 1) <<
+                "[SetNDInputsOutputs] Size of tensor you are trying to allocate is larger than "
+                "2^31 elements. Please build with flag USE_INT64_TENSOR_SIZE=1";
+    }
+    ndinputs->emplace_back(inp);
+  }
+
+  ndoutputs->clear();
+  ndoutputs->reserve(infered_num_outputs);
+  if (out_array == nullptr) {
+    for (int i = 0; i < infered_num_outputs; ++i) {
+      ndoutputs->emplace_back(new NDArray());
+    }
+    *num_outputs = num_visible_outputs;
+  } else {
+    CHECK(*num_outputs == infered_num_outputs || *num_outputs == num_visible_outputs)
+      << "Operator expects " << infered_num_outputs << " (all) or "
+      << num_visible_outputs << " (visible only) outputs, but got "
+      << *num_outputs << " instead.";
+    for (int i = 0; i < *num_outputs; ++i) {
+      ndoutputs->emplace_back(out_array[i]);
+    }
+    for (int i = *num_outputs; i < infered_num_outputs; ++i) {
+      ndoutputs->emplace_back(new NDArray());
+    }
+  }
+}
+
+std::tuple<std::vector<size_t>, std::vector<int>> MXImperativeInvokeExZeros(size_t creator_s,
+                                                                            std::vector<size_t> inputs_s,
+                                                                            std::vector<size_t> outputs_s,
+                                                                            py::list param_keys,
+                                                                            py::list param_vals) {
   const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(creator_s);
-  size_t num_inputs = inputs_s.size();
+  int num_inputs = inputs_s.size();
+  int num_outputs = outputs_s.size();
   nnvm::NodeAttrs attrs = ParseAttrsZeros(op, num_inputs, 
-                                                      param_keys, param_vals);
+                                          param_keys, param_vals);
+  int infered_num_outputs;
+  int num_visible_outputs;
+  imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
+  
+  std::vector<NDArray*> ndinputs, ndoutputs;
+  NDArrayHandle* inputs = num_inputs > 0 ? reinterpret_cast<NDArrayHandle*>(&inputs_s[0]) : nullptr;
+  NDArrayHandle* outputs = num_outputs > 0 ? reinterpret_cast<NDArrayHandle*>(&outputs_s[0]) : nullptr;
+  SetNDInputsOutputsZeros(op, &ndinputs, &ndoutputs, num_inputs, inputs,
+      &num_outputs, infered_num_outputs, num_visible_outputs, &outputs);
+
+  auto state = Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
+  if (Imperative::Get()->is_recording()) {
+    Imperative::Get()->RecordOp(std::move(attrs), ndinputs, ndoutputs, state);
+  }
+  for (int i = num_outputs; i < infered_num_outputs; ++i) delete ndoutputs[i];
+  ndoutputs.resize(num_outputs);
+  std::vector<size_t>* ndoutputs_s = reinterpret_cast<std::vector<size_t>*>(&ndoutputs);
+  std::vector<int> out_stypes;
+  out_stypes.reserve(num_outputs);
+  for (const auto& i: ndoutputs) {
+    out_stypes.emplace_back(i->storage_type());
+  }
+  return std::make_tuple(*ndoutputs_s, out_stypes);
 }
 
 
