@@ -548,6 +548,8 @@ ifeq ($(CI), 1)
 	MAVEN_ARGS := -B
 endif
 
+CFLAGS += -I/home/ubuntu/anaconda3/include/python3.7m
+
 # For quick compile test, used smaller subset
 ALLX_DEP= $(ALL_DEP)
 
