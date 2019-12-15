@@ -131,22 +131,24 @@ def _imperative_invoke_zeros(handle, ndargs, keys, vals, out, is_np_op, output_i
     original_output = None
     output_vars = []
     
-    output_vars, out_stypes = libmxnet.MXImperativeInvokeExZeros(
+    libmxnet.MXImperativeInvokeExZeros(
         handle,
         ndargs,
         output_vars,
         keys,
         vals)
-    create_ndarray_fn = _np_ndarray_cls if is_np_op else _ndarray_cls
+    
+    return None
+    # create_ndarray_fn = _np_ndarray_cls if is_np_op else _ndarray_cls
 
-    # if original_output is not None:
-    #     return original_output
-    if len(output_vars) == 1 and not output_is_list:
-        return create_ndarray_fn(NDArrayHandle(output_vars[0]),
-                                 stype=out_stypes[0])
-    else:
-        return [create_ndarray_fn(NDArrayHandle(output_vars[i]),
-                                  stype=out_stypes[i]) for i in len(output_vars)]
+    # # if original_output is not None:
+    # #     return original_output
+    # if len(output_vars) == 1 and not output_is_list:
+    #     return create_ndarray_fn(NDArrayHandle(output_vars[0]),
+    #                              stype=out_stypes[0])
+    # else:
+    #     return [create_ndarray_fn(NDArrayHandle(output_vars[i]),
+    #                               stype=out_stypes[i]) for i in len(output_vars)]
 
 
 class CachedOp(object):
