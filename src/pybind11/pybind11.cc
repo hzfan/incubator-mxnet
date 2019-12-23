@@ -167,7 +167,37 @@ void MXImperativeInvokeExZeros(size_t creator_s,
 }
 
 
+
+size_t _npi_zeros(size_t op_handle, const std::vector<int>& shape) {
+  const nnvm::Op* op = static_cast<nnvm::Op*>(reinterpret_cast<void*>(op_handle));
+
+  mxnet::op::InitOpParam param;
+  param.shape = TShape(shape.begin(), shape.end());
+  param.dtype = 0;
+  param.ctx = "cpu";
+  nnvm::NodeAttrs attrs;
+  attrs.parsed = std::move(param);
+  attrs.op = op;
+
+  int num_inputs = 0;
+  int infered_num_outputs;
+  int num_visible_outputs;
+  mxnet::imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
+
+  std::vector<mxnet::NDArray*> ndoutputs(1, nullptr), ndinputs;
+  ndoutputs[0] = new mxnet::NDArray();
+  auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
+
+  return reinterpret_cast<size_t>(ndoutputs[0]);
+}
+
+size_t _npi_zeros_dummy(size_t op_handle, const std::vector<int>& shape, const std::string ctx, const std::string dtype) {
+  return 0;
+}
+
 PYBIND11_MODULE(libmxnet, m)
 {
   m.def("MXImperativeInvokeExZeros", &MXImperativeInvokeExZeros);
+  m.def("_npi_zeros", &_npi_zeros, "Creating zeros in shape");
+  m.def("_npi_zeros_dummy", &_npi_zeros_dummy, "Creating zeros in shape");
 }
