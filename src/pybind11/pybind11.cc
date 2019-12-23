@@ -200,10 +200,14 @@ size_t _npi_zeros_tshape_dummy(size_t op_handle, const TShape& shape, const std:
   return 0;
 }
 
-PYBIND11_MODULE(libmxnet, m)
-{
+size_t _npi_zeros_tshape_short_dummy(size_t op_handle, const TShape& shape) {
+  return 0;
+}
+
+PYBIND11_MODULE(libmxnet, m) {
   m.def("MXImperativeInvokeExZeros", &MXImperativeInvokeExZeros);
   m.def("_npi_zeros", &_npi_zeros, "Creating zeros in shape");
   m.def("_npi_zeros_dummy", &_npi_zeros_dummy, "Creating zeros in shape");
   m.def("_npi_zeros_tshape_dummy", &_npi_zeros_tshape_dummy, "Creating zeros in shape");
+  m.def("_npi_zeros_tshape_short_dummy", &_npi_zeros_tshape_short_dummy)
 }
