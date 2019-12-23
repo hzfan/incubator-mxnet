@@ -191,7 +191,11 @@ size_t _npi_zeros(size_t op_handle, const std::vector<int>& shape) {
   return reinterpret_cast<size_t>(ndoutputs[0]);
 }
 
-size_t _npi_zeros_dummy(size_t op_handle, const std::vector<int>& shape, const std::string ctx, const std::string dtype) {
+size_t _npi_zeros_dummy(size_t op_handle, const std::vector<int>& shape, const std::string& ctx, const std::string& dtype) {
+  return 0;
+}
+
+size_t _npi_zeros_tshape_dummy(size_t op_handle, const TShape& shape, const std::string& ctx, const std::string& dtype) {
   return 0;
 }
 
