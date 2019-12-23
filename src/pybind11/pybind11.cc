@@ -204,5 +204,5 @@ PYBIND11_MODULE(libmxnet, m)
   m.def("MXImperativeInvokeExZeros", &MXImperativeInvokeExZeros);
   m.def("_npi_zeros", &_npi_zeros, "Creating zeros in shape");
   m.def("_npi_zeros_dummy", &_npi_zeros_dummy, "Creating zeros in shape");
-  m.def("_npi_zeros_tshape_dummy", &_npi_zeros_tshape_dummy, "Creating zeros in shape")
+  m.def("_npi_zeros_tshape_dummy", &_npi_zeros_tshape_dummy, "Creating zeros in shape");
 }
