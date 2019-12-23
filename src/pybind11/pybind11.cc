@@ -53,8 +53,8 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
   for (size_t i = 0; i < num_params; ++i) {
     if (param_keys[i].cast<std::string>() == "shape") {
       param.shape = param_vals[i].cast<mxnet::TShape>();
-    // } else if (param_keys[i].cast<std::string>() == "ctx") {
-    //   param.ctx = param_vals[i].cast<std::string>();
+    } else if (param_keys[i].cast<std::string>() == "ctx") {
+      param.ctx = param_vals[i].cast<std::string>();
     // } else if (param_keys[i].cast<std::string>() == "dtype") {
     //   const std::string dtype = param_vals[i].cast<std::string>();
     //   if (dtype == "float32") {
