@@ -90,6 +90,7 @@ from . import gluon
 # Dynamic library module should be done after ndarray and symbol are initialized
 from . import library
 from . import tvmop
+from . import libmxnet
 
 __version__ = base.__version__
 
