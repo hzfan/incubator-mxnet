@@ -53,25 +53,25 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
   for (size_t i = 0; i < num_params; ++i) {
     if (param_keys[i].cast<std::string>() == "shape") {
       param.shape = param_vals[i].cast<mxnet::TShape>();
-    } else if (param_keys[i].cast<std::string>() == "ctx") {
-      param.ctx = param_vals[i].cast<std::string>();
-    } else if (param_keys[i].cast<std::string>() == "dtype") {
-      const std::string dtype = param_vals[i].cast<std::string>();
-      if (dtype == "float32") {
-        param.dtype = mshadow::kFloat32;
-      } else if (dtype == "float64") {
-        param.dtype = mshadow::kFloat64;
-      } else if (dtype == "float16") {
-        param.dtype = mshadow::kFloat16;
-      } else if (dtype == "uint8") {
-        param.dtype = mshadow::kUint8;
-      } else if (dtype == "int8") {
-        param.dtype = mshadow::kInt8;
-      } else if (dtype == "int32") {
-        param.dtype = mshadow::kInt32;
-      } else if (dtype == "int64") {
-        param.dtype = mshadow::kInt64;
-      }
+    // } else if (param_keys[i].cast<std::string>() == "ctx") {
+    //   param.ctx = param_vals[i].cast<std::string>();
+    // } else if (param_keys[i].cast<std::string>() == "dtype") {
+    //   const std::string dtype = param_vals[i].cast<std::string>();
+    //   if (dtype == "float32") {
+    //     param.dtype = mshadow::kFloat32;
+    //   } else if (dtype == "float64") {
+    //     param.dtype = mshadow::kFloat64;
+    //   } else if (dtype == "float16") {
+    //     param.dtype = mshadow::kFloat16;
+    //   } else if (dtype == "uint8") {
+    //     param.dtype = mshadow::kUint8;
+    //   } else if (dtype == "int8") {
+    //     param.dtype = mshadow::kInt8;
+    //   } else if (dtype == "int32") {
+    //     param.dtype = mshadow::kInt32;
+    //   } else if (dtype == "int64") {
+    //     param.dtype = mshadow::kInt64;
+    //   }
     }
   }
   // std::cout << "shape: " << param.shape << std::endl;
@@ -133,10 +133,10 @@ void SetNDInputsOutputsZeros(const nnvm::Op* op,
 }
 
 void MXImperativeInvokeExZeros(size_t creator_s,
-                                                                            std::vector<size_t> inputs_s,
-                                                                            std::vector<size_t> outputs_s,
-                                                                            py::list param_keys,
-                                                                            py::list param_vals) {
+                               std::vector<size_t> inputs_s,
+                               std::vector<size_t> outputs_s,
+                               py::list param_keys,
+                               py::list param_vals) {
   const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(creator_s);
   int num_inputs = inputs_s.size();
   int num_outputs = outputs_s.size();
