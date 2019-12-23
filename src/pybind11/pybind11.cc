@@ -50,30 +50,31 @@ inline nnvm::NodeAttrs ParseAttrsZeros(const nnvm::Op *op,
   attrs.op = op;
   // InitOpParam::shape
   size_t num_params = py::len(param_keys);
-  for (size_t i = 0; i < num_params; ++i) {
-    if (param_keys[i].cast<std::string>() == "shape") {
-      param.shape = param_vals[i].cast<mxnet::TShape>();
-    } else if (param_keys[i].cast<std::string>() == "ctx") {
-      param.ctx = param_vals[i].cast<std::string>();
-    // } else if (param_keys[i].cast<std::string>() == "dtype") {
-    //   const std::string dtype = param_vals[i].cast<std::string>();
-    //   if (dtype == "float32") {
-    //     param.dtype = mshadow::kFloat32;
-    //   } else if (dtype == "float64") {
-    //     param.dtype = mshadow::kFloat64;
-    //   } else if (dtype == "float16") {
-    //     param.dtype = mshadow::kFloat16;
-    //   } else if (dtype == "uint8") {
-    //     param.dtype = mshadow::kUint8;
-    //   } else if (dtype == "int8") {
-    //     param.dtype = mshadow::kInt8;
-    //   } else if (dtype == "int32") {
-    //     param.dtype = mshadow::kInt32;
-    //   } else if (dtype == "int64") {
-    //     param.dtype = mshadow::kInt64;
-    //   }
-    }
-  }
+  param.shape = param_vals[0].cast<mxnet::TShape>();
+  // for (size_t i = 0; i < num_params; ++i) {
+  //   if (param_keys[i].cast<std::string>() == "shape") {
+  //     param.shape = param_vals[i].cast<mxnet::TShape>();
+  //   } else if (param_keys[i].cast<std::string>() == "ctx") {
+  //     param.ctx = param_vals[i].cast<std::string>();
+  //   } else if (param_keys[i].cast<std::string>() == "dtype") {
+  //     const std::string dtype = param_vals[i].cast<std::string>();
+  //     if (dtype == "float32") {
+  //       param.dtype = mshadow::kFloat32;
+  //     } else if (dtype == "float64") {
+  //       param.dtype = mshadow::kFloat64;
+  //     } else if (dtype == "float16") {
+  //       param.dtype = mshadow::kFloat16;
+  //     } else if (dtype == "uint8") {
+  //       param.dtype = mshadow::kUint8;
+  //     } else if (dtype == "int8") {
+  //       param.dtype = mshadow::kInt8;
+  //     } else if (dtype == "int32") {
+  //       param.dtype = mshadow::kInt32;
+  //     } else if (dtype == "int64") {
+  //       param.dtype = mshadow::kInt64;
+  //     }
+  //   }
+  // }
   // std::cout << "shape: " << param.shape << std::endl;
   // std::cout << "ctx: " << param.ctx << std::endl;
   // std::cout << "dtype: " << param.dtype << std::endl;
