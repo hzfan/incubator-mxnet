@@ -209,5 +209,5 @@ PYBIND11_MODULE(libmxnet, m) {
   m.def("_npi_zeros", &_npi_zeros, "Creating zeros in shape");
   m.def("_npi_zeros_dummy", &_npi_zeros_dummy, "Creating zeros in shape");
   m.def("_npi_zeros_tshape_dummy", &_npi_zeros_tshape_dummy, "Creating zeros in shape");
-  m.def("_npi_zeros_tshape_short_dummy", &_npi_zeros_tshape_short_dummy)
+  m.def("_npi_zeros_tshape_short_dummy", &_npi_zeros_tshape_short_dummy);
 }
