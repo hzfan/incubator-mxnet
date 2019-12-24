@@ -1165,6 +1165,11 @@ MXNET_DLL int MXImperativeInvokeEx(AtomicSymbolCreator creator,
                                    const char **param_keys,
                                    const char **param_vals,
                                    const int **out_stypes);
+
+MXNET_DLL size_t _npi_zeros(size_t op_handle, size_t shape);
+
+MXNET_DLL size_t _npi_zeros_dummy(size_t op_handle, size_t shape);
+
 /*!
  * \brief set whether to record operator for autograd
  * \param is_recording 1 when recording, 0 when not recording.
