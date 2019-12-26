@@ -18,6 +18,8 @@ def cython_zeros(shape):
 def cython_zeros_dummy(shape):
     out_ndarray_handle = _imperative_invoke_zeros_dummy(zeros_op_handle.value, shape)
 
+# output = cython_zeros((2, 2))
+# print(output)
 num_repeats = 10000
 start = time.time()
 for _ in range(num_repeats):

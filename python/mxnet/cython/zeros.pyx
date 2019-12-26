@@ -16,6 +16,7 @@
 # under the License
 
 from libc.stdint cimport int64_t
+import ctypes
 
 cdef extern from "mxnet/c_api.h":
     size_t _npi_zeros(size_t op_handle, size_t shape)
@@ -32,19 +33,31 @@ cdef extern from "mxnet/tuple.h" namespace "mxnet":
         inline TShape(const int ndim, const int64_t value)
 
 
-cdef inline size_t convert_tuple(tuple src_tuple) except +:
-    cdef size_t size = len(src_tuple)
-    cdef TShape ret = TShape(size, 0)
-    for i in range(size):
-        ret[i] = <int>(src_tuple[i])
-    return <size_t>(&ret)
+class Int64Array(ctypes.Structure):
+    """Temp data structure for byte array."""
+    _fields_ = [("data", ctypes.POINTER(ctypes.c_int64)),
+                ("size", ctypes.c_size_t)]
+
+
+def convert_tuple(src_tuple, temp_objs):
+    arr = Int64Array()
+    size = len(src_tuple)
+    arr.data = ctypes.cast((ctypes.c_int64 * size)(*src_tuple),
+                           ctypes.POINTER(ctypes.c_int64))
+    arr.size = size
+    temp_objs.append(arr)
+    return <size_t>(ctypes.addressof(arr))
 
 
 def _imperative_invoke_zeros(op_handle, shape):
-    out_ndarray_handle = _npi_zeros(op_handle, convert_tuple(shape))
+    temp_objs = []
+    address = convert_tuple(shape, temp_objs)
+    out_ndarray_handle = _npi_zeros(op_handle, address)
     return out_ndarray_handle
 
 
 def _imperative_invoke_zeros_dummy(op_handle, shape):
-    out_ndarray_handle = _npi_zeros_dummy(op_handle, convert_tuple(shape))
+    temp_objs = []
+    address = convert_tuple(shape, temp_objs)
+    out_ndarray_handle = _npi_zeros_dummy(op_handle, address)
     return out_ndarray_handle
