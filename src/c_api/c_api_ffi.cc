@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <mxnet/base.h>
+#include <mxnet/c_api_runtime.h>
 #include "../operator/tensor/init_op.h"
 #include "../imperative/imperative_utils.h"
 
@@ -7,7 +8,11 @@ size_t _npi_zeros(size_t op_handle, size_t shape) {
   const nnvm::Op* op = static_cast<nnvm::Op*>(reinterpret_cast<void*>(op_handle));
 
   mxnet::op::InitOpParam param;
-  param.shape = *reinterpret_cast<TShape*>(shape);
+  Int64Array* arr = reinterpret_cast<Int64Array*>(shape);
+  param.shape = TShape(arr->size, 0);
+  for (size_t i = 0; i < arr->size; ++i) {
+    param.shape[i] = arr->data[i];
+  }
   param.dtype = 0;
   param.ctx = "cpu";
   nnvm::NodeAttrs attrs;

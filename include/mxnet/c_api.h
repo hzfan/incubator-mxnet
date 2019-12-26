@@ -1170,6 +1170,11 @@ MXNET_DLL size_t _npi_zeros(size_t op_handle, size_t shape);
 
 MXNET_DLL size_t _npi_zeros_dummy(size_t op_handle, size_t shape);
 
+typedef struct {
+  int64_t* data;
+  size_t size;
+} Int64Array;
+
 /*!
  * \brief set whether to record operator for autograd
  * \param is_recording 1 when recording, 0 when not recording.
