@@ -25,19 +25,41 @@
 #ifndef MXNET_C_API_RUNTIME_H_
 #define MXNET_C_API_RUNTIME_H_
 
-#include <memory>
 #include <mxnet/c_api.h>
+#include <memory>
+
+/*! \brief Inhibit C++ name-mangling for MXNet functions. */
+#ifdef __cplusplus
+extern "C" {
+#endif  // __cplusplus
 
 /*!
  * \brief Union type of values
  *  being passed through API and function calls.
  */
-// typedef union {
-//   int64_t v_int64;
-//   double v_float64;
-//   void* v_handle;
-//   const char* v_str;
-// } Value;
+typedef union {
+  int64_t v_int64;
+  double v_float64;
+  size_t v_handle;
+  const char* v_str;
+} Value;
+
+typedef enum {
+  kInt = 0U,
+  kUInt = 1U,
+  kFloat = 2U,
+  kHandle = 3U,
+  kNull = 4U
+} TypeCode;
+
+MXNET_DLL size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args);
+
+MXNET_DLL size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args);
+
+typedef struct {
+  int64_t* data;
+  size_t size;
+} Int64Array;
 
 // typedef struct {
   
@@ -49,6 +71,10 @@
 
 // MXNET_DLL size_t _npi_zeros_dummy(size_t op_handle, size_t shape);
 
+
+#ifdef __cplusplus
+}
+#endif  // __cplusplus
 
 template<typename T>
 class ArrayBuilder {

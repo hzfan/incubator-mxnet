@@ -17,15 +17,25 @@
 
 from libc.stdint cimport int64_t
 
-cdef extern from "mxnet/c_api.h":
-    size_t _npi_zeros(size_t op_handle, size_t shape)
-    size_t _npi_zeros_dummy(size_t op_handle, size_t shape)
-    ctypedef struct Int64Array:
-        int64_t* data
-        size_t size
 
 
 cdef extern from "mxnet/c_api_runtime.h":
+    ctypedef enum TypeCode:
+        kInt = 0,
+        kUInt = 1,
+        kFloat = 2,
+        kHandle = 3,
+        kNull = 4
+    ctypedef union Value:
+        int64_t v_int64
+        double v_float64
+        size_t v_handle
+        const char* v_str
+    size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args)
+    size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args)
+    ctypedef struct Int64Array:
+        int64_t* data
+        size_t size
     cdef cppclass ArrayBuilder[T]:
         ArrayBuilder()
         inline ArrayBuilder(size_t size)
@@ -36,6 +46,7 @@ cdef extern from "mxnet/c_api_runtime.h":
         inline Int64ArrayPtr(const ArrayBuilder[int64_t]& arr)
         inline Int64Array* get()
         inline void reset(const ArrayBuilder[int64_t]& arr)
+    
 
 
 cdef extern from "mxnet/tuple.h" namespace "mxnet":
@@ -62,17 +73,29 @@ cdef inline void convert_tuple(tuple src_tuple,
     arrp[0].reset(arr[0])
 
 
-def _imperative_invoke_zeros(op_handle, shape):
+def _imperative_invoke_zeros(args):
     cdef ArrayBuilder[int64_t] temp_obj1
     cdef Int64ArrayPtr temp_obj2
-    convert_tuple(shape, &temp_obj1, &temp_obj2)
-    out_ndarray_handle = _npi_zeros(op_handle, <size_t>temp_obj2.get())
+    cdef Value[2] values
+    cdef TypeCode[2] tcodes
+    convert_tuple(args[1], &temp_obj1, &temp_obj2)
+    values[0].v_handle = args[0]
+    tcodes[0] = kHandle
+    values[1].v_handle = <size_t>temp_obj2.get()
+    tcodes[1] = kHandle
+    out_ndarray_handle = _npi_zeros(values, tcodes, 2)
     return out_ndarray_handle
 
 
-def _imperative_invoke_zeros_dummy(op_handle, shape):
+def _imperative_invoke_zeros_dummy(args):
     cdef ArrayBuilder[int64_t] temp_obj1
     cdef Int64ArrayPtr temp_obj2
-    convert_tuple(shape, &temp_obj1, &temp_obj2)
-    out_ndarray_handle = _npi_zeros_dummy(op_handle, <size_t>temp_obj2.get())
+    cdef Value[2] values
+    cdef TypeCode[2] tcodes
+    convert_tuple(args[1], &temp_obj1, &temp_obj2)
+    values[0].v_handle = args[0]
+    tcodes[0] = kHandle
+    values[1].v_handle = <size_t>temp_obj2.get()
+    tcodes[1] = kHandle
+    out_ndarray_handle = _npi_zeros_dummy(values, tcodes, 2)
     return out_ndarray_handle
