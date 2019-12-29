@@ -26,6 +26,7 @@
 #define MXNET_C_API_RUNTIME_H_
 
 #include <mxnet/c_api.h>
+#include <dmlc/logging.h>
 #include <memory>
 
 /*! \brief Inhibit C++ name-mangling for MXNet functions. */
@@ -61,61 +62,112 @@ typedef struct {
   size_t size;
 } Int64Array;
 
-// typedef struct {
-  
-// } IntTuple;
-
-// MXNET_DLL size_t _npi_zeros(size_t op_handle, size_t shape);
-
-// MXNET_DLL size_t _npi_zeros(Value* arg_values, int* type_codes, int num_args)
-
-// MXNET_DLL size_t _npi_zeros_dummy(size_t op_handle, size_t shape);
-
 
 #ifdef __cplusplus
 }
 #endif  // __cplusplus
 
-template<typename T>
-class ArrayBuilder {
-public:
-  // ArrayBuilder() = default;
-  inline ArrayBuilder() = default;
-  inline ArrayBuilder(size_t size): data_(reinterpret_cast<T*>(new T[size])),
-                             size_(size) {}
-  inline void resize(size_t size) {
-    data_.reset(reinterpret_cast<T*>(new T[size]));
-    size_ = size;
+// template<typename T>
+// class ArrayBuilder {
+// public:
+//   // ArrayBuilder() = default;
+//   inline ArrayBuilder() = default;
+//   inline ArrayBuilder(size_t size): data_(reinterpret_cast<T*>(new T[size])),
+//                              size_(size) {}
+//   inline void resize(size_t size) {
+//     data_.reset(reinterpret_cast<T*>(new T[size]));
+//     size_ = size;
+//   }
+//   inline T& operator[](int i) {
+//     return data_.get()[i];
+//   }
+//   // ~ArrayBuilder() = default;
+//   // ArrayBuilder(ArrayBuilder<T>&&) = default;
+//   // ArrayBuilder& operator =(ArrayBuilder&&) = default;
+// protected:
+//   friend class Int64ArrayPtr;
+//   std::unique_ptr<T[]> data_;
+//   size_t size_;
+// };
+
+// class Int64ArrayPtr {
+// public:
+//   inline Int64ArrayPtr() = default;
+//   inline Int64ArrayPtr(const ArrayBuilder<int64_t>& arr): data_(reinterpret_cast<Int64Array*>(new Int64Array)) {
+//     data_->data = arr.data_.get();
+//     data_->size = arr.size_;
+//   }
+//   inline void reset(const ArrayBuilder<int64_t>& arr) {
+//     data_.reset(reinterpret_cast<Int64Array*>(new Int64Array));
+//     data_->data = arr.data_.get();
+//     data_->size = arr.size_;
+//   }
+//   inline Int64Array* get() {
+//     return data_.get();
+//   }
+// private:
+//   std::unique_ptr<Int64Array> data_;
+// };
+
+struct Int64ArrayCtor {
+  inline void operator() (Int64Array& obj, size_t size) {
+    obj.data = new int64_t[size];
+    obj.size = size;
   }
-  inline T& operator[](int i) {
-    return data_.get()[i];
-  }
-  // ~ArrayBuilder() = default;
-  // ArrayBuilder(ArrayBuilder<T>&&) = default;
-  // ArrayBuilder& operator =(ArrayBuilder&&) = default;
-protected:
-  friend class Int64ArrayPtr;
-  std::unique_ptr<T[]> data_;
-  size_t size_;
 };
 
-class Int64ArrayPtr {
-public:
-  inline Int64ArrayPtr() = default;
-  inline Int64ArrayPtr(const ArrayBuilder<int64_t>& arr): data_(reinterpret_cast<Int64Array*>(new Int64Array)) {
-    data_->data = arr.data_.get();
-    data_->size = arr.size_;
+struct Int64ArrayDeleter {
+  inline void operator() (const Int64Array& obj) {
+    delete[] obj.data;
   }
-  inline void reset(const ArrayBuilder<int64_t>& arr) {
-    data_.reset(reinterpret_cast<Int64Array*>(new Int64Array));
-    data_->data = arr.data_.get();
-    data_->size = arr.size_;
+};
+
+struct Int64ArrayMoveCtor {
+  inline void operator() (Int64Array& obj, Int64Array&& other) {
+    obj.data = other.data;
+    obj.size = other.size;
+    other.data = nullptr;
+    other.size = 0;
   }
-  inline Int64Array* get() {
-    return data_.get();
+};
+
+struct Int64ArrayMoveAssign {
+  inline void operator() (Int64Array& obj, Int64Array&& other) {
+    std::swap(obj.data, other.data);
+    std::swap(obj.size, other.size);
   }
-private:
-  std::unique_ptr<Int64Array> data_;
+};
+
+struct Int64ArrayWrapper {
+  inline Int64ArrayWrapper() = default;
+  // inline Int64ArrayWrapper(size_t size) {
+  //   Int64ArrayCtor func;
+  //   func.operator()(this->obj, size);
+  // }
+  inline ~Int64ArrayWrapper() {
+    Int64ArrayDeleter func;
+    func.operator()(this->obj);
+  }
+  inline Int64ArrayWrapper(const Int64ArrayWrapper& other) {
+    CHECK(false) << "Int64ArrayWrapper should not be copy-constructed";
+  }
+  inline Int64ArrayWrapper& operator= (const Int64ArrayWrapper& other) {
+    CHECK(false) << "Int64ArrayWrapper should not be copy-assigned";
+    return *this;
+  }
+  inline Int64ArrayWrapper(Int64ArrayWrapper&& other) {
+    Int64ArrayMoveCtor func;
+    func.operator()(this->obj, std::move(other.obj));
+  }
+  inline Int64ArrayWrapper& operator=(Int64ArrayWrapper&& other) {
+    Int64ArrayMoveAssign func;
+    func.operator()(this->obj, std::move(other.obj));
+    return *this;
+  }
+  inline Int64ArrayWrapper&& move() {
+    return std::move(*this);
+  }
+  Int64Array obj;
 };
 
 #endif // MXNET_C_API_RUNTIME_H_

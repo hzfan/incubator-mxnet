@@ -36,17 +36,24 @@ cdef extern from "mxnet/c_api_runtime.h":
     ctypedef struct Int64Array:
         int64_t* data
         size_t size
-    cdef cppclass ArrayBuilder[T]:
-        ArrayBuilder()
-        inline ArrayBuilder(size_t size)
-        inline T& operator[](int i)
-        inline void resize(size_t size)
-    cdef cppclass Int64ArrayPtr:
-        Int64ArrayPtr()
-        inline Int64ArrayPtr(const ArrayBuilder[int64_t]& arr)
-        inline Int64Array* get()
-        inline void reset(const ArrayBuilder[int64_t]& arr)
-    
+    # cdef cppclass ArrayBuilder[T]:
+    #     ArrayBuilder()
+    #     inline ArrayBuilder(size_t size)
+    #     inline T& operator[](int i)
+    #     inline void resize(size_t size)
+    cdef cppclass Int64ArrayCtor:
+        inline void operator() (Int64Array& obj, size_t size)
+    cdef cppclass Int64ArrayWrapper:
+        inline Int64ArrayWrapper() except +
+        inline Int64ArrayWrapper(size_t size) except +
+        inline Int64ArrayWrapper(Int64ArrayWrapper&& other) except +
+        inline Int64ArrayWrapper&& move()
+        Int64Array obj
+    # cdef cppclass Int64ArrayPtr:
+    #     Int64ArrayPtr()
+    #     inline Int64ArrayPtr(const ArrayBuilder[int64_t]& arr)
+    #     inline Int64Array* get()
+    #     inline void reset(const ArrayBuilder[int64_t]& arr)
 
 
 cdef extern from "mxnet/tuple.h" namespace "mxnet":
@@ -59,43 +66,55 @@ cdef extern from "mxnet/tuple.h" namespace "mxnet":
         inline TShape(const int ndim, const int64_t value)
 
 
-cdef extern from "<utility>" namespace "std":
-    T move[T](T t)
+cdef extern from "dmlc/any.h" namespace "dmlc":
+    inline T& get[T](any& src)
+    cdef cppclass any:
+        inline any& operator=[T](T&& other)
 
 
-cdef inline void convert_tuple(tuple src_tuple,
-                               ArrayBuilder[int64_t]* arr,
-                               Int64ArrayPtr* arrp) except +:
-    cdef size_t size = len(src_tuple)
-    arr[0].resize(size)
+# cdef inline void convert_tuple(tuple src_tuple,
+#                                ArrayBuilder[int64_t]* arr,
+#                                Int64ArrayPtr* arrp) except +:
+#     cdef size_t size = len(src_tuple)
+#     arr[0].resize(size)
+#     for i in range(size):
+#         arr[0][i] = src_tuple[i]
+#     arrp[0].reset(arr[0])
+
+cdef convert_to_tuple(tuple x, any* temp_args, size_t* value):
+    cdef size_t size = len(x)
+    cdef Int64ArrayWrapper arr
+    cdef Int64ArrayCtor func
+    func(arr.obj, size)
     for i in range(size):
-        arr[0][i] = src_tuple[i]
-    arrp[0].reset(arr[0])
+        arr.obj.data[i] = x[i]
+    temp_args[0] = arr.move()
+    value[0] = <size_t>&(get[Int64ArrayWrapper](temp_args[0]).obj)
 
 
 def _imperative_invoke_zeros(args):
-    cdef ArrayBuilder[int64_t] temp_obj1
-    cdef Int64ArrayPtr temp_obj2
+    cdef any temp_obj
+    cdef size_t shape_handle
     cdef Value[2] values
     cdef TypeCode[2] tcodes
-    convert_tuple(args[1], &temp_obj1, &temp_obj2)
+    convert_to_tuple(args[1], &temp_obj, &shape_handle)
     values[0].v_handle = args[0]
     tcodes[0] = kHandle
-    values[1].v_handle = <size_t>temp_obj2.get()
+    values[1].v_handle = shape_handle
     tcodes[1] = kHandle
     out_ndarray_handle = _npi_zeros(values, tcodes, 2)
     return out_ndarray_handle
 
 
 def _imperative_invoke_zeros_dummy(args):
-    cdef ArrayBuilder[int64_t] temp_obj1
-    cdef Int64ArrayPtr temp_obj2
+    cdef any temp_obj
+    cdef size_t shape_handle
     cdef Value[2] values
     cdef TypeCode[2] tcodes
-    convert_tuple(args[1], &temp_obj1, &temp_obj2)
+    convert_to_tuple(args[1], &temp_obj, &shape_handle)
     values[0].v_handle = args[0]
     tcodes[0] = kHandle
-    values[1].v_handle = <size_t>temp_obj2.get()
+    values[1].v_handle = shape_handle
     tcodes[1] = kHandle
     out_ndarray_handle = _npi_zeros_dummy(values, tcodes, 2)
     return out_ndarray_handle
