@@ -130,7 +130,7 @@ cdef inline int make_arg(object arg, Value* value, TypeCode* tcode, any* temp_ob
 
 cdef inline object make_ret(const Value* value, const TypeCode* tcode):
     if tcode[0] == kArrayHandle:
-        return ndarray(handle=ctypes.cast(value[0].v_handle, NDArrayHandle))
+        return ndarray(handle=value[0].v_handle)
     raise TypeError("Unhandled type code %d" % <int>(tcode[0]))
 
 
@@ -164,5 +164,7 @@ def _imperative_invoke_zeros_dummy(args):
     for i in range(size):
         make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
     _npi_zeros_dummy(&values[0], &tcodes[0], size, &ret_value, &ret_tcode)
+    print("before make_ret")
     ret = make_ret(&ret_value, &ret_tcode)
+    print("after make_ret")
     return ret
