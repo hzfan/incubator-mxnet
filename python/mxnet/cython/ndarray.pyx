@@ -53,6 +53,7 @@ cdef class NDArrayBase:
             return bool(self.cwritable)
 
     def __init__(self, handle, writable=True):
+        print("init an cython ndarray")
         self._set_handle(handle)
         self.cwritable = writable
 
