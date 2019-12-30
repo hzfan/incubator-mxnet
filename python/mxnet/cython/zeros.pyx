@@ -151,7 +151,7 @@ def _imperative_invoke_zeros(args):
     return ret
 
 
-def _imperative_invoke_zeros(args):
+def _imperative_invoke_zeros_dummy(args):
     cdef vector[any] temp_obj
     cdef vector[Value] values
     cdef vector[TypeCode] tcodes
