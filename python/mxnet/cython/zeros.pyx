@@ -45,7 +45,7 @@ cdef extern from "mxnet/c_api_runtime.h":
         size_t v_handle
         const char* v_str
     size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code)
-    size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args)
+    size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code)
     ctypedef struct Int64Array:
         int64_t* data
         size_t size
@@ -151,15 +151,18 @@ def _imperative_invoke_zeros(args):
     return ret
 
 
-def _imperative_invoke_zeros_dummy(args):
+def _imperative_invoke_zeros(args):
     cdef vector[any] temp_obj
     cdef vector[Value] values
     cdef vector[TypeCode] tcodes
+    cdef Value ret_value
+    cdef TypeCode ret_tcode
     cdef size_t size = len(args)
     temp_obj.resize(size)
     values.resize(size)
     tcodes.resize(size)
     for i in range(size):
         make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
-    out_ndarray_handle = _npi_zeros_dummy(&values[0], &tcodes[0], size)
-    return out_ndarray_handle
+    _npi_zeros_dummy(&values[0], &tcodes[0], size, &ret_value, &ret_tcode)
+    ret = make_ret(&ret_value, &ret_tcode)
+    return ret

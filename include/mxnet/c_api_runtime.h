@@ -56,7 +56,7 @@ typedef enum {
 
 MXNET_DLL void _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code);
 
-MXNET_DLL size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args);
+MXNET_DLL size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code);
 
 typedef struct {
   int64_t* data;
