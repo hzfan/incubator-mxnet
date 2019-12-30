@@ -50,10 +50,11 @@ typedef enum {
   kUInt = 1U,
   kFloat = 2U,
   kHandle = 3U,
-  kNull = 4U
+  kNull = 4U,
+  kArrayHandle = 7U
 } TypeCode;
 
-MXNET_DLL size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args);
+MXNET_DLL void _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code);
 
 MXNET_DLL size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args);
 

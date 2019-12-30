@@ -27,7 +27,7 @@
 //   return reinterpret_cast<size_t>(ndoutputs[0]);
 // }
 
-size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args) {
+void _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code) {
   const nnvm::Op* op = reinterpret_cast<nnvm::Op*>(arg_values[0].v_handle);
   Int64Array* arr = reinterpret_cast<Int64Array*>(arg_values[1].v_handle);
   mxnet::op::InitOpParam param;
@@ -50,7 +50,8 @@ size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args) {
   ndoutputs[0] = new mxnet::NDArray();
   auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
 
-  return reinterpret_cast<size_t>(ndoutputs[0]);
+  ret_val->v_handle = reinterpret_cast<size_t>(ndoutputs[0]);
+  (*ret_type_code) = kArrayHandle;
 }
 
 size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args) {

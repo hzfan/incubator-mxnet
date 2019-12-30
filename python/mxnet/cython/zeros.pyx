@@ -16,6 +16,8 @@
 # under the License
 
 import ctypes
+from ..base import NDArrayHandle
+from ..numpy import ndarray
 from libcpp.vector cimport vector
 from libc.stdint cimport int64_t
 
@@ -35,13 +37,14 @@ cdef extern from "mxnet/c_api_runtime.h":
         kUInt = 1,
         kFloat = 2,
         kHandle = 3,
-        kNull = 4
+        kNull = 4,
+        kArrayHandle = 7
     ctypedef union Value:
         int64_t v_int64
         double v_float64
         size_t v_handle
         const char* v_str
-    size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args)
+    size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code)
     size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args)
     ctypedef struct Int64Array:
         int64_t* data
@@ -122,20 +125,30 @@ cdef inline int make_arg(object arg, Value* value, TypeCode* tcode, any* temp_ob
         tcode[0] = kHandle
     else:
         raise TypeError("Don't know how to handle type %s" % type(arg))
+    return 0
+
+
+cdef inline object make_ret(const Value* value, const TypeCode* tcode):
+    if tcode[0] == kArrayHandle:
+        return ndarray(handle=ctypes.cast(value[0].v_handle, NDArrayHandle))
+    raise TypeError("Unhandled type code %d" % <int>(tcode[0]))
 
 
 def _imperative_invoke_zeros(args):
     cdef vector[any] temp_obj
     cdef vector[Value] values
     cdef vector[TypeCode] tcodes
+    cdef Value ret_value
+    cdef TypeCode ret_tcode
     cdef size_t size = len(args)
     temp_obj.resize(size)
     values.resize(size)
     tcodes.resize(size)
     for i in range(size):
         make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
-    out_ndarray_handle = _npi_zeros(&values[0], &tcodes[0], size)
-    return out_ndarray_handle
+    _npi_zeros(&values[0], &tcodes[0], size, &ret_value, &ret_tcode)
+    ret = make_ret(&ret_value, &ret_tcode)
+    return ret
 
 
 def _imperative_invoke_zeros_dummy(args):
