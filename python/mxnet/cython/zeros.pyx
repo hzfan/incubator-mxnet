@@ -15,8 +15,17 @@
 # specific language governing permissions and limitations
 # under the License
 
+import ctypes
 from libc.stdint cimport int64_t
 
+# cdef class Handle:
+#     cdef size_t chandle
+#     property chandle:
+#         def __set__(self, value):
+#             if value == None:
+#                 self.chandle = <size_t>NULL
+#             else:
+#                 self.chandle = <size_t>value
 
 
 cdef extern from "mxnet/c_api_runtime.h":
@@ -81,7 +90,15 @@ cdef extern from "dmlc/any.h" namespace "dmlc":
 #         arr[0][i] = src_tuple[i]
 #     arrp[0].reset(arr[0])
 
-cdef convert_to_tuple(tuple x, any* temp_args, size_t* value):
+
+cdef inline size_t c_handle(object handle):
+    """Cast C types handle to c handle."""
+    cdef unsigned long long v_ptr
+    v_ptr = handle.value
+    return <size_t>(v_ptr)
+
+
+cdef inline void convert_to_tuple(tuple x, any* temp_args, size_t* value):
     cdef size_t size = len(x)
     cdef Int64ArrayWrapper arr
     cdef Int64ArrayCtor func
@@ -92,29 +109,35 @@ cdef convert_to_tuple(tuple x, any* temp_args, size_t* value):
     value[0] = <size_t>&(get[Int64ArrayWrapper](temp_args[0]).obj)
 
 
+cdef inline int make_arg(object arg, Value* value, TypeCode* tcode, any* temp_objs) except -1:
+    if isinstance(arg, ctypes.c_void_p):
+        value[0].v_handle = c_handle(arg)
+        tcode[0] = kHandle
+    # elif isinstance(arg, Handle):
+    #     value[0].v_handle = (<Handle>arg).chandle
+    #     tcode[0] = kHandle
+    elif isinstance(arg, tuple):
+        convert_to_tuple(arg, temp_objs, &value[0].v_handle)
+        tcode[0] = kHandle
+    else:
+        raise TypeError("Don't know how to handle type %s" % type(arg))
+
+
 def _imperative_invoke_zeros(args):
-    cdef any temp_obj
-    cdef size_t shape_handle
+    cdef any[2] temp_obj
     cdef Value[2] values
     cdef TypeCode[2] tcodes
-    convert_to_tuple(args[1], &temp_obj, &shape_handle)
-    values[0].v_handle = args[0]
-    tcodes[0] = kHandle
-    values[1].v_handle = shape_handle
-    tcodes[1] = kHandle
+    for i in range(2):
+        make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
     out_ndarray_handle = _npi_zeros(values, tcodes, 2)
     return out_ndarray_handle
 
 
 def _imperative_invoke_zeros_dummy(args):
-    cdef any temp_obj
-    cdef size_t shape_handle
+    cdef any[2] temp_obj
     cdef Value[2] values
     cdef TypeCode[2] tcodes
-    convert_to_tuple(args[1], &temp_obj, &shape_handle)
-    values[0].v_handle = args[0]
-    tcodes[0] = kHandle
-    values[1].v_handle = shape_handle
-    tcodes[1] = kHandle
+    for i in range(2):
+        make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
     out_ndarray_handle = _npi_zeros_dummy(values, tcodes, 2)
     return out_ndarray_handle
