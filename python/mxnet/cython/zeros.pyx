@@ -16,6 +16,7 @@
 # under the License
 
 import ctypes
+from libcpp.vector cimport vector
 from libc.stdint cimport int64_t
 
 # cdef class Handle:
@@ -124,20 +125,28 @@ cdef inline int make_arg(object arg, Value* value, TypeCode* tcode, any* temp_ob
 
 
 def _imperative_invoke_zeros(args):
-    cdef any[2] temp_obj
-    cdef Value[2] values
-    cdef TypeCode[2] tcodes
-    for i in range(2):
+    cdef vector[any] temp_obj
+    cdef vector[Value] values
+    cdef vector[TypeCode] tcodes
+    cdef size_t size = len(args)
+    temp_obj.resize(size)
+    values.resize(size)
+    tcodes.resize(size)
+    for i in range(size):
         make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
-    out_ndarray_handle = _npi_zeros(values, tcodes, 2)
+    out_ndarray_handle = _npi_zeros(&values[0], &tcodes[0], size)
     return out_ndarray_handle
 
 
 def _imperative_invoke_zeros_dummy(args):
-    cdef any[2] temp_obj
-    cdef Value[2] values
-    cdef TypeCode[2] tcodes
-    for i in range(2):
+    cdef vector[any] temp_obj
+    cdef vector[Value] values
+    cdef vector[TypeCode] tcodes
+    cdef size_t size = len(args)
+    temp_obj.resize(size)
+    values.resize(size)
+    tcodes.resize(size)
+    for i in range(size):
         make_arg(args[i], &values[i], &tcodes[i], &temp_obj[i])
-    out_ndarray_handle = _npi_zeros_dummy(values, tcodes, 2)
+    out_ndarray_handle = _npi_zeros_dummy(&values[0], &tcodes[0], size)
     return out_ndarray_handle
