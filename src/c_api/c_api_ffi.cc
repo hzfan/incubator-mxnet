@@ -54,7 +54,7 @@ size_t _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args) {
 }
 
 size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args) {
-  return 0;
+  return reinterpret_cast<size_t>(new mxnet::NDArray());
 }
 
 //#endif  // MXNET_USE_PYBIND11

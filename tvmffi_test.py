@@ -20,6 +20,7 @@ def cython_zeros(shape):
 
 def cython_zeros_dummy(shape):
     out_ndarray_handle = _imperative_invoke_zeros_dummy([zeros_op_handle, shape])
+    return mx.np.ndarray(handle=ctypes.cast(out_ndarray_handle, NDArrayHandle))
 
 # out = cython_zeros((2, 2))
 # print(out)
