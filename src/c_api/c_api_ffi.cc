@@ -55,7 +55,7 @@ void _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* re
 }
 
 void _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code) {
-  ret_val->v_handle = 0U;
+  ret_val->v_handle = new mxnet::NDArray();
   (*ret_type_code) = kArrayHandle;
 }
 
