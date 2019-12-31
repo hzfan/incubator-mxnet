@@ -54,8 +54,9 @@ void _npi_zeros(Value* arg_values, TypeCode* type_codes, int num_args, Value* re
   (*ret_type_code) = kArrayHandle;
 }
 
-size_t _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args) {
-  return 0;
+void _npi_zeros_dummy(Value* arg_values, TypeCode* type_codes, int num_args, Value* ret_val, TypeCode* ret_type_code) {
+  ret_val->v_handle = reinterpret_cast<size_t>(nullptr);
+  (*ret_type_code) = kArrayHandle;
 }
 
 //#endif  // MXNET_USE_PYBIND11
