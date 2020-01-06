@@ -2438,3 +2438,4 @@ int MXShallowCopyNDArray(NDArrayHandle src_handle, NDArrayHandle* out) {
   *out = ret;
   API_END_HANDLE_ERROR(delete ret);
 }
+
