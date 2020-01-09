@@ -27,3 +27,4 @@ _init_np_op_module(root_module_name='mxnet', np_module_name='numpy',
                    mx_module_name=None, make_op_func=_make_ndarray_function)
 
 _init_api("np", "mxnet.numpy")
+_init_api("_npi", "mxnet.ndarray.numpy._internal")
