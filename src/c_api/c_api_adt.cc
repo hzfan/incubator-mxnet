@@ -61,7 +61,7 @@ MXNET_REGISTER_API("_npi.zeros1")
   nnvm::NodeAttrs attrs;
   attrs.parsed = std::move(param);
   attrs.op = op;
-
+  attrs.dict["ctx"] = args[1].operator std::string();
   int num_inputs = 0;
   int infered_num_outputs;
   int num_visible_outputs;
