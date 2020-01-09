@@ -189,6 +189,7 @@ cdef class CachedOp:
 
 def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op=0, output_is_list=0):
     """cython implementation of imperative invoke wrapper"""
+    print("vals: {}".format(vals))
     cdef unsigned long long ihandle = handle
     cdef OpHandle chandle = <OpHandle>ihandle
     cdef vector[string] ckeys

@@ -6479,7 +6479,7 @@ def bincount(x, weights=None, minlength=0):
 
 
 @set_module('mxnet.ndarray.numpy')
-def zeros1(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=redefined-outer-name
+def zeros1(shape, dtype=None, order='C', ctx=None):  # pylint: disable=redefined-outer-name
     """Return a new array of given shape and type, filled with zeros.
     This function currently only supports storing multi-dimensional data
     in row-major (C-style).
@@ -6508,12 +6508,14 @@ def zeros1(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=re
         raise NotImplementedError
     if ctx is None:
         ctx = str(current_context())
-    dtype = _np.float32 if dtype is None else dtype
-    return _npi.zeros1(shape, ctx)
+    # dtype = _np.float32 if dtype is None else dtype
+    if dtype is not None and not isinstance(dtype, str):
+        dtype = _np.dtype(dtype).name
+    return _npi.zeros1(shape, dtype, ctx)
 
 
 @set_module('mxnet.ndarray.numpy')
-def zeros0(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=redefined-outer-name
+def zeros0(shape, dtype=None, order='C', ctx=None):  # pylint: disable=redefined-outer-name
     """Return a new array of given shape and type, filled with zeros.
     This function currently only supports storing multi-dimensional data
     in row-major (C-style).
@@ -6542,5 +6544,7 @@ def zeros0(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=re
         raise NotImplementedError
     if ctx is None:
         ctx = str(current_context())
-    dtype = _np.float32 if dtype is None else dtype
-    return _npi.zeros0(shape, ctx)
+    # dtype = _np.float32 if dtype is None else dtype
+    if dtype is not None and not isinstance(dtype, str):
+        dtype = _np.dtype(dtype).name
+    return _npi.zeros0(shape, dtype, ctx)

@@ -56,12 +56,16 @@ MXNET_REGISTER_API("_npi.zeros1")
     int64_t value = obj->operator[](i).as<::mxnet::runtime::IntegerObj>()->value;
     param.shape[i] = value;
   }
-  param.dtype = 0;
-  param.ctx = args[1].operator std::string();
+  if (args[1].type_code() == kNull) {
+    param.dtype = mshadow::kFloat32;
+  } else {
+    param.dtype = runtime::String2MXNetTypeWithBool(args[1].operator std::string());
+  }
+  param.ctx = args[2].operator std::string();
   nnvm::NodeAttrs attrs;
   attrs.parsed = std::move(param);
   attrs.op = op;
-  attrs.dict["ctx"] = args[1].operator std::string();
+  attrs.dict["ctx"] = args[2].operator std::string();
   int num_inputs = 0;
   int infered_num_outputs;
   int num_visible_outputs;
