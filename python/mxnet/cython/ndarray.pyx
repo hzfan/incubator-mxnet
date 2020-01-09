@@ -37,7 +37,10 @@ cdef class NDArrayBase:
         if handle is None:
             self.chandle = NULL
         else:
-            ptr = handle.value
+            if isinstance(handle, (int, long)):
+                ptr = handle
+            else:
+                ptr = handle.value
             self.chandle = <SymbolHandle>(ptr)
 
     property handle:
