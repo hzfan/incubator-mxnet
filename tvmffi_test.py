@@ -3,7 +3,7 @@ import time
 from mxnet.ndarray import np
 
 print("tvm ffi...")
-a = np.zeros1((3, 4), ctx="gpu(0)")
+a = np.zeros1((3, 4), ctx="cpu(0)")
 print(a)
 print("legacy ffi...")
 a = np.zeros((3, 4), ctx=mx.cpu())
