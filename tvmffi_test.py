@@ -16,3 +16,11 @@ for i in range(repeat):
     a = np.zeros0((3, 4))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
+
+print("tvm ffi...")
+repeat = 10000
+start = time.time()
+for i in range(repeat):
+    a = np.zeros1((3, 4))
+end = time.time()
+print("time = {}".format((end - start) / repeat))
