@@ -39,7 +39,7 @@ void MXTestADT(size_t ptr) {
 
 namespace mxnet {
 
-MXNET_REGISTER_API("np.zeros1")
+MXNET_REGISTER_API("_npi.zeros1")
 .set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
   const nnvm::Op* op = Op::Get("_npi_zeros");
   const runtime::ObjectRef ref = args[0].operator runtime::ObjectRef();
@@ -57,7 +57,7 @@ MXNET_REGISTER_API("np.zeros1")
     param.shape[i] = value;
   }
   param.dtype = 0;
-  param.ctx = "cpu";
+  param.ctx = args[1].operator std::string();
   nnvm::NodeAttrs attrs;
   attrs.parsed = std::move(param);
   attrs.op = op;
@@ -74,7 +74,7 @@ MXNET_REGISTER_API("np.zeros1")
   *ret = reinterpret_cast<mxnet::NDArray*>(ndoutputs[0]);
 });
 
-MXNET_REGISTER_API("np.zeros0")
+MXNET_REGISTER_API("_npi.zeros0")
 .set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
   *ret = static_cast<int64_t>(0xdeadbeaf);
 });

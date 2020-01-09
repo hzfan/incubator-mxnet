@@ -42,7 +42,7 @@ __all__ = ['shape', 'zeros', 'zeros_like', 'ones', 'ones_like', 'full', 'full_li
            'bitwise_or', 'rad2deg', 'deg2rad', 'unique', 'lcm', 'tril', 'identity', 'take', 'ldexp', 'vdot',
            'inner', 'outer', 'equal', 'not_equal', 'greater', 'less', 'greater_equal', 'less_equal', 'hsplit',
            'rot90', 'einsum', 'true_divide', 'nonzero', 'shares_memory', 'may_share_memory', 'diff', 'resize',
-           'nan_to_num', 'where', 'bincount']
+           'nan_to_num', 'where', 'bincount', 'zeros0', 'zeros1']
 
 
 @set_module('mxnet.ndarray.numpy')
@@ -6476,3 +6476,71 @@ def bincount(x, weights=None, minlength=0):
     if weights is None:
         return _npi.bincount(x, minlength=minlength, has_weights=False)
     return _npi.bincount(x, weights=weights, minlength=minlength, has_weights=True)
+
+
+@set_module('mxnet.ndarray.numpy')
+def zeros1(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=redefined-outer-name
+    """Return a new array of given shape and type, filled with zeros.
+    This function currently only supports storing multi-dimensional data
+    in row-major (C-style).
+
+    Parameters
+    ----------
+    shape : int or tuple of int
+        The shape of the empty array.
+    dtype : str or numpy.dtype, optional
+        An optional value type. Default is `numpy.float32`. Note that this
+        behavior is different from NumPy's `zeros` function where `float64`
+        is the default value, because `float32` is considered as the default
+        data type in deep learning.
+    order : {'C'}, optional, default: 'C'
+        How to store multi-dimensional data in memory, currently only row-major
+        (C-style) is supported.
+    ctx : Context, optional
+        An optional device context (default is the current default context).
+
+    Returns
+    -------
+    out : ndarray
+        Array of zeros with the given shape, dtype, and ctx.
+    """
+    if order != 'C':
+        raise NotImplementedError
+    if ctx is None:
+        ctx = str(current_context())
+    dtype = _np.float32 if dtype is None else dtype
+    return _npi.zeros1(shape, ctx)
+
+
+@set_module('mxnet.ndarray.numpy')
+def zeros0(shape, dtype=_np.float32, order='C', ctx=None):  # pylint: disable=redefined-outer-name
+    """Return a new array of given shape and type, filled with zeros.
+    This function currently only supports storing multi-dimensional data
+    in row-major (C-style).
+
+    Parameters
+    ----------
+    shape : int or tuple of int
+        The shape of the empty array.
+    dtype : str or numpy.dtype, optional
+        An optional value type. Default is `numpy.float32`. Note that this
+        behavior is different from NumPy's `zeros` function where `float64`
+        is the default value, because `float32` is considered as the default
+        data type in deep learning.
+    order : {'C'}, optional, default: 'C'
+        How to store multi-dimensional data in memory, currently only row-major
+        (C-style) is supported.
+    ctx : Context, optional
+        An optional device context (default is the current default context).
+
+    Returns
+    -------
+    out : ndarray
+        Array of zeros with the given shape, dtype, and ctx.
+    """
+    if order != 'C':
+        raise NotImplementedError
+    if ctx is None:
+        ctx = str(current_context())
+    dtype = _np.float32 if dtype is None else dtype
+    return _npi.zeros0(shape, ctx)
