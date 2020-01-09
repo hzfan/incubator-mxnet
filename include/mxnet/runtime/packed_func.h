@@ -30,6 +30,7 @@
 #include <mxnet/runtime/object.h>
 #include <mxnet/runtime/ndarray.h>
 #include <mxnet/ndarray.h>
+#include <mxnet/base.h>
 #include <functional>
 #include <tuple>
 #include <vector>
@@ -818,6 +819,52 @@ inline const char* TypeCode2Str(int type_code) {
     default: LOG(FATAL) << "unknown type_code="
                         << static_cast<int>(type_code); return "";
   }
+}
+
+inline int String2MXNetTypeWithBool(const std::string& s) {
+  if (s == "float32") {
+    return mshadow::kFloat32;
+  } else if (s == "float64") {
+    return mshadow::kFloat64;
+  } else if (s == "flaot16") {
+    return mshadow::kFloat16;
+  } else if (s == "uint8") {
+    return mshadow::kUint8;
+  } else if (s == "int8") {
+    return mshadow::kInt8;
+  } else if (s == "int32") {
+    return mshadow::kInt32;
+  } else if (s == "int64") {
+    return mshadow::kInt64;
+  } else if (s == "bool") {
+    return mshadow::kBool;
+  } else {
+    LOG(FATAL) << "unknown type " << s;
+  }
+  LOG(FATAL) << "should not reach here ";
+  return 0;
+}
+
+inline int String2MXNetType(const std::string& s) {
+  if (s == "float32") {
+    return mshadow::kFloat32;
+  } else if (s == "float64") {
+    return mshadow::kFloat64;
+  } else if (s == "flaot16") {
+    return mshadow::kFloat16;
+  } else if (s == "uint8") {
+    return mshadow::kUint8;
+  } else if (s == "int8") {
+    return mshadow::kInt8;
+  } else if (s == "int32") {
+    return mshadow::kInt32;
+  } else if (s == "int64") {
+    return mshadow::kInt64;
+  } else {
+    LOG(FATAL) << "unknown type " << s;
+  }
+  LOG(FATAL) << "should not reach here ";
+  return 0;
 }
 
 inline MXNetArgValue MXNetArgs::operator[](int i) const {
