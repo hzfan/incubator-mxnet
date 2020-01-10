@@ -65,6 +65,9 @@ cdef class NDArrayBase:
     def __reduce__(self):
         return (_ndarray_cls, (None,), self.__getstate__())
 
+    def _get_handle(self):
+        return <size_t>self.chandle
+
 
 _ndarray_cls = None
 _np_ndarray_cls = None
@@ -189,7 +192,6 @@ cdef class CachedOp:
 
 def _imperative_invoke(handle, ndargs, keys, vals, out, is_np_op=0, output_is_list=0):
     """cython implementation of imperative invoke wrapper"""
-    print("vals: {}".format(vals))
     cdef unsigned long long ihandle = handle
     cdef OpHandle chandle = <OpHandle>ihandle
     cdef vector[string] ckeys

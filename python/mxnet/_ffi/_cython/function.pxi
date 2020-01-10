@@ -17,6 +17,7 @@
 
 import ctypes
 import traceback
+from ...ndarray._internal import NDArrayBase
 from numbers import Number, Integral
 
 
@@ -52,6 +53,9 @@ cdef inline int make_arg(object arg,
     elif isinstance(arg, ctypes.c_void_p):
         value[0].v_handle = c_handle(arg)
         tcode[0] = kHandle
+    elif isinstance(arg, NDArrayBase):
+        value[0].v_handle = <void*><size_t>(arg._get_handle())
+        tcode[0] = kNDArrayHandle
     else:
         raise TypeError("Don't know how to handle type %s" % type(arg))
     return 0

@@ -537,6 +537,10 @@ class MXNetArgValue : public MXNetPODValue_ {
       return std::string(value_.v_str);
     }
   }
+  operator ::mxnet::NDArray*() const {
+    MXNET_CHECK_TYPE_CODE(type_code_, kNDArrayHandle);
+    return reinterpret_cast<::mxnet::NDArray*>(value_.v_handle);
+  }
   operator PackedFunc() const {
     if (type_code_ == kNull) return PackedFunc();
     MXNET_CHECK_TYPE_CODE(type_code_, kFuncHandle);
