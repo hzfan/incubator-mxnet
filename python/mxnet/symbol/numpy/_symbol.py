@@ -48,7 +48,8 @@ __all__ = ['zeros', 'zeros_like', 'ones', 'ones_like', 'full_like', 'empty_like'
            'blackman', 'flip', 'flipud', 'fliplr', 'around', 'round', 'hypot', 'bitwise_xor', 'bitwise_or',
            'rad2deg', 'deg2rad', 'unique', 'lcm', 'tril', 'identity', 'take', 'ldexp', 'vdot', 'inner', 'outer',
            'equal', 'not_equal', 'greater', 'less', 'greater_equal', 'less_equal', 'hsplit', 'rot90', 'einsum',
-           'true_divide', 'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where', 'bincount']
+           'true_divide', 'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num',
+           'where', 'polyval', 'bincount']
 
 
 @set_module('mxnet.symbol.numpy')
@@ -5754,6 +5755,47 @@ def load_json(json_str):
     handle = SymbolHandle()
     check_call(_LIB.MXSymbolCreateFromJSON(c_str(json_str), ctypes.byref(handle)))
     return _Symbol(handle)
+
+
+@set_module('mxnet.symbol.numpy')
+def polyval(p, x):
+     """
+     Evaluate a polynomial at specific values.
+
+     If p is of length N, this function returns the value:
+
+     p[0]*x**(N-1) + p[1]*x**(N-2) + ... + p[N-2]*x + p[N-1]
+     If x is a sequence, then p(x) is returned for each element of x.
+     If x is another polynomial then the composite polynomial p(x(t)) is returned.
+
+     Parameters
+     ----------
+     p : _Symbol
+         1D array of polynomial coefficients (including coefficients equal to zero)
+         from highest degree to the constant term.
+     x : _Symbol
+         A number, an array of numbers, at which to evaluate p.
+
+     Returns
+     -------
+     values : _Symbol
+         Result array of polynomials
+
+     Notes
+     -----
+     This function differs from the original `numpy.polyval
+     <https://numpy.org/devdocs/reference/generated/numpy.polyval.html>`_ in
+     the following way(s):
+     - Does not support poly1d.
+     - X should be ndarray type even if it contains only one element.
+     - Does not support float16
+     """
+     if isinstance(p, _Symbol) and isinstance(x, _Symbol):
+         return _npi.polyval(p, x)
+     elif not isinstance(p, _Symbol) and not isinstance(x, _Symbol):
+         return _np.polyval(p, x)
+     else:
+         raise TypeError('type not supported')
 
 
 @set_module('mxnet.symbol.numpy')

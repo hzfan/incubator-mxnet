@@ -1533,7 +1533,7 @@ def _add_workload_diagflat():
     vals_c = (100 * np.array(get_mat(5)) + 1).astype('l')
     vals_f = _np.array((100 * get_mat(5) + 1), order='F', dtype='l')
     vals_f = np.array(vals_f)
-    
+
     OpArgMngr.add_workload('diagflat', A, k=2)
     OpArgMngr.add_workload('diagflat', A, k=1)
     OpArgMngr.add_workload('diagflat', A, k=0)
@@ -1591,12 +1591,21 @@ def _add_workload_resize():
     OpArgMngr.add_workload('resize', np.zeros((10, 0)), (0, 10))
     OpArgMngr.add_workload('resize', np.zeros((10, 0)), (0, 100))
 
+
 def _add_workload_empty_like():
     OpArgMngr.add_workload('empty_like', np.random.uniform(low=0, high=100, size=(1,3,4), dtype='float64'))
     OpArgMngr.add_workload('empty_like', np.random.uniform(low=0, high=100, size=(9,3,1)), np.int32)
     OpArgMngr.add_workload('empty_like', np.random.uniform(low=0, high=100, size=(9,3)), 'float32')
     OpArgMngr.add_workload('empty_like', np.random.uniform(low=0, high=100, size=(9,3,1)), np.bool_)
     OpArgMngr.add_workload('empty_like', np.random.uniform(low=0, high=100, size=(0,3)), np.float32)
+
+# def _add_workload_polyval():
+#     array1 = np.array([[-433, 0, 456, _np.inf], [-1, -_np.inf, 0, 1]])
+#     array2 = np.array([_np.nan, _np.inf, -_np.inf, -574, 0, 23425, 24234,-5])
+#     array3 = np.array(-_np.inf)
+#     OpArgMngr.add_workload('polyval', array1, True, 0, 100, -100)
+#     OpArgMngr.add_workload('polyval', array1, True, 0.00)
+#     OpArgMngr.add_workload('polyval', array2, True)
 
 
 def _add_workload_nan_to_num():

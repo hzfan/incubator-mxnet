@@ -1,3 +1,4 @@
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,11 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# coding: utf-8
-from .opdef import defop
-from .utils import AllTypes, RealTypes, IntegralTypes
-from .utils import assign_by_req, reduce_axes
-
-from . import basic
-from . import core
-from . import lib
+from . import polynomial

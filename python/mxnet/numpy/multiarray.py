@@ -60,7 +60,7 @@ __all__ = ['ndarray', 'empty', 'empty_like', 'array', 'shape',
            'round', 'arctan2', 'hypot', 'bitwise_xor', 'bitwise_or', 'rad2deg', 'deg2rad', 'unique', 'lcm',
            'tril', 'identity', 'take', 'ldexp', 'vdot', 'inner', 'outer', 'equal', 'not_equal', 'greater',
            'less', 'greater_equal', 'less_equal', 'hsplit', 'rot90', 'einsum', 'true_divide', 'nonzero',
-           'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where', 'bincount']
+           'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where', 'polyval', 'bincount']
 
 # Return code for dispatching indexing function call
 _NDARRAY_UNSUPPORTED_INDEXING = -1
@@ -8386,6 +8386,55 @@ def where(condition, x=None, y=None):
            [ 0.,  3., -1.]])
     """
     return _mx_nd_np.where(condition, x, y)
+
+
+@set_module('mxnet.numpy')
+def polyval(p, x):
+    """
+    Evaluate a polynomial at specific values.
+
+    If p is of length N, this function returns the value:
+
+    p[0]*x**(N-1) + p[1]*x**(N-2) + ... + p[N-2]*x + p[N-1]
+    If x is a sequence, then p(x) is returned for each element of x.
+    If x is another polynomial then the composite polynomial p(x(t)) is returned.
+
+    Parameters
+    ----------
+    p : ndarray
+        1D array of polynomial coefficients (including coefficients equal to zero)
+        from highest degree to the constant term.
+    x : ndarray
+        A number, an array of numbers, at which to evaluate p.
+
+    Returns
+    -------
+    values : ndarray
+        Result array of polynomials
+
+    Notes
+    -----
+    This function differs from the original `numpy.polyval
+    <https://numpy.org/devdocs/reference/generated/numpy.polyval.html>`_ in
+    the following way(s):
+    - Does not support poly1d.
+    - X should be ndarray type even if it contains only one element.
+    - Does not support float16
+
+    Examples
+    --------
+    >>> p = np.array([3, 0, 1])
+    array([3., 0., 1.])
+    >>> x = np.array([5])
+    array([5.])
+    >>> np.polyval(p, x)  # 3 * 5**2 + 0 * 5**1 + 1
+    array([76.])
+    >>> x = np.array([5, 4])
+    array([5., 4.])
+    >>> np.polyval(p, x)
+    array([76., 49.])
+    """
+    return _mx_nd_np.polyval(p, x)
 
 
 @set_module('mxnet.numpy')

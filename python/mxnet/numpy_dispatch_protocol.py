@@ -159,6 +159,7 @@ _NUMPY_ARRAY_FUNCTION_LIST = [
     'where',
     'full_like',
     'bincount',
+    'polyval',
     'empty_like',
     'nan_to_num',
 ]
