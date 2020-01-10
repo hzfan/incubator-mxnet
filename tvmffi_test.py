@@ -1,3 +1,6 @@
+import os
+os.environ["MXNET_ENGINE_TYPE"] = "NaiveEngine"
+
 import mxnet as mx
 import time
 from mxnet.ndarray import np
