@@ -35,9 +35,15 @@ c = np.tensordot1(a, b)
 print(c)
 
 print("tuple axes...")
-a = np.ones((2, 2))
-b = np.ones((2, 2))
-c = np.tensordot1(a, b, (1, 0))
+a = np.ones((2, 3))
+b = np.ones((3, 2))
+c = np.tensordot1(a, b, ((1, 0), (0, 1)))
+print(c)
+
+print("new tvm...")
+a = np.ones((2, 3))
+b = np.ones((3, 2))
+c = np.tensordot3(a, b, ((1, 0), (0, 1)))
 print(c)
 
 print("tvm ffi...")
@@ -46,7 +52,7 @@ a = np.ones((2, 2))
 b = np.ones((2, 2))
 start = time.time()
 for i in range(repeat):
-    c = np.tensordot1(a, b, (1, 0))
+    c = np.tensordot1(a, b, ((1, 0), (0, 1)))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
 
@@ -56,7 +62,17 @@ a = np.ones((2, 2))
 b = np.ones((2, 2))
 start = time.time()
 for i in range(repeat):
-    c = np.tensordot(a, b, (1, 0))
+    c = np.tensordot(a, b, ((1, 0), (0, 1)))
+end = time.time()
+print("time = {}".format((end - start) / repeat))
+
+print("tvm new ffi...")
+repeat = 10000
+a = np.ones((2, 2))
+b = np.ones((2, 2))
+start = time.time()
+for i in range(repeat):
+    c = np.tensordot3(a, b, ((1, 0), (0, 1)))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
 
@@ -66,6 +82,16 @@ a = np.ones((2, 2))
 b = np.ones((2, 2))
 start = time.time()
 for i in range(repeat):
-    c = np.tensordot0(a, b, (1, 0))
+    c = np.tensordot0(a, b, ((1, 0), (0, 1)))
+end = time.time()
+print("time = {}".format((end - start) / repeat))
+
+print("tvm new dummy ffi...")
+repeat = 10000
+a = np.ones((2, 2))
+b = np.ones((2, 2))
+start = time.time()
+for i in range(repeat):
+    c = np.tensordot2(a, b, ((1, 0), (0, 1)))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
