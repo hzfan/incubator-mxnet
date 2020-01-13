@@ -20,6 +20,6 @@ from .opdef import defop
 from .utils import AllTypes, RealTypes, IntegralTypes
 from .utils import assign_by_req, reduce_axes
 
-from . import basic
-from . import core
+# from . import basic
+# from . import core
 from . import lib
