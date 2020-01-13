@@ -40,7 +40,7 @@ def polyval_compute(dtype):
                     lambda j: tvm.sum(Px[n, j], axis=n),
                     name="V")
     s = tvm.create_schedule(V.op)
-    # s[Px].compute_inline()
+    s[Px].compute_inline()
     return s, [P, X, V], Px
 
 
