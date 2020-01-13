@@ -33,7 +33,8 @@ def decl_args(dtype):
 def polyval_compute(dtype):
     N, M, P, X = decl_args(dtype)
     Px = tvm.compute((N, M),
-                    lambda i, j: P[i]*tvm.power(X[j], N.astype(dtype)-i-1),
+                    # lambda i, j: P[i]*tvm.power(X[j], N.astype(dtype)-i-1),
+                    lambda i, j: P[i]*X[j],
                     name="Px")
     n = tvm.reduce_axis((0, N), 'n')
     V = tvm.compute(X.shape,
