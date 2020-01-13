@@ -44,7 +44,7 @@ def polyval_compute(dtype):
     return s, [P, X, V], Px
 
 
-# @defop(name="polyval", target="cpu", dtype=['float32', 'float64'])
+@defop(name="polyval", target="cpu", dtype=['float32', 'float64'])
 def polyval(dtype):
     s, args, Px = polyval_compute(dtype)
     return s, args
@@ -58,7 +58,7 @@ def cuda_split(sch, tensor):
     sch[tensor].bind(tx, tvm.thread_axis("threadIdx.x"))
 
 
-# @defop(name="polyval_cuda", target="cuda", dtype=['float32', 'float64'])
+@defop(name="polyval_cuda", target="cuda", dtype=['float32', 'float64'])
 def polyval_cuda(dtype):
     s, [P, X, V], Px = polyval_compute(dtype)
     cuda_split(s, V)
@@ -78,13 +78,13 @@ def polyval_horner_compute(dtype):
     return s, P, X, V
 
 
-# @defop(name="polyval_horner", target="cpu", dtype=IntegralTypes)
+@defop(name="polyval_horner", target="cpu", dtype=IntegralTypes)
 def polyval_horner(dtype):
     s, P, X, V = polyval_horner_compute(dtype)
     return s, [P, X, V]
 
 
-# @defop(name="polyval_horner_cuda", target="cuda", dtype=IntegralTypes)
+@defop(name="polyval_horner_cuda", target="cuda", dtype=IntegralTypes)
 def polyval_horner_cuda(dtype):
     s, P, X, V = polyval_horner_compute(dtype)
     cuda_split(s, V)
@@ -116,15 +116,15 @@ def backward_polyval_compute(dtype, req):
     igrad_x_placeholder, igrad_x_out], [d_x, d_p, igrad_p_bc, igrad_p, igrad_x]
 
 
-# @defop(name="backward_polyval", target="cpu", dtype=['float32', 'float64'],
-#        req=['kWriteTo', 'kAddTo'], attrs=['req'])
+@defop(name="backward_polyval", target="cpu", dtype=['float32', 'float64'],
+       req=['kWriteTo', 'kAddTo'], attrs=['req'])
 def backward_polyval(dtype, req):
     s, tensors, _ = backward_polyval_compute(dtype, req)
     return s, tensors
 
 
-# @defop(name="backward_polyval_cuda", target="cuda", dtype=['float32', 'float64'],
-#        req=['kWriteTo', 'kAddTo'], attrs=['req'])
+@defop(name="backward_polyval_cuda", target="cuda", dtype=['float32', 'float64'],
+       req=['kWriteTo', 'kAddTo'], attrs=['req'])
 def backward_polyval_cuda(dtype, req):
     s, [ograd, P, X, _p, igrad_p, _x, igrad_x], [d_x, d_p, o_p_, o_p, o_x] = backward_polyval_compute(dtype, req)
     cuda_split(s, igrad_p)
