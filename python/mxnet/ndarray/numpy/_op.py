@@ -26,7 +26,10 @@ from ...util import _sanity_check_params, set_module
 from ...util import wrap_np_unary_func, wrap_np_binary_func
 from ...context import current_context
 from . import _internal as _npi
+from ... import _api
 from ..ndarray import NDArray
+import sys
+from ..ndarray import _int64_enabled
 
 __all__ = ['shape', 'zeros', 'zeros_like', 'ones', 'ones_like', 'full', 'full_like', 'empty_like', 'invert', 'delete',
            'add', 'subtract', 'multiply', 'divide', 'mod', 'remainder', 'power', 'bitwise_not',
@@ -41,7 +44,7 @@ __all__ = ['shape', 'zeros', 'zeros_like', 'ones', 'ones_like', 'full', 'full_li
            'rad2deg', 'deg2rad', 'unique', 'lcm', 'tril', 'identity', 'take', 'ldexp', 'vdot', 'inner', 'outer',
            'equal', 'not_equal', 'greater', 'less', 'greater_equal', 'less_equal', 'hsplit', 'rot90', 'einsum',
            'true_divide', 'nonzero', 'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where',
-           'bincount', 'zeros0', 'zeros1', 'tensordot1', 'tensordot0', 'tensordot2', 'tensordot3']
+           'bincount', 'zeros0', 'zeros1', 'tensordot1', 'tensordot0', 'tensordot2', 'tensordot3', 'mxnet_get_item']
 
 
 @set_module('mxnet.ndarray.numpy')
@@ -6673,3 +6676,212 @@ def tensordot2(a, b, axes=2):
            [ 4928.,  5306.]])
     """
     return _npi.tensordot_dispatcher0(a, b, axes)
+
+
+def mxnet_at(x, idx):
+    if idx < 0:
+        length = x.shape[0]
+        idx += length
+        if idx < 0:
+            raise IndexError('index %d is out of bounds for axis 0 with size %d'
+                                % (idx-length, length))
+    if sys.version_info[0] > 2 and _int64_enabled():
+        handle = NDArrayHandle()
+        check_call(_LIB.MXNDArrayAt64(
+            x.handle, ctypes.c_int64(idx), ctypes.byref(handle)))
+    else:
+        handle = _api.MXNDArrayAt(x, idx)
+    return x.__class__(handle=handle, writable=x.writable)
+
+
+@set_module('mxnet.ndarray.numpy')
+def mxnet_get_item(x, key):
+    """Return x[key].
+
+    Returns a sliced view of this array if the elements fetched are contiguous in memory;
+    otherwise, returns a newly created NDArray.
+    This functions supports advanced indexing defined in the following reference with
+    some restrictions. Boolean indexing is supported only for a single boolean ndarray
+    as a key. Mixing boolean ndarray with other index types is not supported in ``advanced``
+    indexing.
+
+    For basic indexing, i.e., if ``key`` consists only of integers,
+    ``slice``, ``Ellipsis`` (``...``) and ``None``, a mutable view is
+    returned that shares memory with this array if the accessed portion is
+    contiguous in memory.
+    Otherwise, a newly created ``ndarray`` is returned.
+
+    This functions supports advanced indexing as defined in `the NumPy
+    advanced indexing documentation
+    <https://docs.scipy.org/doc/numpy/reference/arrays.indexing.html#advanced-indexing>`_.
+
+    Parameters
+    ----------
+    key : int, slice, list, np.ndarray, mx.np.ndarray, or tuple of all previous types
+        Indexing key.
+
+    Examples
+    --------
+    The default is to give explicit indices for all axes:
+
+    >>> x = np.arange(6).reshape(2, 3)
+    >>> x
+    array([[0., 1., 2.],
+            [3., 4., 5.]])
+    >>> x[0, :2]
+    array([0., 1.])
+    >>> x[:, :-1]
+    array([[0., 1.],
+            [3., 4.]])
+
+    If fewer indices are given, they are automatically supplemented by an
+    appropriate number of ``slice(None)`` ("``:``") to the right. For
+    instance, a single integer indexes along the first axis:
+
+    >>> x[0]
+    array([0., 1., 2.])
+    >>> x[1:]
+    array([[3., 4., 5.]])
+
+    To omit a range of axes that should be kept as-is, an `Ellipsis`
+    ("``...``") can be used:
+
+    >>> x = np.arange(16).reshape(2, 2, 2, 2)
+    >>> x[0, ..., 1]
+    array([[1., 3.],
+            [5., 7.]])
+    >>> x[0, :, :, 1]  # equivalent
+    array([[1., 3.],
+            [5., 7.]])
+
+    New axes of length 1 can be created by inserting ``None``
+    (`numpy.newaxis`) in the index:
+
+    >>> x = np.arange(6).reshape(2, 3)
+    >>> x[None, :, :]
+    array([[[0., 1., 2.],
+            [3., 4., 5.]]])
+    >>> x[None, :, :].shape
+    (1, 2, 3)
+
+    If the indexed portion of the array is contiguous in memory, no data
+    is copied. Instead, a shared-memory view of the original array is
+    returned, and changes to that view affect the original array:
+
+    >>> x = np.arange(8).reshape(2, 2, 2)
+    >>> y = x[0]  # contiguous
+    >>> y
+    array([[0., 1.],
+            [2., 3.]])
+    >>> y[:] = -1
+    >>> x
+    array([[[-1., -1.],
+            [-1., -1.]],
+            [[ 4.,  5.],
+            [ 6.,  7.]]])
+    >>> x = np.arange(8).reshape(2, 2, 2)
+    >>> y = x[1, :1, :]  # contiguous
+    >>> y
+    array([[4., 5.]])
+    >>> y[:] = -1
+    >>> x
+    array([[[ 0.,  1.],
+            [ 2.,  3.]],
+            [[-1., -1.],
+            [ 6.,  7.]]])
+    >>> x = np.arange(0, 8).reshape(2, 2, 2)
+    >>> y = x[:, :, 1]  # not contiguous
+    >>> y
+    array([[1., 3.],
+            [5., 7.]])
+    >>> y[:] = -1
+    >>> x
+    array([[[0., 1.],
+            [2., 3.]],
+            [[4., 5.],
+            [6., 7.]]])
+
+    If the indexing key contains `list`, `numpy.ndarray` or `NDArray`
+    objects, advanced indexing is triggered, which always returns a
+    copy:
+
+    >>> x = np.arange(8).reshape(2, 2, 2)
+    >>> x[[0, 1]]
+    array([[[0., 1.],
+            [2., 3.]],
+            [[4., 5.],
+            [6., 7.]]])
+    >>> x[[0, 1], :]  # equivalent
+    array([[[0., 1.],
+            [2., 3.]],
+            [[4., 5.],
+            [6., 7.]]])
+    >>> y = np.array([0, 1], dtype='int32')
+    >>> x[1:, y]
+    array([[[4., 5.],
+            [6., 7.]]])
+    >>> y = np.array([0, 1], dtype='int32')
+    >>> x[1:, y]
+    array([[[4., 5.],
+            [6., 7.]]])
+
+    Get negative elements in an ndarray through boolean array indexing
+    >>> x = np.array([1., -1., -2., 3])
+    >>> x[x < 0]
+    array([-1., -2.])
+    """
+    # handling possible boolean indexing first
+    ndim = x.ndim
+    shape = x.shape  # pylint: disable=redefined-outer-name
+
+    if isinstance(key, list):
+        try:
+            new_key = _np.array(key)
+            if new_key.dtype == _np.bool_:
+                key = new_key
+        except Exception as err:
+            raise TypeError('{}'.format(str(err)))
+    if isinstance(key, _np.ndarray) and key.dtype == _np.bool_:
+        key = array(key, dtype='bool', ctx=x.ctx)
+
+    if ndim == 0:
+        if key != ():
+            raise IndexError('scalar tensor can only accept `()` as index')
+    # Handle simple cases for higher speed
+    if isinstance(key, tuple) and len(key) == 0:
+        return x
+    if isinstance(key, tuple) and len(key) == ndim\
+            and all(isinstance(idx, integer_types) for idx in key):
+        out = x
+        for idx in key:
+            out = out[idx]
+        return out
+    if isinstance(key, integer_types):
+        if key > shape[0] - 1:
+            raise IndexError(
+                'index {} is out of bounds for axis 0 with size {}'.format(
+                    key, shape[0]))
+        return mxnet_at(x, key)
+    elif isinstance(key, py_slice):
+        if key.step is None or key.step == 1:
+            if key.start is not None or key.stop is not None:
+                return x._slice(key.start, key.stop)
+            else:
+                return x
+        elif key.step == 0:
+            raise ValueError("slice step cannot be zero")
+    
+    key_before_expaned = key
+    key = indexing_key_expand_implicit_axes(key, x.shape)
+    indexing_dispatch_code = get_indexing_dispatch_code(key)
+    if indexing_dispatch_code == _NDARRAY_BASIC_INDEXING:
+        return x._get_np_basic_indexing(key)
+    elif indexing_dispatch_code == _NDARRAY_EMPTY_TUPLE_INDEXING:
+        return x._get_np_empty_tuple_indexing(key)
+    elif indexing_dispatch_code == _NDARRAY_ADVANCED_INDEXING:
+        return x._get_np_advanced_indexing(key)
+    elif indexing_dispatch_code == _NDARRAY_BOOLEAN_INDEXING:
+        return x._get_np_boolean_indexing(key_before_expaned)
+    else:
+        raise RuntimeError
+

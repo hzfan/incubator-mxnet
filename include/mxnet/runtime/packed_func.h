@@ -441,6 +441,12 @@ class MXNetPODValue_ {
     MXNET_CHECK_TYPE_CODE(type_code_, kDLInt);
     return value_.v_int64;
   }
+  operator uint32_t() const {
+    MXNET_CHECK_TYPE_CODE(type_code_, kDLInt);
+    CHECK_LE(value_.v_int64,
+             std::numeric_limits<uint32_t>::max());
+    return static_cast<uint32_t>(value_.v_int64);
+  }
   operator int() const {
     MXNET_CHECK_TYPE_CODE(type_code_, kDLInt);
     CHECK_LE(value_.v_int64,
@@ -518,6 +524,7 @@ class MXNetArgValue : public MXNetPODValue_ {
   using MXNetPODValue_::operator double;
   using MXNetPODValue_::operator int64_t;
   using MXNetPODValue_::operator uint64_t;
+  using MXNetPODValue_::operator uint32_t;
   using MXNetPODValue_::operator int;
   using MXNetPODValue_::operator bool;
   using MXNetPODValue_::operator void*;

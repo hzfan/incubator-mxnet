@@ -203,4 +203,13 @@ MXNET_REGISTER_API("_npi.tensordot_dispatcher0")
   *ret = static_cast<int64_t>(0xdeadbeaf);
 });
 
+MXNET_REGISTER_API("_api.MXNDArrayAt")
+.set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
+  NDArray* handle = args[0].operator mxnet::NDArray*();
+  uint32_t idx = args[1].operator uint32_t();
+  NDArray *ptr = new NDArray();
+  *ptr = handle->AtWithRecord(idx);
+  *ret = static_cast<void*>(ptr);
+});
+
 }  // namespace mxnet
