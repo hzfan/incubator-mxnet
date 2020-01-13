@@ -40,7 +40,7 @@ def polyval_compute(dtype):
                     lambda j: tvm.sum(Px[n, j], axis=n),
                     name="V")
     s = tvm.create_schedule(V.op)
-    s[Px].compute_inline()
+    # s[Px].compute_inline()
     return s, [P, X, V], Px
 
 
@@ -61,8 +61,8 @@ def cuda_split(sch, tensor):
 @defop(name="polyval_cuda", target="cuda", dtype=['float32', 'float64'])
 def polyval_cuda(dtype):
     s, [P, X, V], Px = polyval_compute(dtype)
-    cuda_split(s, V)
     cuda_split(s, Px)
+    cuda_split(s, V)
     return s, [P, X, V]
 
 
