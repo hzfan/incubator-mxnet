@@ -33,6 +33,9 @@ cdef inline int make_arg(object arg,
         temp_objs[0] = convert_tuple(<tuple>arg)
         value[0].v_handle = (<void*>(temp_objs[0].get()))
         tcode[0] = kObjectHandle
+    elif isinstance(arg, NDArrayBase):
+        value[0].v_handle = <void*><size_t>(arg._get_handle())
+        tcode[0] = kNDArrayHandle
     elif isinstance(arg, (int, long)):
         value[0].v_int64 = arg
         tcode[0] = kInt
@@ -53,9 +56,6 @@ cdef inline int make_arg(object arg,
     elif isinstance(arg, ctypes.c_void_p):
         value[0].v_handle = c_handle(arg)
         tcode[0] = kHandle
-    elif isinstance(arg, NDArrayBase):
-        value[0].v_handle = <void*><size_t>(arg._get_handle())
-        tcode[0] = kNDArrayHandle
     else:
         raise TypeError("Don't know how to handle type %s" % type(arg))
     return 0
