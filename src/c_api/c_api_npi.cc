@@ -14,22 +14,16 @@ namespace mxnet {
 
 MXNET_REGISTER_API("_npi.zeros1")
 .set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
-  const nnvm::Op* op = Op::Get("_npi_zeros");
-  const runtime::ObjectRef ref = args[0].operator runtime::ObjectRef();
-  const runtime::ADTObj* obj = ref.as<runtime::ADTObj>();
+  const static nnvm::Op* op = Op::Get("_npi_zeros");
+  nnvm::NodeAttrs attrs;
   mxnet::op::InitOpParam param;
-  param.shape = TShape(obj->size, 0);
-  for (uint32_t i = 0; i < obj->size; ++i) {
-    int64_t value = obj->operator[](i).as<::mxnet::runtime::IntegerObj>()->value;
-    param.shape[i] = value;
-  }
+  param.shape = args[0].operator TShape();
   if (args[1].type_code() == kNull) {
     param.dtype = mshadow::kFloat32;
   } else {
     param.dtype = runtime::String2MXNetTypeWithBool(args[1].operator std::string());
   }
   param.ctx = args[2].operator std::string();
-  nnvm::NodeAttrs attrs;
   attrs.parsed = std::move(param);
   attrs.op = op;
   attrs.dict["ctx"] = args[2].operator std::string();
@@ -41,8 +35,7 @@ MXNET_REGISTER_API("_npi.zeros1")
   std::vector<mxnet::NDArray*> ndoutputs(1, nullptr), ndinputs;
   ndoutputs[0] = reinterpret_cast<mxnet::NDArray*>(new mxnet::NDArray());
   auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
-  
-  *ret = reinterpret_cast<mxnet::NDArray*>(ndoutputs[0]);
+  *ret = ndoutputs[0];
 });
 
 MXNET_REGISTER_API("_npi.zeros0")

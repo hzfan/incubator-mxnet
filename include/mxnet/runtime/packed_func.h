@@ -30,6 +30,8 @@
 #include <mxnet/runtime/c_runtime_api.h>
 #include <mxnet/runtime/object.h>
 #include <mxnet/runtime/ndarray.h>
+#include <mxnet/runtime/container.h>
+#include <mxnet/runtime/ffi_helper.h>
 #include <mxnet/ndarray.h>
 #include <mxnet/base.h>
 #include <functional>
@@ -541,6 +543,15 @@ class MXNetArgValue : public MXNetPODValue_ {
   operator ::mxnet::NDArray*() const {
     MXNET_CHECK_TYPE_CODE(type_code_, kNDArrayHandle);
     return reinterpret_cast<::mxnet::NDArray*>(value_.v_handle);
+  }
+  operator ::mxnet::TShape() const {
+    MXNET_CHECK_TYPE_CODE(type_code_, kObjectHandle);
+    const ADTObj* obj = static_cast<ADTObj*>(value_.v_handle);
+    TShape ret(obj->size, 0);
+    for (uint32_t i = 0; i < obj->size; ++i) {
+      ret[i] = obj->operator[](i).as<IntegerObj>()->value;
+    }
+    return ret;
   }
   operator PackedFunc() const {
     if (type_code_ == kNull) return PackedFunc();
