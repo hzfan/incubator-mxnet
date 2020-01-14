@@ -297,9 +297,6 @@ class Registry {
 #define MXNET_FUNC_REG_VAR_DEF                                            \
   static MXNET_ATTRIBUTE_UNUSED ::mxnet::runtime::Registry& __mk_ ## MXNET
 
-// #define MXNET_TYPE_REG_VAR_DEF                                            \
-//   static TVM_ATTRIBUTE_UNUSED ::tvm::runtime::ExtTypeVTable* __mk_ ## TVMT
-
 /*!
  * \brief Register a function globally.
  * \code
@@ -311,15 +308,6 @@ class Registry {
 #define MXNET_REGISTER_GLOBAL(OpName)                              \
   MXNET_STR_CONCAT(MXNET_FUNC_REG_VAR_DEF, __COUNTER__) =            \
       ::mxnet::runtime::Registry::Register(OpName)
-
-/*!
- * \brief Macro to register extension type.
- *  This must be registered in a cc file
- *  after the trait extension_type_info is defined.
- */
-// #define MXNET_REGISTER_EXT_TYPE(T)                                 \
-//   MXNET_STR_CONCAT(MXNET_TYPE_REG_VAR_DEF, __COUNTER__) =            \
-//       ::tvm::runtime::ExtTypeVTable::Register_<T>()
 
 }  // namespace runtime
 }  // namespace mxnet

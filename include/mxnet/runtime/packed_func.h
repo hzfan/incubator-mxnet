@@ -541,6 +541,9 @@ class MXNetArgValue : public MXNetPODValue_ {
     }
   }
   operator ::mxnet::NDArray*() const {
+    if (type_code_ == kNull) {
+      return nullptr;
+    }
     MXNET_CHECK_TYPE_CODE(type_code_, kNDArrayHandle);
     return reinterpret_cast<::mxnet::NDArray*>(value_.v_handle);
   }

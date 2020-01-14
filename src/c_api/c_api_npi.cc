@@ -16,7 +16,7 @@ MXNET_REGISTER_API("_npi.zeros1")
 .set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
   const static nnvm::Op* op = Op::Get("_npi_zeros");
   nnvm::NodeAttrs attrs;
-  mxnet::op::InitOpParam param;
+  op::InitOpParam param;
   param.shape = args[0].operator TShape();
   if (args[1].type_code() == kNull) {
     param.dtype = mshadow::kFloat32;
@@ -27,14 +27,19 @@ MXNET_REGISTER_API("_npi.zeros1")
   attrs.parsed = std::move(param);
   attrs.op = op;
   attrs.dict["ctx"] = args[2].operator std::string();
-  int num_inputs = 0;
+
+  const int num_inputs = 0;
   int infered_num_outputs;
   int num_visible_outputs;
-  mxnet::imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
+  imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
 
-  std::vector<mxnet::NDArray*> ndoutputs(1, nullptr), ndinputs;
-  ndoutputs[0] = reinterpret_cast<mxnet::NDArray*>(new mxnet::NDArray());
-  auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
+  std::vector<NDArray*> ndoutputs(1, nullptr), ndinputs;
+  ndoutputs[0] = static_cast<NDArray*>(new NDArray());
+
+  auto state = Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
+  if (Imperative::Get()->is_recording()) {
+    Imperative::Get()->RecordOp(std::move(attrs), ndinputs, ndoutputs, state);
+  }
   *ret = ndoutputs[0];
 });
 
