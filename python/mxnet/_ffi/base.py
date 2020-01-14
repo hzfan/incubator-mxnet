@@ -16,8 +16,10 @@
 # under the License.
 # coding: utf-8
 # pylint: disable=invalid-name
-"""Adapted from incubator-tvm/python/tvm/_ffi/base.py"""
-"""Base library for MXNet FFI."""
+"""
+Adapted from incubator-tvm/python/tvm/_ffi/base.py
+Base library for MXNet FFI.
+"""
 from __future__ import absolute_import
 
 import sys

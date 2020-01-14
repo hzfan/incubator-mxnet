@@ -78,8 +78,6 @@ typedef union {
   double v_float64;
   void* v_handle;
   const char* v_str;
-  MXNetType v_type;
-  MXNetContext v_ctx;
 } MXNetValue;
 
 /*!

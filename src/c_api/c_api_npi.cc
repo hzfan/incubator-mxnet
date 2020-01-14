@@ -1,7 +1,6 @@
 #include <mxnet/runtime/ffi_helper.h>
 #include <mxnet/runtime/container.h>
 #include <mxnet/runtime/packed_func.h>
-#include <mxnet/c_api_adt.h>
 #include <mxnet/api_registry.h>
 #include <mxnet/base.h>
 #include <nnvm/c_api.h>
@@ -10,33 +9,6 @@
 #include "../operator/tensor/init_op.h"
 #include "../operator/numpy/np_tensordot_op-inl.h"
 #include "../imperative/imperative_utils.h"
-
-void MXTestADT(size_t ptr) {
-  using namespace mxnet::runtime;
-  // const Object*
-  // ADT::get()
-  // ADTBuilder builder = ADTBuilder(0, 10);
-  // for (uint32_t i = 0; i < 10; ++i) {
-  //   builder.EmplaceInit(i, Integer(i));
-  // }
-  // ADT adt = builder.Get();
-  // const ::mxnet::runtime::ADTObj* obj = adt.as<ADTObj>();
-
-  // const ADTObj* obj = reinterpret_cast<const ADTObj*>(ptr);
-  // std::cout << "size = " << obj->size;
-  // for (uint32_t i = 0; i < obj->size; ++i) {
-  //   int64_t value = obj->operator[](i).as<::mxnet::runtime::IntegerObj>()->value;
-  //   std::cout << value;
-  // }
-  
-  MXNetRetValue rv;
-  const PackedFunc* fp = Registry::Get("test");
-  if (fp != nullptr) {
-    fp->CallPacked(MXNetArgs(nullptr, nullptr, 0), &rv);
-  } else {
-    std::cout << "null PackedFunc" << std::endl;
-  }
-}
 
 namespace mxnet {
 
@@ -74,79 +46,6 @@ MXNET_REGISTER_API("_npi.zeros1")
 });
 
 MXNET_REGISTER_API("_npi.zeros0")
-.set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
-  *ret = static_cast<int64_t>(0xdeadbeaf);
-});
-
-
-MXNET_REGISTER_API("_npi.tensordot_int_axes1")
-.set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
-  const nnvm::Op* op = Op::Get("_npi_tensordot_int_axes");
-
-  mxnet::op::TensordotIntAxesParam param;
-  param.axes = args[2].operator int();
-  nnvm::NodeAttrs attrs;
-  attrs.parsed = std::move(param);
-  attrs.op = op;
-
-  int num_inputs = 2;
-  int infered_num_outputs;
-  int num_visible_outputs;
-  mxnet::imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
-
-  std::vector<mxnet::NDArray*> ndoutputs(1, nullptr), ndinputs(2, nullptr);
-  ndoutputs[0] = reinterpret_cast<mxnet::NDArray*>(new mxnet::NDArray());
-  ndinputs[0] = args[0].operator mxnet::NDArray*();
-  ndinputs[1] = args[1].operator mxnet::NDArray*();
-  auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
-
-  *ret = reinterpret_cast<mxnet::NDArray*>(ndoutputs[0]);
-});
-
-MXNET_REGISTER_API("_npi.tensordot1")
-.set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
-  const nnvm::Op* op = Op::Get("_npi_tensordot");
-  mxnet::op::TensordotParam param;
-  {
-    const runtime::ObjectRef ref = args[2].operator runtime::ObjectRef();
-    const runtime::ADTObj* obj = ref.as<runtime::ADTObj>();
-    param.a_axes_summed = Tuple<int>(obj->size, 0);
-    for (uint32_t i = 0; i < obj->size; ++i) {
-      param.a_axes_summed[i] = obj->operator[](i).as<::mxnet::runtime::IntegerObj>()->value;
-    }
-  }
-  {
-    const runtime::ObjectRef ref = args[3].operator runtime::ObjectRef();
-    const runtime::ADTObj* obj = ref.as<runtime::ADTObj>();
-    param.b_axes_summed = Tuple<int>(obj->size, 0);
-    for (uint32_t i = 0; i < obj->size; ++i) {
-      param.b_axes_summed[i] = obj->operator[](i).as<::mxnet::runtime::IntegerObj>()->value;
-    }
-  }
-  nnvm::NodeAttrs attrs;
-  attrs.parsed = std::move(param);
-  attrs.op = op;
-
-  int num_inputs = 2;
-  int infered_num_outputs;
-  int num_visible_outputs;
-  mxnet::imperative::SetNumOutputs(op, attrs, num_inputs, &infered_num_outputs, &num_visible_outputs);
-
-  std::vector<mxnet::NDArray*> ndoutputs(1, nullptr), ndinputs(2, nullptr);
-  ndoutputs[0] = reinterpret_cast<mxnet::NDArray*>(new mxnet::NDArray());
-  ndinputs[0] = args[0].operator mxnet::NDArray*();
-  ndinputs[1] = args[1].operator mxnet::NDArray*();
-  auto state = mxnet::Imperative::Get()->Invoke(Context::CPU(), attrs, ndinputs, ndoutputs);
-
-  *ret = reinterpret_cast<mxnet::NDArray*>(ndoutputs[0]);
-});
-
-MXNET_REGISTER_API("_npi.tensordot_int_axes0")
-.set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
-  *ret = static_cast<int64_t>(0xdeadbeaf);
-});
-
-MXNET_REGISTER_API("_npi.tensordot0")
 .set_body([](runtime::MXNetArgs args, runtime::MXNetRetValue* ret) {
   *ret = static_cast<int64_t>(0xdeadbeaf);
 });

@@ -90,24 +90,8 @@ b = np.ones((3, 2))
 c = np.tensordot1(a, b, ((1, 0), (0, 1)))
 print(c)
 
-print("new tvm...")
-a = np.ones((2, 3))
-b = np.ones((3, 2))
-c = np.tensordot3(a, b, ((1, 0), (0, 1)))
-print(c)
 
 print("####  tensordot benchmark ####")
-print("tvm ffi...")
-repeat = 10000
-a = np.ones((2, 2))
-b = np.ones((2, 2))
-c = np.tensordot1(a, b, ((1, 0), (0, 1)))
-start = time.time()
-for i in range(repeat):
-    c = np.tensordot1(a, b, ((1, 0), (0, 1)))
-end = time.time()
-print("time = {}".format((end - start) / repeat))
-
 print("legacy ffi...")
 repeat = 10000
 a = np.ones((2, 2))
@@ -119,14 +103,14 @@ for i in range(repeat):
 end = time.time()
 print("time = {}".format((end - start) / repeat))
 
-print("tvm new ffi...")
+print("tvm ffi...")
 repeat = 10000
 a = np.ones((2, 2))
 b = np.ones((2, 2))
-c = np.tensordot3(a, b, ((1, 0), (0, 1)))
+c = np.tensordot1(a, b, ((1, 0), (0, 1)))
 start = time.time()
 for i in range(repeat):
-    c = np.tensordot3(a, b, ((1, 0), (0, 1)))
+    c = np.tensordot1(a, b, ((1, 0), (0, 1)))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
 
@@ -138,16 +122,5 @@ c = np.tensordot0(a, b, ((1, 0), (0, 1)))
 start = time.time()
 for i in range(repeat):
     c = np.tensordot0(a, b, ((1, 0), (0, 1)))
-end = time.time()
-print("time = {}".format((end - start) / repeat))
-
-print("tvm new dummy ffi...")
-repeat = 10000
-a = np.ones((2, 2))
-b = np.ones((2, 2))
-c = np.tensordot2(a, b, ((1, 0), (0, 1)))
-start = time.time()
-for i in range(repeat):
-    c = np.tensordot2(a, b, ((1, 0), (0, 1)))
 end = time.time()
 print("time = {}".format((end - start) / repeat))
