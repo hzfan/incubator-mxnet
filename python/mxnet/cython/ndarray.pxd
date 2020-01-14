@@ -1,2 +1,0 @@
-cdef _ndarray_cls
-cdef _np_ndarray_cls

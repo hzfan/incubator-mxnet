@@ -19,7 +19,8 @@
 
 /*!
  * \file registry.cc
- * \brief The global registry of packed function.
+ * \brief Adapted from incubator-tvm/src/runtime/registry.cc
+ * The global registry of packed function.
  */
 #include <dmlc/logging.h>
 #include <dmlc/thread_local.h>

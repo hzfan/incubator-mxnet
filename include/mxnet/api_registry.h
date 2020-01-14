@@ -18,9 +18,10 @@
  */
 
 /*!
- * \file mxnet/api_registry.h
- * \brief This file contains utilities related to
- *  the TVM's global function registry.
+ * \file api_registry.h
+ * \brief Adapted from incubator-tvm/include/tvm/api_registry.h
+ *  This file contains utilities related to
+ *  the MXNet's global function registry.
  */
 #ifndef MXNET_API_REGISTRY_H_
 #define MXNET_API_REGISTRY_H_
@@ -32,11 +33,11 @@
 namespace mxnet {
 /*!
  * \brief Register an API function globally.
- * It simply redirects to TVM_REGISTER_GLOBAL
+ * It simply redirects to MXNET_REGISTER_GLOBAL
  *
  * \code
  *   MXNET_REGISTER_API(MyPrint)
- *   .set_body([](TVMArgs args, TVMRetValue* rv) {
+ *   .set_body([](MXNetArgs args, MXNetRetValue* rv) {
  *     // my code.
  *   });
  * \endcode

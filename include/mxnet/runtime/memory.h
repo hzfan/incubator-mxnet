@@ -18,7 +18,8 @@
  */
 /*!
  * \file runtime/memory.h
- * \brief Runtime memory management.
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/memory.h
+ * Runtime memory management.
  */
 #ifndef MXNET_RUNTIME_MEMORY_H_
 #define MXNET_RUNTIME_MEMORY_H_

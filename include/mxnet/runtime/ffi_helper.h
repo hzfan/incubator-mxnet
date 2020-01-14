@@ -19,7 +19,8 @@
 
 /*!
  * \file ffi_helper
- * \brief Helper class to support additional objects in FFI.
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/ffi_helper.h
+ * Helper class to support additional objects in FFI.
  */
 #ifndef MXNET_RUNTIME_FFI_HELPER_H_
 #define MXNET_RUNTIME_FFI_HELPER_H_

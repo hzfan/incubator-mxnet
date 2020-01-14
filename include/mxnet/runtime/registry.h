@@ -18,8 +18,9 @@
  */
 
 /*!
- * \file tvm/runtime/registry.h
- * \brief This file defines the TVM global function registry.
+ * \file registry.h
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/registry.h
+ *  This file defines the TVM global function registry.
  *
  *  The registered functions will be made available to front-end
  *  as well as backend users.

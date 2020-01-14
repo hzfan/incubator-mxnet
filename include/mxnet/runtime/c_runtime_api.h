@@ -18,8 +18,9 @@
  */
 
 /*
- * \file runtime/c_runtime_api.h
- * \brief MXNet runtime library.
+ * \file c_runtime_api.h
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/c_runtime_api.h
+ * MXNet runtime library.
  */
 #ifndef MXNET_RUNTIME_C_RUNTIME_API_H_
 #define MXNET_RUNTIME_C_RUNTIME_API_H_
@@ -69,23 +70,6 @@ typedef enum {
 } MXNetTypeCode;
 
 /*!
- * \brief The data type used in MXNet Runtime.
- *
- *  Examples
- *   - float: type_code = 2, bits = 32, lanes=1
- *   - float4(vectorized 4 float): type_code = 2, bits = 32, lanes=4
- *   - int8: type_code = 0, bits = 8, lanes=1
- *
- * \note Arguments MXNet API function always takes bits=64 and lanes=1
- */
-typedef DLDataType MXNetType;
-
-/*!
- * \brief The Device information, abstract away common device types.
- */
-typedef DLContext MXNetContext;
-
-/*!
  * \brief Union type of values
  *  being passed through API and function calls.
  */
@@ -120,7 +104,7 @@ typedef void* MXNetObjectHandle;
 MXNET_DLL int MXNetFuncFree(MXNetFunctionHandle func);
 
 /*!
- * \brief Call a Packed TVM Function.
+ * \brief Call a Packed MXNet Function.
  *
  * \param func node handle of the function.
  * \param arg_values The arguments
@@ -131,12 +115,12 @@ MXNET_DLL int MXNetFuncFree(MXNetFunctionHandle func);
  * \param ret_type_code the type code of return value.
  *
  * \return 0 when success, -1 when failure happens
- * \note TVM calls always exchanges with type bits=64, lanes=1
+ * \note MXNet calls always exchanges with type bits=64, lanes=1
  *
  * \note API calls always exchanges with type bits=64, lanes=1
  *   If API call returns container handles (e.g. FunctionHandle)
  *   these handles should be managed by the front-end.
- *   The front-end need to call free function (e.g. TVMFuncFree)
+ *   The front-end need to call free function (e.g. MXNetFuncFree)
  *   to free these handles.
  */
 MXNET_DLL int MXNetFuncCall(MXNetFunctionHandle func,
@@ -152,8 +136,8 @@ MXNET_DLL int MXNetFuncCall(MXNetFunctionHandle func,
  * \param name The name of the function.
  * \param out the result function pointer, NULL if it does not exist.
  *
- * \note The function handle of global function is managed by TVM runtime,
- *  So TVMFuncFree is should not be called when it get deleted.
+ * \note The function handle of global function is managed by MXNet runtime,
+ *  So MXNetFuncFree is should not be called when it get deleted.
  */
 MXNET_DLL int MXNetFuncGetGlobal(const char* name, MXNetFunctionHandle* out);
 

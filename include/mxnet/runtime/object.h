@@ -17,8 +17,9 @@
  * under the License.
  */
 /*!
- * \file runtime/object.h
- * \brief A managed object in MXNet runtime.
+ * \file object.h
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/object.h
+ * A managed object in MXNet runtime.
  */
 #ifndef MXNET_RUNTIME_OBJECT_H_
 #define MXNET_RUNTIME_OBJECT_H_

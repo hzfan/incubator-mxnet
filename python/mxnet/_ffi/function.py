@@ -16,6 +16,7 @@
 # under the License.
 
 # pylint: disable=invalid-name, unused-import
+""" Adapted from incubator-tvm/python/tvm/_ffi/function.py """
 """Function namespace."""
 from __future__ import absolute_import
 

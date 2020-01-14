@@ -19,7 +19,8 @@
 
 /*!
  * \file runtime/packed_func.h
- * \brief Type-erased function used across MXNET API.
+ * \brief Adapted from incubator-tvm/include/tvm/runtime/packed_func.h
+ * Type-erased function used across MXNET API.
  */
 #ifndef MXNET_RUNTIME_PACKED_FUNC_H_
 #define MXNET_RUNTIME_PACKED_FUNC_H_
