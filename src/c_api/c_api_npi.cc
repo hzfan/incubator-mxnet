@@ -23,10 +23,11 @@ MXNET_REGISTER_API("_npi.zeros1")
   } else {
     param.dtype = runtime::String2MXNetTypeWithBool(args[1].operator std::string());
   }
-  param.ctx = args[2].operator std::string();
   attrs.parsed = std::move(param);
   attrs.op = op;
-  attrs.dict["ctx"] = args[2].operator std::string();
+  if (args[2].type_code() != kNull) {
+    attrs.dict["ctx"] = args[2].operator std::string();
+  }
 
   const int num_inputs = 0;
   int infered_num_outputs;

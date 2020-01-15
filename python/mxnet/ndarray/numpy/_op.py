@@ -6506,8 +6506,8 @@ def zeros1(shape, dtype=None, order='C', ctx=None):  # pylint: disable=redefined
     """
     if order != 'C':
         raise NotImplementedError
-    if ctx is None:
-        ctx = str(current_context())
+    # if ctx is None:
+    #     ctx = str(current_context())
     if dtype is not None and not isinstance(dtype, str):
         dtype = _np.dtype(dtype).name
     return _npi.zeros1(shape, dtype, ctx)
@@ -6541,8 +6541,8 @@ def zeros0(shape, dtype=None, order='C', ctx=None):  # pylint: disable=redefined
     """
     if order != 'C':
         raise NotImplementedError
-    if ctx is None:
-        ctx = str(current_context())
+    # if ctx is None:
+    #     ctx = str(current_context())
     if dtype is not None and not isinstance(dtype, str):
         dtype = _np.dtype(dtype).name
     return _npi.zeros0(shape, dtype, ctx)
