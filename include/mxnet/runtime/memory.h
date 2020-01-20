@@ -73,6 +73,7 @@ class ObjAllocatorBase {
     T* ptr = Handler::New(static_cast<Derived*>(this),
                          std::forward<Args>(args)...);
     ptr->type_index_ = T::RuntimeTypeIndex();
+    std::cout << ptr->type_index_ << std::endl;
     ptr->deleter_ = Handler::Deleter();
     return ObjectPtr<T>(ptr);
   }
