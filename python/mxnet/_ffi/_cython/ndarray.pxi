@@ -33,4 +33,4 @@ cdef c_make_array(void* handle):
     # return return ndarray(handle=None if value[0].v_handle == 0 else ctypes.cast(value[0].v_handle, NDArrayHandle))
     # return ctypes.cast(<unsigned long long>handle, ctypes.c_void_p)
     # return ndarray(handle=<unsigned long long>handle)
-    return _global_var._set_np_ndarray_class(handle=<unsigned long long>handle)
+    return _global_var._np_ndarray_cls(handle=<unsigned long long>handle)
