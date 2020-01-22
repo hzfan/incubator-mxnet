@@ -17,7 +17,7 @@
 
 """Namespace for numpy internal ops."""
 
-from .._ffi.function import _init_api
+from ..._ffi.function import _init_api
 
 __all__ = []
 
