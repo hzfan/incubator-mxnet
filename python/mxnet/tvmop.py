@@ -29,7 +29,7 @@ if Features().is_enabled("TVM_OP"):
     from .libinfo import find_lib_path, find_conf_path
 
     _LIB_TVM_OP = find_lib_path("libtvmop")
-    print("_LIB_TVM_OP = {}".formaT(_LIB_TVM_OP))
+    print("_LIB_TVM_OP = {}".format(_LIB_TVM_OP))
     check_call(_LIB.MXLoadTVMOp(c_str(_LIB_TVM_OP[0])))
 
     # op sch config
