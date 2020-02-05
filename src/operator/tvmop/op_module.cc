@@ -82,7 +82,9 @@ PackedFunc GetFunction(const std::shared_ptr<Module> &module,
     }
     func_name << "_" << arg.shape_.ndim();
   }
+  std::cout << "module->GetFunction..." << std::endl;
   PackedFunc ret = module->GetFunction(func_name.str(), false);
+  std::cout << "module->GetFunction ends" << std::endl;
   if (ret == nullptr) {
     LOG(FATAL) << "Unknown function " << func_name.str();
   }
@@ -135,6 +137,7 @@ void TVMOpModule::CallEx(const std::string &func_name,
     TVMSetStream(dev_type, dev_id, stream);
   }
 #endif
+  
   GetFunction(module_ptr_, func_name, tblobs).CallPacked(tvm_args, &rv);
 #if MXNET_USE_CUDA
   if (dev_type == kDLGPU) {
