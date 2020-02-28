@@ -273,7 +273,7 @@ class ADT : public ObjectRef {
     return ADT(0, std::forward<Args>(args)...);
   }
 
-  MXNET_DEFINE_OBJECT_REF_METHODS(ADT, ObjectRef, ADTObj);
+  MXNET_DEFINE_OBJECT_REF_METHODS(ADT, ObjectRef, ADTObj)
 };
 
 }  // namespace runtime

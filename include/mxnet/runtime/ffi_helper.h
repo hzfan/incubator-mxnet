@@ -74,7 +74,7 @@ class Slice : public ObjectRef {
   // constant to represent None.
   static constexpr int64_t kNoneValue = std::numeric_limits<int64_t>::min();
 
-  MXNET_DEFINE_OBJECT_REF_METHODS(Slice, ObjectRef, SliceObj);
+  MXNET_DEFINE_OBJECT_REF_METHODS(Slice, ObjectRef, SliceObj)
 };
 
 int64_t inline SliceNoneValue() {
@@ -96,7 +96,7 @@ class Integer: public ObjectRef {
     data->value = value;
     data_ = std::move(data);
   }
-  MXNET_DEFINE_OBJECT_REF_METHODS(Integer, ObjectRef, IntegerObj);
+  MXNET_DEFINE_OBJECT_REF_METHODS(Integer, ObjectRef, IntegerObj)
 };
 
 //  Helper functions for fast FFI implementations
