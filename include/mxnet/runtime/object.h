@@ -644,19 +644,19 @@ struct ObjectEqual {
  * \param TypeName The name of the current type.
  * \param ParentType The name of the ParentType
  */
-#define MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)              \
-  static uint32_t RuntimeTypeIndex()  {                                   \
-    return TypeName::_type_index != ::tvm::runtime::TypeIndex::kDynamic ? \
-           TypeName::_type_index : _GetOrAllocRuntimeTypeIndex();         \
-  }                                                                       \
-  static uint32_t _GetOrAllocRuntimeTypeIndex()  {                        \
-    static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                    \
-        TypeName::_type_key,                                              \
-        TypeName::_type_index,                                            \
-        ParentType::_GetOrAllocRuntimeTypeIndex(),                        \
-        TypeName::_type_child_slots,                                      \
-        TypeName::_type_child_slots_can_overflow);                        \
-    return tidx;                                                          \
+#define MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)                \
+  static uint32_t RuntimeTypeIndex()  {                                     \
+    return TypeName::_type_index != ::mxnet::runtime::TypeIndex::kDynamic ? \
+           TypeName::_type_index : _GetOrAllocRuntimeTypeIndex();           \
+  }                                                                         \
+  static uint32_t _GetOrAllocRuntimeTypeIndex()  {                          \
+    static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                      \
+        TypeName::_type_key,                                                \
+        TypeName::_type_index,                                              \
+        ParentType::_GetOrAllocRuntimeTypeIndex(),                          \
+        TypeName::_type_child_slots,                                        \
+        TypeName::_type_child_slots_can_overflow);                          \
+    return tidx;                                                            \
   }
 
 /*!
