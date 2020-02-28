@@ -645,13 +645,13 @@ struct ObjectEqual {
  * \param ParentType The name of the ParentType
  */
 #define MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)              \
-  uint32_t RuntimeTypeIndex()  {                                          \
+  static uint32_t RuntimeTypeIndex()  {                                   \
     if (TypeName::_type_index != ::mxnet::runtime::TypeIndex::kDynamic) { \
       return TypeName::_type_index;                                       \
     }                                                                     \
     return _GetOrAllocRuntimeTypeIndex();                                 \
   }                                                                       \
-  uint32_t _GetOrAllocRuntimeTypeIndex()  {                               \
+  static uint32_t _GetOrAllocRuntimeTypeIndex()  {                        \
     static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                    \
         TypeName::_type_key,                                              \
         TypeName::_type_index,                                            \
