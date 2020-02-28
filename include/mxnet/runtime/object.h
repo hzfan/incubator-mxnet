@@ -645,21 +645,21 @@ struct ObjectEqual {
  * \param ParentType The name of the ParentType
  */
 #define MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)              \
-  static const uint32_t RuntimeTypeIndex()  {                           \
+  uint32_t RuntimeTypeIndex()  {                                          \
     if (TypeName::_type_index != ::mxnet::runtime::TypeIndex::kDynamic) { \
-      return TypeName::_type_index;                                     \
-    }                                                                   \
-    return _GetOrAllocRuntimeTypeIndex();                               \
-  }                                                                     \
-  static const uint32_t _GetOrAllocRuntimeTypeIndex()  {                \
-    static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                  \
-        TypeName::_type_key,                                            \
-        TypeName::_type_index,                                          \
-        ParentType::_GetOrAllocRuntimeTypeIndex(),                      \
-        TypeName::_type_child_slots,                                    \
-        TypeName::_type_child_slots_can_overflow);                      \
-    return tidx;                                                        \
-  }                                                                     \
+      return TypeName::_type_index;                                       \
+    }                                                                     \
+    return _GetOrAllocRuntimeTypeIndex();                                 \
+  }                                                                       \
+  uint32_t _GetOrAllocRuntimeTypeIndex()  {                               \
+    static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                    \
+        TypeName::_type_key,                                              \
+        TypeName::_type_index,                                            \
+        ParentType::_GetOrAllocRuntimeTypeIndex(),                        \
+        TypeName::_type_child_slots,                                      \
+        TypeName::_type_child_slots_can_overflow);                        \
+    return tidx;                                                          \
+  }
 
 /*!
  * \brief helper macro to declare type information in a final class.
@@ -667,8 +667,8 @@ struct ObjectEqual {
   * \param ParentType The name of the ParentType
   */
 #define MXNET_DECLARE_FINAL_OBJECT_INFO(TypeName, ParentType)             \
-  static const constexpr bool _type_final = true;                       \
-  static const constexpr int _type_child_slots = 0;                     \
+  static const constexpr bool _type_final = true;                         \
+  static const constexpr int _type_child_slots = 0;                       \
   MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)                    \
 
 
@@ -684,26 +684,26 @@ struct ObjectEqual {
 
 
 #define MXNET_DEFINE_OBJECT_REF_METHODS(TypeName, ParentType, ObjectName) \
-  TypeName() {}                                                         \
-  explicit TypeName(                                                    \
-      ::mxnet::runtime::ObjectPtr<::mxnet::runtime::Object> n)              \
-      : ParentType(n) {}                                                \
-  const ObjectName* operator->() const {                                \
-    return static_cast<const ObjectName*>(data_.get());                 \
-  }                                                                     \
-  operator bool() const { return data_ != nullptr; }                    \
-  using ContainerType = ObjectName;
+  TypeName() {}                                                           \
+  explicit TypeName(                                                      \
+      ::mxnet::runtime::ObjectPtr<::mxnet::runtime::Object> n)            \
+      : ParentType(n) {}                                                  \
+  const ObjectName* operator->() const {                                  \
+    return static_cast<const ObjectName*>(data_.get());                   \
+  }                                                                       \
+  operator bool() const { return data_ != nullptr; }                      \
+  using ContainerType = ObjectName
 
 #define MXNET_DEFINE_OBJECT_REF_METHODS_MUT(TypeName, ParentType, ObjectName) \
-  TypeName() {}                                                             \
-  explicit TypeName(                                                        \
-      ::mxnet::runtime::ObjectPtr<::mxnet::runtime::Object> n)                  \
-      : ParentType(n) {}                                                    \
-  ObjectName* operator->() {                                    \
-    return static_cast<ObjectName*>(data_.get());                     \
-  }                                                                         \
-  operator bool() const { return data_ != nullptr; }                        \
-  using ContainerType = ObjectName;
+  TypeName() {}                                                               \
+  explicit TypeName(                                                          \
+      ::mxnet::runtime::ObjectPtr<::mxnet::runtime::Object> n)                \
+      : ParentType(n) {}                                                      \
+  ObjectName* operator->() {                                                  \
+    return static_cast<ObjectName*>(data_.get());                             \
+  }                                                                           \
+  operator bool() const { return data_ != nullptr; }                          \
+  using ContainerType = ObjectName
 
 // Implementations details below
 // Object reference counting.
