@@ -646,7 +646,11 @@ struct ObjectEqual {
  */
 #define MXNET_DECLARE_BASE_OBJECT_INFO(TypeName, ParentType)              \
   static uint32_t RuntimeTypeIndex()  {                                   \
-    return TypeName::_type_index;                                       \
+    const uint32_t tidx = TypeName::_type_index;                          \
+    if (tidx != ::mxnet::runtime::TypeIndex::kDynamic) {                  \
+      return tidx;                                                        \
+    }                                                                     \
+    return _GetOrAllocRuntimeTypeIndex();                                 \
   }                                                                       \
   static uint32_t _GetOrAllocRuntimeTypeIndex()  {                        \
     static uint32_t tidx = GetOrAllocRuntimeTypeIndex(                    \
